@@ -3,35 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>iPixel Pilot Pro • Ultra Vision HUD</title>
+  <title>iPixel Pilot HUD • Windshield Matrix</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700;800;900&family=Noto+Sans+Tamil:wght@500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Noto+Sans+Tamil:wght@500;700;900&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --bg-deep: #020205;
-      --glass-base: rgba(26, 28, 38, 0.60);
-      --glass-surface: rgba(36, 40, 56, 0.45);
-      --glass-border: rgba(255, 255, 255, 0.14);
-      --glass-border-light: rgba(255, 255, 255, 0.24);
-      --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.04) 40%, rgba(255, 255, 255, 0) 100%);
-      
-      --accent-blue: #0A84FF;
-      --accent-cyan: #64D2FF;
-      --accent-emerald: #30D158;
-      --accent-amber: #FF9F0A;
-      --accent-red: #FF453A;
-      --accent-purple: #BF5AF2;
+      --bg-dark: #0b0d17;
+      --card-bg: #151828;
+      --card-inner: #1c2035;
+      --card-border: #232742;
+      --border-subtle: rgba(255, 255, 255, 0.08);
 
-      --text-pure: #FFFFFF;
-      --text-sub: rgba(245, 245, 250, 0.68);
-      --text-tertiary: rgba(245, 245, 250, 0.42);
+      --cyan-led: #22d3ee;
+      --amber-led: #f59e0b;
+      --emerald-led: #10b981;
+      --rose-led: #ef4444;
+      --blue-led: #3b82f6;
 
-      --glow-emerald: 0 0 24px rgba(48, 209, 88, 0.55);
-      --glow-amber: 0 0 24px rgba(255, 159, 10, 0.55);
-      --glow-red: 0 0 30px rgba(255, 69, 58, 0.75);
-      --glow-blue: 0 0 26px rgba(10, 132, 255, 0.55);
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
     }
 
     * {
@@ -43,680 +36,907 @@
     }
 
     body {
-      background-color: var(--bg-deep);
+      background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(at 15% 10%, rgba(10, 132, 255, 0.22) 0px, transparent 55%),
-        radial-gradient(at 85% 15%, rgba(191, 90, 242, 0.20) 0px, transparent 50%),
-        radial-gradient(at 50% 85%, rgba(255, 69, 58, 0.16) 0px, transparent 60%);
+        radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.08) 0px, transparent 60%),
+        radial-gradient(at 80% 40%, rgba(244, 63, 94, 0.06) 0px, transparent 50%);
       background-attachment: fixed;
-      color: var(--text-pure);
+      color: var(--text-white);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans Tamil", sans-serif;
       min-height: 100vh;
-      overflow-x: hidden;
-      padding-top: max(env(safe-area-inset-top), 16px);
-      padding-bottom: calc(max(env(safe-area-inset-bottom), 16px) + 90px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: max(env(safe-area-inset-top), 12px) 14px calc(max(env(safe-area-inset-bottom), 12px) + 94px) 14px;
     }
 
-    .app-viewport {
+    .hud-container {
+      width: 100%;
       max-width: 480px;
-      margin: 0 auto;
-      padding: 8px 16px;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
 
     /* =========================================================================
-       DYNAMIC ISLAND (VISION PRO STYLE)
+       SECTION 1: WINDSHIELD MATRIX 16x96 CARD
        ========================================================================= */
-    .island-wrapper {
-      display: flex;
-      justify-content: center;
-      position: sticky;
-      top: 8px;
-      z-index: 100;
-    }
-
-    .dynamic-island {
-      background: rgba(14, 15, 20, 0.85);
-      backdrop-filter: blur(40px) saturate(220%);
-      -webkit-backdrop-filter: blur(40px) saturate(220%);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 44px;
-      padding: 6px 16px 6px 14px;
-      min-width: 230px;
-      height: 44px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      cursor: pointer;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-      transition: all 0.35s cubic-bezier(0.19, 1, 0.22, 1);
-    }
-
-    .dynamic-island:active {
-      transform: scale(0.95);
-    }
-
-    .island-status {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
-
-    .status-orb {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--accent-red);
-      box-shadow: var(--glow-red);
-      animation: pulse-dot 1.8s infinite ease-in-out;
-    }
-
-    .status-orb.online {
-      background: var(--accent-emerald);
-      box-shadow: var(--glow-emerald);
-      animation: none;
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.35; transform: scale(0.85); }
-    }
-
-    .island-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: -0.2px;
-      color: #FFF;
-    }
-
-    .island-chip {
-      background: rgba(255, 255, 255, 0.12);
-      border-radius: 20px;
-      padding: 3px 8px;
-      font-size: 10px;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      color: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    /* =========================================================================
-       GLASS CARDS & VISION CONTAINERS
-       ========================================================================= */
-    .glass-card {
-      background: var(--glass-base);
-      backdrop-filter: blur(32px) saturate(200%);
-      -webkit-backdrop-filter: blur(32px) saturate(200%);
-      border: 1px solid var(--glass-border);
-      border-radius: 28px;
+    .screen-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
       padding: 16px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.28);
-    }
-
-    .glass-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--glass-specular);
-      pointer-events: none;
-    }
-
-    .card-headline {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+    }
+
+    .screen-top-bar {
+      display: flex;
       align-items: center;
+      justify-content: space-between;
       font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.9px;
-      color: var(--text-sub);
-      margin-bottom: 12px;
+      letter-spacing: 0.5px;
     }
 
-    /* =========================================================================
-       AUTHENTIC 16x96 BEZEL & RETRO DIODE MATRIX
-       ========================================================================= */
-    .bezel-chassis {
-      background: #08080c;
-      border: 2px solid #1c1d28;
-      border-radius: 18px;
-      padding: 9px 8px;
-      box-shadow: inset 0 4px 14px rgba(0, 0, 0, 0.9), 0 8px 24px rgba(0, 0, 0, 0.6);
+    .screen-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+    }
+
+    .dot-matrix-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--emerald-led);
+      box-shadow: 0 0 10px var(--emerald-led);
+    }
+
+    .screen-meta-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .active-text-badge {
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mode-badge {
+      color: var(--cyan-led);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .version-pill {
+      font-size: 9px;
+      color: var(--amber-led);
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+
+    /* Screen Canvas & Diode Grid */
+    .bezel-frame {
+      background: #05060a;
+      border: 2px solid #141726;
+      border-radius: 16px;
+      padding: 10px 8px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.6);
       position: relative;
-      overflow: hidden;
-    }
-
-    .bezel-chassis::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 40%, rgba(0,0,0,0.3) 100%);
-      pointer-events: none;
     }
 
     #matrixCanvas {
       width: 100%;
-      height: 68px;
+      height: 72px;
       display: block;
       border-radius: 8px;
-      background: #020202;
+      background: #020204;
       image-rendering: pixelated;
     }
 
-    .matrix-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-      font-size: 11px;
-      color: var(--text-sub);
-    }
-
-    .version-pill {
-      color: var(--accent-cyan);
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      background: rgba(100, 210, 255, 0.12);
-      padding: 2px 8px;
-      border-radius: 12px;
-      border: 1px solid rgba(100, 210, 255, 0.28);
-    }
-
-    /* =========================================================================
-       SPEEDOMETER & REAL-TIME DRIVING TELEMETRY
-       ========================================================================= */
-    .cockpit-grid {
+    /* Brightness and Speed Dual Sliders */
+    .sliders-grid {
       display: grid;
-      grid-template-columns: 1.15fr 1.55fr;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
-    .speedo-tile {
-      background: var(--glass-surface);
-      border: 1px solid var(--glass-border-light);
-      border-radius: 22px;
-      padding: 16px 12px;
+    .slider-pill {
+      background: var(--card-inner);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      position: relative;
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.18);
+      gap: 8px;
     }
 
-    .speed-digits {
-      font-size: 48px;
-      font-weight: 900;
-      line-height: 0.95;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-pure);
-      text-shadow: 0 0 20px rgba(255, 255, 255, 0.35);
-    }
-
-    .speed-lbl {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 1.2px;
-      color: var(--text-sub);
-      margin-top: 6px;
-    }
-
-    .driving-actions-tile {
-      background: var(--glass-surface);
-      border: 1px solid var(--glass-border-light);
-      border-radius: 22px;
-      padding: 12px;
+    .slider-info {
       display: flex;
-      flex-direction: column;
       justify-content: space-between;
-      gap: 8px;
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.18);
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
     }
 
-    .turn-signals {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-signal {
-      flex: 1;
-      height: 38px;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid var(--glass-border);
-      border-radius: 14px;
-      color: var(--text-pure);
-      font-size: 13px;
-      font-weight: 700;
+    .slider-info span:first-child {
       display: flex;
       align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .btn-signal:active, .btn-signal.active-turn {
-      background: var(--accent-amber);
-      color: #000;
-      box-shadow: var(--glow-amber);
-      border-color: var(--accent-amber);
-    }
-
-    .btn-emergency {
-      width: 100%;
-      height: 38px;
-      background: rgba(255, 69, 58, 0.16);
-      border: 1px solid rgba(255, 69, 58, 0.45);
-      border-radius: 14px;
-      color: var(--accent-red);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       gap: 6px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .btn-emergency:active, .btn-emergency.active-brake {
-      background: var(--accent-red);
+    .slider-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
       color: #fff;
-      box-shadow: var(--glow-red);
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 4px;
+      background: #111422;
+      outline: none;
+    }
+
+    #brightnessRange::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--amber-led);
+      box-shadow: 0 0 10px var(--amber-led);
+      cursor: pointer;
+    }
+
+    #speedRange::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--cyan-led);
+      box-shadow: 0 0 10px var(--cyan-led);
+      cursor: pointer;
     }
 
     /* =========================================================================
-       PILL TABS & PRESETS GRID
+       SECTION 2: AUTOMOTIVE TELEMETRY CARD
        ========================================================================= */
-    .tab-strip-outer {
-      overflow-x: auto;
-      margin: 0 -8px;
-      padding: 0 8px 4px 8px;
-      scrollbar-width: none;
+    .telemetry-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
     }
-    .tab-strip-outer::-webkit-scrollbar { display: none; }
 
-    .category-dock {
-      display: inline-flex;
+    .telemetry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .telemetry-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-box-hud {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue-led);
+      font-size: 16px;
+    }
+
+    .title-subgroup h3 {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .title-subgroup span {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    /* Auto Mirror Switch */
+    .mirror-toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider-toggle {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #262c45;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider-toggle:before {
+      position: absolute;
+      content: "";
+      height: 18px; width: 18px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider-toggle { background-color: var(--emerald-led); }
+    input:checked + .slider-toggle:before { transform: translateX(20px); }
+
+    /* Cockpit Main Stage: Turns & Speedometer */
+    .cockpit-stage {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 6px 0;
+    }
+
+    .turn-pod {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       gap: 6px;
-      background: rgba(255, 255, 255, 0.06);
-      padding: 4px;
-      border-radius: 22px;
-      border: 1px solid var(--glass-border);
+      cursor: pointer;
+      opacity: 0.35;
+      transition: opacity 0.2s ease, transform 0.2s ease;
     }
 
-    .tab-pill {
-      padding: 7px 15px;
-      border-radius: 18px;
+    .turn-pod.active-pod {
+      opacity: 1;
+      transform: scale(1.06);
+    }
+
+    .turn-circle {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: var(--card-inner);
+      border: 1.5px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: var(--text-dim);
+      transition: all 0.2s ease;
+    }
+
+    .turn-pod.active-pod .turn-circle {
+      border-color: var(--emerald-led);
+      color: var(--emerald-led);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .turn-pod span {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
+    }
+
+    .turn-pod.active-pod span {
+      color: var(--emerald-led);
+    }
+
+    .speedo-cluster {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .speed-reading {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .speed-val-big {
+      font-size: 54px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .speed-unit-txt {
+      font-size: 12px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
+    }
+
+    .stopped-pill {
+      background: #1c2035;
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 10px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.8px;
+    }
+
+    .stopped-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--rose-led);
+      box-shadow: 0 0 8px var(--rose-led);
+    }
+
+    /* 3-Column Stats Strip */
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .metric-cell {
+      background: var(--card-inner);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 10px 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-label {
+      font-size: 9px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 12px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-white);
+    }
+
+    /* Actions Row: Enable Sensors & Emergency Brake */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-sensors {
+      background: var(--card-inner);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      border-radius: 16px;
+      color: #fff;
       font-size: 12px;
       font-weight: 700;
-      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 44px;
       cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.25s ease;
     }
 
-    .tab-pill.active {
-      background: rgba(255, 255, 255, 0.22);
+    .btn-sensors:active {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-brake-action {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      border: none;
+      border-radius: 16px;
       color: #fff;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      font-size: 13px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 44px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(239, 68, 68, 0.45);
     }
 
-    .presets-wall {
+    .btn-brake-action:active, .btn-brake-action.active-brake {
+      transform: scale(0.97);
+      background: #b91c1c;
+      box-shadow: 0 0 24px rgba(239, 68, 68, 0.8);
+    }
+
+    /* Desk Simulator Controls */
+    .sim-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 12px;
+    }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      color: var(--text-dim);
+      letter-spacing: 0.6px;
+    }
+
+    .sim-header span:last-child {
+      color: var(--text-muted);
+    }
+
+    #simSpeedRange::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--blue-led);
+      box-shadow: 0 0 8px var(--blue-led);
+      cursor: pointer;
+    }
+
+    .sim-buttons-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .btn-sim {
+      background: var(--card-inner);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 9px 4px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-sim:active, .btn-sim.sim-active {
+      background: rgba(34, 211, 238, 0.15);
+      border-color: var(--cyan-led);
+      color: #fff;
+    }
+
+    /* Content Views (Meme / Tamil / Devil / Studio) */
+    .tab-content-zone {
+      display: none;
+      width: 100%;
+    }
+
+    .tab-content-zone.show {
+      display: block;
+    }
+
+    .deck-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
     }
 
-    .preset-tile {
-      background: var(--glass-surface);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
+    .deck-item {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
       padding: 14px 12px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
       cursor: pointer;
-      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
     }
 
-    .preset-tile:active {
-      transform: scale(0.96);
-      background: rgba(255, 255, 255, 0.14);
-      border-color: rgba(255, 255, 255, 0.35);
+    .deck-item:active {
+      border-color: var(--cyan-led);
+      transform: scale(0.97);
     }
 
-    .tile-text {
+    .deck-item-title {
       font-size: 14px;
       font-weight: 700;
-      color: var(--text-pure);
-      line-height: 1.35;
+      color: #fff;
     }
 
-    .tile-sub {
+    .deck-item-sub {
       font-size: 11px;
-      color: var(--text-tertiary);
+      color: var(--text-dim);
     }
 
     /* =========================================================================
-       CUSTOM TEXT & VOICE BAR
+       SECTION 3: FLOATING BOTTOM GLASS NAVIGATION BAR
        ========================================================================= */
-    .input-dock {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      background: var(--glass-surface);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      padding: 6px 8px;
-    }
-
-    .input-field {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: #fff;
-      font-size: 14px;
-      font-family: inherit;
-      padding-left: 8px;
-    }
-
-    .input-field::placeholder {
-      color: var(--text-tertiary);
-    }
-
-    .btn-push {
-      background: var(--accent-blue);
-      color: #fff;
-      border: none;
-      border-radius: 14px;
-      padding: 9px 15px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: var(--glow-blue);
-    }
-
-    .btn-voice {
-      background: rgba(255, 255, 255, 0.08);
-      border: none;
-      border-radius: 14px;
-      width: 38px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: #fff;
-      font-size: 16px;
-    }
-
-    /* =========================================================================
-       MODAL: SHEET (BLUEFY COMPLIANT)
-       ========================================================================= */
-    .modal-curtain {
+    .bottom-nav-wrapper {
       position: fixed;
-      top: 0;
+      bottom: max(env(safe-area-inset-bottom), 12px);
       left: 0;
       right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.78);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: center;
+      z-index: 99;
+      pointer-events: none;
+    }
+
+    .floating-nav {
+      pointer-events: auto;
+      background: rgba(21, 24, 40, 0.85);
+      backdrop-filter: blur(28px) saturate(200%);
+      -webkit-backdrop-filter: blur(28px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 36px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+    }
+
+    .nav-tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 14px;
+      border-radius: 24px;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      transition: all 0.25s ease;
+    }
+
+    .nav-tab-btn .tab-ico {
+      font-size: 15px;
+    }
+
+    .nav-tab-btn.active-tab {
+      background: rgba(59, 130, 246, 0.22);
+      color: #fff;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    /* Bluefy BLE Modal */
+    .modal-veil {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       display: none;
       align-items: flex-end;
       justify-content: center;
       z-index: 999;
     }
 
-    .modal-curtain.open {
-      display: flex;
-    }
+    .modal-veil.open { display: flex; }
 
-    .ios-sheet {
-      background: #15161E;
-      border: 1px solid var(--glass-border);
-      border-radius: 36px 36px 0 0;
+    .sheet-card {
+      background: #131624;
+      border: 1px solid var(--card-border);
+      border-radius: 28px 28px 0 0;
       width: 100%;
       max-width: 480px;
-      padding: 24px 20px calc(max(env(safe-area-inset-bottom), 16px) + 20px) 20px;
-      box-shadow: 0 -24px 50px rgba(0,0,0,0.9);
-      animation: sheetPop 0.32s cubic-bezier(0.19, 1, 0.22, 1);
+      padding: 22px 18px calc(max(env(safe-area-inset-bottom), 12px) + 20px) 18px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
+      box-shadow: 0 -16px 40px rgba(0,0,0,0.8);
     }
 
-    @keyframes sheetPop {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-
-    .grab-handle {
-      width: 42px;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.25);
-      border-radius: 3px;
-      align-self: center;
-      margin-bottom: 4px;
-    }
-
-    .sheet-title-row {
+    .sheet-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .sheet-title {
-      font-size: 20px;
-      font-weight: 800;
+    .sheet-top h2 { font-size: 18px; font-weight: 800; }
+    .sheet-close-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      border: none; color: #fff; cursor: pointer;
     }
 
-    .btn-dismiss {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.12);
-      border: none;
-      color: #fff;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .live-console {
-      background: #090A0F;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      padding: 12px;
+    .console-terminal {
+      background: #08090f;
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 10px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
-      color: #30D158;
-      height: 110px;
+      color: var(--emerald-led);
+      height: 100px;
       overflow-y: auto;
       white-space: pre-wrap;
-      word-break: break-all;
     }
 
-    .btn-scan-primary {
-      background: linear-gradient(135deg, var(--accent-blue), #5856D6);
-      color: #fff;
-      border: none;
-      border-radius: 18px;
-      padding: 15px;
-      font-size: 15px;
-      font-weight: 800;
+    .btn-connect-primary {
+      background: linear-gradient(135deg, var(--blue-led), #6366f1);
+      border: none; border-radius: 16px;
+      padding: 14px; color: #fff; font-weight: 800; font-size: 14px;
       cursor: pointer;
-      box-shadow: 0 6px 20px rgba(10, 132, 255, 0.45);
-      transition: all 0.2s ease;
-    }
-
-    .btn-scan-primary:active {
-      transform: scale(0.97);
-    }
-
-    .btn-scan-secondary {
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      border: 1px solid var(--glass-border);
-      border-radius: 18px;
-      padding: 13px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .foot-note {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      line-height: 1.4;
-      text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <div class="app-viewport">
-    
-    <!-- Dynamic Island Header -->
-    <div class="island-wrapper">
-      <div class="dynamic-island" onclick="openPairSheet()">
-        <div class="island-status">
-          <div class="status-orb" id="statusDot"></div>
-          <span class="island-title" id="islandLabel">Connect Matrix</span>
+  <div class="hud-container">
+
+    <!-- =====================================================================
+         1. WINDSHIELD MATRIX (16x96) CARD
+         ===================================================================== -->
+    <div class="screen-card">
+      <div class="screen-top-bar">
+        <div class="screen-tag">
+          <span class="dot-matrix-indicator"></span>
+          <span>WINDSHIELD MATRIX (16×96)</span>
         </div>
-        <div class="island-chip" id="islandBadge">16×96 HUD</div>
-      </div>
-    </div>
-
-    <!-- 16x96 Matrix Preview Bezel -->
-    <div class="glass-card">
-      <div class="card-headline">
-        <span>Windshield Diode Screen</span>
-        <span style="color: var(--accent-emerald);">60 FPS</span>
+        <div class="screen-meta-right">
+          <span class="active-text-badge" id="screenStatusHeader">வணக்கம் 🤝</span>
+          <span class="mode-badge" onclick="openBleSheet()" id="bleBadge">SIMULATED</span>
+          <span class="version-pill">v1.4.0-COCKPIT-EXACT</span>
+        </div>
       </div>
 
-      <div class="bezel-chassis">
+      <div class="bezel-frame">
         <canvas id="matrixCanvas" width="96" height="16"></canvas>
       </div>
 
-      <div class="matrix-meta">
-        <span id="presetLabel">Preset: Ready</span>
-        <span class="version-pill">v1.3.0-VISION-GLASS</span>
-        <span id="bleStatusText" style="color: var(--text-tertiary);">BLE: Offline</span>
+      <div class="sliders-grid">
+        <div class="slider-pill">
+          <div class="slider-info">
+            <span>☀️ Brightness</span>
+            <span class="slider-val" id="brightnessVal">85%</span>
+          </div>
+          <input type="range" id="brightnessRange" min="10" max="100" value="85" oninput="updateBrightness(this.value)" />
+        </div>
+
+        <div class="slider-pill">
+          <div class="slider-info">
+            <span>⚡ Speed</span>
+            <span class="slider-val" id="speedVal">6x</span>
+          </div>
+          <input type="range" id="speedRange" min="1" max="10" value="6" oninput="updateSpeed(this.value)" />
+        </div>
       </div>
     </div>
 
-    <!-- Cockpit & Driving Telemetry -->
-    <div class="glass-card">
-      <div class="card-headline">
-        <span>Cockpit Telemetry</span>
-        <span id="gpsPill" style="color: var(--text-sub); display: flex; align-items: center; gap: 5px;">
-          <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--accent-amber);" id="gpsDot"></span> GPS HUD
-        </span>
-      </div>
+    <!-- =====================================================================
+         2. AUTOMOTIVE TELEMETRY CARD (HUD VIEW)
+         ===================================================================== -->
+    <div class="tab-content-zone show" id="view-hud">
+      <div class="telemetry-card">
+        <div class="telemetry-header">
+          <div class="telemetry-title-group">
+            <div class="icon-box-hud">📊</div>
+            <div class="title-subgroup">
+              <h3>Automotive Telemetry</h3>
+              <span>GPS + GYROSCOPE + G-METER</span>
+            </div>
+          </div>
 
-      <div class="cockpit-grid">
-        <div class="speedo-tile">
-          <div class="speed-digits" id="speedNum">0</div>
-          <div class="speed-lbl">KM / H</div>
+          <div class="mirror-toggle-group">
+            <span>Auto Mirror</span>
+            <label class="switch">
+              <input type="checkbox" id="mirrorToggle" checked onchange="toggleAutoMirror(this.checked)">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
         </div>
 
-        <div class="driving-actions-tile">
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-sub);">
-            <span>Signals</span>
-            <span id="motionTag">Center</span>
+        <!-- Turns and Speedometer Cluster -->
+        <div class="cockpit-stage">
+          <div class="turn-pod" id="turnPodLeft" onclick="toggleTurnSignal('LEFT')">
+            <div class="turn-circle">←</div>
+            <span>LEFT TURN</span>
           </div>
 
-          <div class="turn-signals">
-            <button class="btn-signal" id="btnTurnL" onclick="handleTurn('LEFT')">◀ LEFT</button>
-            <button class="btn-signal" id="btnTurnR" onclick="handleTurn('RIGHT')">RIGHT ▶</button>
+          <div class="speedo-cluster">
+            <div class="speed-reading">
+              <span class="speed-val-big" id="speedDisplay">0</span>
+              <span class="speed-unit-txt">KM/H</span>
+            </div>
+            <div class="stopped-pill" id="motionPill">
+              <span class="stopped-dot"></span>
+              <span id="motionStatusText">STOPPED</span>
+            </div>
           </div>
 
-          <button class="btn-emergency" id="btnBrake" onclick="handleBrake()">
-            <span>⛔</span> EMERGENCY BRAKE
+          <div class="turn-pod" id="turnPodRight" onclick="toggleTurnSignal('RIGHT')">
+            <div class="turn-circle">→</div>
+            <span>RIGHT TURN</span>
+          </div>
+        </div>
+
+        <!-- 3 Metric Readings Strip -->
+        <div class="metrics-strip">
+          <div class="metric-cell">
+            <span class="metric-label">GPS ACCURACY</span>
+            <span class="metric-value" id="gpsAccVal">±20M</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">STEER ANGLE</span>
+            <span class="metric-value" id="steerAngleVal">0° (CENTER)</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">G-DECEL</span>
+            <span class="metric-value" id="gDecelVal">0.00 G</span>
+          </div>
+        </div>
+
+        <!-- Action Row: Enable Sensors & Brake -->
+        <div class="action-row">
+          <button class="btn-sensors" onclick="requestDeviceSensors()">
+            <span>📱</span> Enable iPhone Sensors
+          </button>
+          <button class="btn-brake-action" id="btnBrake" onclick="triggerBrakeAlert()">
+            <span>⚠️</span> BRAKE! ⛔
           </button>
         </div>
+
+        <!-- Indoor Desk Simulator -->
+        <div class="sim-bar">
+          <div class="sim-header">
+            <span>INDOOR DESK SIMULATOR</span>
+            <span>Test Speed: <b id="simSpeedLabel" style="color:#fff;">45 km/h</b></span>
+          </div>
+
+          <input type="range" id="simSpeedRange" min="0" max="140" value="45" oninput="updateSimSpeed(this.value)" />
+
+          <div class="sim-buttons-row">
+            <button class="btn-sim" id="btnSimLeft" onclick="simulateTurn('LEFT')">Simulate Left Turn</button>
+            <button class="btn-sim sim-active" id="btnSimStraight" onclick="simulateTurn('STRAIGHT')">Straight</button>
+            <button class="btn-sim" id="btnSimRight" onclick="simulateTurn('RIGHT')">Simulate Right Turn</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Category Selector Strip -->
-    <div class="tab-strip-outer">
-      <div class="category-dock">
-        <div class="tab-pill active" onclick="activateTab('tamil_meme')">தமிழ் மீம் (Memes)</div>
-        <div class="tab-pill" onclick="activateTab('tamil_road')">தமிழ் சாலை (Road)</div>
-        <div class="tab-pill" onclick="activateTab('devil')">Devil Eyes 😈</div>
-        <div class="tab-pill" onclick="activateTab('highway')">Highway / Pass</div>
+    <!-- =====================================================================
+         TAB 2: TAMIL MEMES VIEW
+         ===================================================================== -->
+    <div class="tab-content-zone" id="view-meme">
+      <div class="deck-grid" id="memeGrid"></div>
+    </div>
+
+    <!-- =====================================================================
+         TAB 3: TAMIL ROAD GREETINGS VIEW
+         ===================================================================== -->
+    <div class="tab-content-zone" id="view-tamil">
+      <div class="deck-grid" id="tamilGrid"></div>
+    </div>
+
+    <!-- =====================================================================
+         TAB 4: DEVIL EYES VIEW
+         ===================================================================== -->
+    <div class="tab-content-zone" id="view-devil">
+      <div class="deck-grid">
+        <div class="deck-item" onclick="setMode('devil')">
+          <div class="deck-item-title">Devil Eyes 😈</div>
+          <div class="deck-item-sub">Red animated blinking optics</div>
+        </div>
+        <div class="deck-item" onclick="setMode('devil')">
+          <div class="deck-item-title">Cyber Gaze 🤖</div>
+          <div class="deck-item-sub">Electric scanner eyes</div>
+        </div>
       </div>
     </div>
 
-    <!-- Presets Deck -->
-    <div class="presets-wall" id="presetsGrid">
-      <!-- Populated dynamically via JS -->
-    </div>
-
-    <!-- Custom Text & Speech Input -->
-    <div class="glass-card">
-      <div class="input-dock">
-        <input type="text" class="input-field" id="customInput" placeholder="Type Tamil or English driving message..." />
-        <button class="btn-voice" onclick="dictateVoice()" title="Tamil Speech-to-Text">🎙️</button>
-        <button class="btn-push" onclick="pushText()">Send</button>
+    <!-- =====================================================================
+         TAB 5: STUDIO / CUSTOM SENDER
+         ===================================================================== -->
+    <div class="tab-content-zone" id="view-studio">
+      <div class="telemetry-card">
+        <h3 style="font-size: 14px; font-weight: 800;">✍️ Custom Message Studio</h3>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="studioInput" placeholder="Enter custom message..." style="flex:1; background: var(--card-inner); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 10px 14px; color: #fff; outline:none;" />
+          <button onclick="sendStudioText()" style="background: var(--blue-led); border: none; border-radius: 12px; padding: 10px 16px; color:#fff; font-weight:700; cursor:pointer;">Push</button>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Bluefy-Safe Bluetooth Pairing Sheet -->
-  <div class="modal-curtain" id="pairSheet">
-    <div class="ios-sheet">
-      <div class="grab-handle"></div>
-
-      <div class="sheet-title-row">
-        <div class="sheet-title">Connect 16×96 Matrix</div>
-        <button class="btn-dismiss" onclick="closePairSheet()">✕</button>
+  <!-- =====================================================================
+       3. FLOATING BOTTOM GLASS NAVIGATION BAR
+       ===================================================================== -->
+  <div class="bottom-nav-wrapper">
+    <div class="floating-nav">
+      <div class="nav-tab-btn active-tab" onclick="switchNavTab('hud')">
+        <span class="tab-ico">⚡</span>
+        <span>HUD</span>
       </div>
-
-      <div class="foot-note">
-        Compatible with <b>Bluefy Browser</b> (iOS) and <b>Google Chrome</b> (Android/Mac). Close the original app first.
+      <div class="nav-tab-btn" onclick="switchNavTab('meme')">
+        <span class="tab-ico">🤣</span>
+        <span>மீம்</span>
       </div>
+      <div class="nav-tab-btn" onclick="switchNavTab('tamil')">
+        <span class="tab-ico">🇮🇳</span>
+        <span>தமிழ்</span>
+      </div>
+      <div class="nav-tab-btn" onclick="switchNavTab('devil')">
+        <span class="tab-ico">😈</span>
+        <span>Devil</span>
+      </div>
+      <div class="nav-tab-btn" onclick="switchNavTab('studio')">
+        <span class="tab-ico">✍️</span>
+        <span>Studio</span>
+      </div>
+    </div>
+  </div>
 
-      <div class="live-console" id="sheetLogs">[System] Tap Scan to discover your windshield matrix.</div>
-
-      <button class="btn-scan-primary" onclick="executeBleScan(false)">
-        🔍 Scan for LED Matrix (Fast)
-      </button>
-
-      <button class="btn-scan-secondary" onclick="executeBleScan(true)">
-        Show All Nearby Devices (Broad Scan)
-      </button>
-
-      <div class="foot-note">
-        Build: <b>v1.3.0-VISION-GLASS</b> • GATT: <code style="color:var(--accent-blue);">0000fa02-0000-1000-8000-00805f9b34fb</code>
+  <!-- Bluefy-Safe Bluetooth Connection Modal Sheet -->
+  <div class="modal-veil" id="bleSheet">
+    <div class="sheet-card">
+      <div class="sheet-top">
+        <h2>Connect 16×96 Matrix</h2>
+        <button class="sheet-close-btn" onclick="closeBleSheet()">✕</button>
+      </div>
+      <div style="font-size: 12px; color: var(--text-dim);">
+        Strictly compliant with <b>Bluefy Browser</b> (iPhone) & <b>Chrome</b> (Android).
+      </div>
+      <div class="console-terminal" id="bleConsole">[Ready] Tap scan to discover your 16×96 LED screen.</div>
+      <button class="btn-connect-primary" onclick="startBluefyScan()">🔍 Scan for LED Matrix</button>
+      <div style="font-size: 10px; color: var(--text-dim); text-align: center;">
+        Build: <b>v1.4.0-COCKPIT-EXACT</b> • GATT: 0000fa02-0000-1000-8000-00805f9b34fb
       </div>
     </div>
   </div>
 
   <script>
     /* =========================================================================
-       1. BLE ENGINE (BLUEFY STRICT 128-BIT STRING COMPLIANCE)
+       1. BLE ENGINE (BLUEFY COMPLIANT 128-BIT LOWERCASE UUIDs)
        ========================================================================= */
     const SERVICE_UUID = '0000fa02-0000-1000-8000-00805f9b34fb';
     const NOTIFY_UUID = '0000fa03-0000-1000-8000-00805f9b34fb';
@@ -724,128 +944,75 @@
     let bleDevice = null;
     let bleWriteChar = null;
 
-    function appendLog(str) {
-      const el = document.getElementById('sheetLogs');
+    function openBleSheet() { document.getElementById('bleSheet').classList.add('open'); }
+    function closeBleSheet() { document.getElementById('bleSheet').classList.remove('open'); }
+
+    function logBle(msg) {
+      const el = document.getElementById('bleConsole');
       const time = new Date().toTimeString().split(' ')[0];
-      el.innerText += `\n[${time}] ${str}`;
+      el.innerText += `\n[${time}] ${msg}`;
       el.scrollTop = el.scrollHeight;
     }
 
-    function openPairSheet() {
-      document.getElementById('pairSheet').classList.add('open');
-    }
-
-    function closePairSheet() {
-      document.getElementById('pairSheet').classList.remove('open');
-    }
-
-    async function executeBleScan(broad) {
-      appendLog(`Starting scan (${broad ? 'Broad' : 'Fast Filters'})...`);
-
+    async function startBluefyScan() {
+      logBle("Requesting BLE peripheral...");
       if (!navigator.bluetooth) {
-        appendLog("ERROR: Web Bluetooth unsupported in current browser.");
-        alert("Web Bluetooth is unavailable in this browser.\n• On iPhone: Open inside Bluefy BLE Browser\n• On Android: Use Google Chrome.");
+        logBle("ERROR: Web Bluetooth unsupported.");
+        alert("Please open this link inside Bluefy Browser (on iPhone) or Google Chrome (on Android).");
         return;
       }
 
       try {
-        let opts = {};
-        if (broad) {
-          opts = {
-            acceptAllDevices: true,
-            optionalServices: [SERVICE_UUID, NOTIFY_UUID]
-          };
-        } else {
-          opts = {
-            filters: [
-              { namePrefix: 'LED' },
-              { namePrefix: 'iPixel' },
-              { namePrefix: 'WC' }
-            ],
-            optionalServices: [SERVICE_UUID, NOTIFY_UUID]
-          };
-        }
-
-        appendLog("Opening native picker...");
-        const device = await navigator.bluetooth.requestDevice(opts);
-        appendLog(`Selected: ${device.name || "Device"} (${device.id})`);
-        bleDevice = device;
-
-        device.addEventListener('gattserverdisconnected', () => {
-          appendLog("Device disconnected.");
-          setBleStatus(false);
+        // Zero numbers, zero non-128bit strings (prevents Bluefy payload parse crash)
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [SERVICE_UUID, NOTIFY_UUID]
         });
 
-        appendLog("Connecting GATT server...");
+        logBle(`Device selected: ${device.name || "16x96 Matrix"}`);
+        bleDevice = device;
+
+        logBle("Connecting to GATT server...");
         const server = await device.gatt.connect();
-        appendLog("Connected. Resolving service...");
 
-        let service;
-        try {
-          service = await server.getPrimaryService(SERVICE_UUID);
-        } catch(e) {
-          const svcs = await server.getPrimaryServices();
-          service = svcs[0];
-        }
+        logBle("Finding service...");
+        const service = await server.getPrimaryService(SERVICE_UUID);
 
-        appendLog("Acquiring characteristic...");
-        try {
-          bleWriteChar = await service.getCharacteristic(SERVICE_UUID);
-        } catch(e) {
-          const chars = await service.getCharacteristics();
-          bleWriteChar = chars.find(c => c.properties.write || c.properties.writeWithoutResponse) || chars[0];
-        }
+        logBle("Acquiring characteristic...");
+        bleWriteChar = await service.getCharacteristic(SERVICE_UUID);
 
-        appendLog("SUCCESS: Linked to Matrix!");
-        setBleStatus(true, device.name || "16×96 Linked");
-        setTimeout(closePairSheet, 900);
+        logBle("SUCCESS: 16x96 Matrix Connected!");
+        document.getElementById('bleBadge').innerText = "LINKED 🟢";
+        document.getElementById('bleBadge').style.color = "var(--emerald-led)";
+        setTimeout(closeBleSheet, 800);
 
       } catch (err) {
-        appendLog(`FAILED: ${err.message || err}`);
-      }
-    }
-
-    function setBleStatus(online, name = "Connect Matrix") {
-      const dot = document.getElementById('statusDot');
-      const label = document.getElementById('islandLabel');
-      const text = document.getElementById('bleStatusText');
-
-      if (online) {
-        dot.classList.add('online');
-        label.innerText = name;
-        text.innerText = "BLE: Online";
-        text.style.color = "var(--accent-emerald)";
-      } else {
-        dot.classList.remove('online');
-        label.innerText = "Connect Matrix";
-        text.innerText = "BLE: Offline";
-        text.style.color = "var(--text-tertiary)";
-        bleWriteChar = null;
+        logBle(`BLE Error: ${err.message || err}`);
       }
     }
 
     /* =========================================================================
-       2. MATRIX RENDER ENGINE (RETRO BLOOM & DIODE GRID)
+       2. 16x96 DIODE CANVAS ENGINE
        ========================================================================= */
     const canvas = document.getElementById('matrixCanvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
     let matrixBuffer = Array.from({ length: 16 }, () => Array(96).fill('#000000'));
     let activeMode = 'text';
-    let currentText = "பேசிட்டே போலாம் வா 😎";
+    let currentText = "வணக்கம் 🤝";
     let textOffset = 0;
-    let currentTextColor = "#FF9F0A";
+    let scrollSpeed = 6;
+    let brightness = 0.85;
+    let autoMirror = true;
 
     function clearBuffer() {
       for (let r = 0; r < 16; r++) {
-        for (let c = 0; c < 96; c++) {
-          matrixBuffer[r][c] = '#000000';
-        }
+        for (let c = 0; c < 96; c++) matrixBuffer[r][c] = '#000000';
       }
     }
 
-    function renderBuffer() {
-      ctx.fillStyle = '#050508';
+    function renderMatrixDiodeView() {
+      ctx.fillStyle = '#020204';
       ctx.fillRect(0, 0, 96, 16);
 
       for (let r = 0; r < 16; r++) {
@@ -863,7 +1030,7 @@
     const offscreenCtx = offscreenCanvas.getContext('2d');
     offscreenCanvas.height = 16;
 
-    function renderDynamicText(text, color = "#FF9F0A") {
+    function renderTextDiode(text, color = "#22d3ee") {
       offscreenCtx.font = "bold 13px 'Noto Sans Tamil', -apple-system, sans-serif";
       const measured = Math.ceil(offscreenCtx.measureText(text).width) + 14;
       offscreenCanvas.width = measured;
@@ -891,14 +1058,13 @@
           }
         }
       }
-      renderBuffer();
+      renderMatrixDiodeView();
     }
 
     let devilTick = 0;
-    function renderOptics() {
+    function renderDevilEyes() {
       clearBuffer();
       devilTick++;
-
       const isWink = (Math.floor(devilTick / 45) % 6 === 0);
       const pupilShift = Math.floor(Math.sin(devilTick * 0.14) * 4);
 
@@ -906,27 +1072,23 @@
         for (let i = 0; i < 24; i++) {
           let topY = Math.floor(3 + (i * 0.25));
           let botY = Math.floor(13 - (i * 0.2));
-          if (topY < 16) matrixBuffer[topY][originX + i] = "#FF453A";
-          if (botY >= 0 && botY < 16) matrixBuffer[botY][originX + i] = "#FF453A";
+          if (topY < 16) matrixBuffer[topY][originX + i] = "#ef4444";
+          if (botY >= 0 && botY < 16) matrixBuffer[botY][originX + i] = "#ef4444";
         }
-
         if (!isWink) {
           const cx = originX + 12 + pupilShift;
           for (let r = 5; r <= 11; r++) {
-            if (cx >= 0 && cx < 96) matrixBuffer[r][cx] = "#FFD60A";
-            if (cx-1 >= 0 && cx-1 < 96) matrixBuffer[r][cx-1] = "#FF453A";
-            if (cx+1 >= 0 && cx+1 < 96) matrixBuffer[r][cx+1] = "#FF453A";
+            if (cx >= 0 && cx < 96) matrixBuffer[r][cx] = "#fbbf24";
+            if (cx-1 >= 0 && cx-1 < 96) matrixBuffer[r][cx-1] = "#ef4444";
+            if (cx+1 >= 0 && cx+1 < 96) matrixBuffer[r][cx+1] = "#ef4444";
           }
         } else {
-          for (let i = 2; i < 22; i++) {
-            matrixBuffer[8][originX + i] = "#FF453A";
-          }
+          for (let i = 2; i < 22; i++) matrixBuffer[8][originX + i] = "#ef4444";
         }
       }
-
       paintEye(14);
       paintEye(58);
-      renderBuffer();
+      renderMatrixDiodeView();
     }
 
     let turnTick = 0;
@@ -941,190 +1103,229 @@
           let delta = 7 - Math.abs(r - 7.5);
           let c = dir === 'LEFT' ? Math.floor(baseCol + delta) : Math.floor(baseCol - delta);
           if (c >= 0 && c < 96) {
-            matrixBuffer[r][c] = "#FF9F0A";
+            matrixBuffer[r][c] = "#10b981";
           }
         }
       }
-      renderBuffer();
+      renderMatrixDiodeView();
     }
 
     let brakeBlink = false;
-    function renderBrakeAlert() {
+    function renderBrakeFlash() {
       clearBuffer();
       brakeBlink = !brakeBlink;
-      renderDynamicText("⛔ நில்! BRAKE ⛔", brakeBlink ? "#FF453A" : "#FFFFFF");
+      renderTextDiode("⛔ BRAKE / நில்! ⛔", brakeBlink ? "#ef4444" : "#ffffff");
     }
 
-    function tick() {
-      if (activeMode === 'text') {
-        textOffset++;
-        renderDynamicText(currentText, currentTextColor);
-      } else if (activeMode === 'devil') {
-        renderOptics();
-      } else if (activeMode === 'turn_left') {
-        renderTurnArrows('LEFT');
-      } else if (activeMode === 'turn_right') {
-        renderTurnArrows('RIGHT');
-      } else if (activeMode === 'brake') {
-        renderBrakeAlert();
-      }
-      requestAnimationFrame(tick);
-    }
-    tick();
+    let frameCount = 0;
+    function matrixLoop() {
+      frameCount++;
+      const speedDivider = Math.max(1, 11 - scrollSpeed);
 
-    /* =========================================================================
-       3. PRESETS DATA & TAB CONTROLLER
-       ========================================================================= */
-    const PRESETS = {
-      tamil_meme: [
-        { title: "பேசிட்டே போலாம் வா 😎", sub: "Iconic driving banter", color: "#FF9F0A" },
-        { title: "ஆஹான்?! 🤨", sub: "Classic vadivelu react", color: "#30D158" },
-        { title: "என்ன கொடுமை சரவணா! 🤦", sub: "Traffic congestion", color: "#FF453A" },
-        { title: "பயபுள்ள பயந்துட்டான்! 😂", sub: "Playful overtake poke", color: "#64D2FF" },
-        { title: "நீ புடுங்குறது பூராம் ஆணிதான் 🔨", sub: "Hilarious classic", color: "#BF5AF2" },
-        { title: "நாங்கெல்லாம் யாருன்னு தெரியுமா?! 🔥", sub: "Mass dialogue", color: "#FF375F" },
-        { title: "வண்டிய மெதுவா ஓட்டு மாப்ள 🐢", sub: "Speed caution", color: "#30D158" },
-        { title: "ஏன்டா என்னைய பாத்துட்டே வர்ற?! 👀", sub: "Tailgater warning", color: "#FF9F0A" }
-      ],
-      tamil_road: [
-        { title: "நன்றி 🙏", sub: "Thank you courtesy", color: "#30D158" },
-        { title: "வணக்கம் 🤝", sub: "Greetings / Respect", color: "#64D2FF" },
-        { title: "முந்திச் செல்க ➡️", sub: "Please pass / Overtake", color: "#FF9F0A" },
-        { title: "மன்னிக்கவும் ✌️", sub: "Sorry / Apologies", color: "#BF5AF2" },
-        { title: "வழி விடுக 🚗", sub: "Give way please", color: "#FF453A" },
-        { title: "பாதுகாப்பான இடைவெளி விடுக ⛔", sub: "Keep distance", color: "#FF9F0A" }
-      ],
-      devil: [
-        { title: "Devil Eyes 😈", sub: "Aggressive optic pulse", mode: "devil" },
-        { title: "Cyber Gaze 🤖", sub: "Autonomous scan", mode: "devil" }
-      ],
-      highway: [
-        { title: "PASS >>>", sub: "Overtake signal", color: "#30D158" },
-        { title: "THANK YOU! 🙏", sub: "Highway salute", color: "#64D2FF" },
-        { title: "KEEP DISTANCE ⚠️", sub: "Anti-tailgating", color: "#FF453A" },
-        { title: "SLOW DOWN 🐢", sub: "Speed alert", color: "#FF9F0A" }
-      ]
-    };
-
-    function activateTab(tabKey) {
-      document.querySelectorAll('.tab-pill').forEach(el => el.classList.remove('active'));
-      event.target.classList.add('active');
-
-      const grid = document.getElementById('presetsGrid');
-      grid.innerHTML = '';
-
-      PRESETS[tabKey].forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'preset-tile';
-        card.innerHTML = `
-          <div class="tile-text">${item.title}</div>
-          <div class="tile-sub">${item.sub}</div>
-        `;
-
-        card.onclick = () => {
-          if (item.mode === 'devil') {
-            activeMode = 'devil';
-            document.getElementById('presetLabel').innerText = "Mode: Devil Eyes";
-          } else {
-            activeMode = 'text';
-            currentText = item.title;
-            currentTextColor = item.color || '#FF9F0A';
-            textOffset = 0;
-            document.getElementById('presetLabel').innerText = `Preset: ${item.title}`;
-          }
-        };
-
-        grid.appendChild(card);
-      });
-    }
-
-    activateTab('tamil_meme');
-
-    function pushText() {
-      const input = document.getElementById('customInput');
-      if (!input.value.trim()) return;
-      activeMode = 'text';
-      currentText = input.value.trim();
-      currentTextColor = "#64D2FF";
-      textOffset = 0;
-      document.getElementById('presetLabel').innerText = `Text: ${currentText}`;
-      input.value = '';
-    }
-
-    function dictateVoice() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert("Speech dictation not supported in this browser.");
-        return;
-      }
-
-      const rec = new SpeechRecognition();
-      rec.lang = 'ta-IN';
-      rec.onstart = () => { document.getElementById('presetLabel').innerText = "Listening..."; };
-      rec.onresult = (e) => {
-        const spoken = e.results[0][0].transcript;
-        activeMode = 'text';
-        currentText = spoken;
-        currentTextColor = "#30D158";
-        textOffset = 0;
-        document.getElementById('presetLabel').innerText = `Voice: ${spoken}`;
-      };
-      rec.start();
-    }
-
-    /* =========================================================================
-       4. TELEMETRY, SPEED & GYRO
-       ========================================================================= */
-    if ('geolocation' in navigator) {
-      navigator.geolocation.watchPosition(
-        pos => {
-          document.getElementById('gpsDot').style.background = 'var(--accent-emerald)';
-          const kmh = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
-          document.getElementById('speedNum').innerText = kmh;
-        },
-        () => {},
-        { enableHighAccuracy: true }
-      );
-    }
-
-    if (window.DeviceMotionEvent) {
-      window.addEventListener('devicemotion', e => {
-        const acc = e.accelerationIncludingGravity;
-        if (acc && acc.z < -8.5 && activeMode !== 'brake') {
-          handleBrake();
+      if (frameCount % speedDivider === 0) {
+        if (activeMode === 'text') {
+          textOffset++;
+          renderTextDiode(currentText, "#22d3ee");
+        } else if (activeMode === 'devil') {
+          renderDevilEyes();
+        } else if (activeMode === 'turn_left') {
+          renderTurnArrows('LEFT');
+        } else if (activeMode === 'turn_right') {
+          renderTurnArrows('RIGHT');
+        } else if (activeMode === 'brake') {
+          renderBrakeFlash();
         }
-      });
+      }
+      requestAnimationFrame(matrixLoop);
+    }
+    matrixLoop();
+
+    /* =========================================================================
+       3. CONTROLS, SENSORS & SIMULATOR
+       ========================================================================= */
+    function updateBrightness(val) {
+      document.getElementById('brightnessVal').innerText = val + "%";
+      brightness = val / 100;
+      canvas.style.opacity = brightness;
     }
 
-    function handleTurn(dir) {
-      const btnL = document.getElementById('btnTurnL');
-      const btnR = document.getElementById('btnTurnR');
-      const tag = document.getElementById('motionTag');
+    function updateSpeed(val) {
+      document.getElementById('speedVal').innerText = val + "x";
+      scrollSpeed = parseInt(val, 10);
+    }
+
+    function toggleAutoMirror(checked) {
+      autoMirror = checked;
+      canvas.style.transform = autoMirror ? 'scaleX(-1)' : 'scaleX(1)';
+    }
+
+    function toggleTurnSignal(dir) {
+      const podL = document.getElementById('turnPodLeft');
+      const podR = document.getElementById('turnPodRight');
 
       if (dir === 'LEFT') {
         activeMode = activeMode === 'turn_left' ? 'text' : 'turn_left';
-        btnL.classList.toggle('active-turn', activeMode === 'turn_left');
-        btnR.classList.remove('active-turn');
-        tag.innerText = activeMode === 'turn_left' ? "Turn ◀◀" : "Center";
+        podL.classList.toggle('active-pod', activeMode === 'turn_left');
+        podR.classList.remove('active-pod');
       } else {
         activeMode = activeMode === 'turn_right' ? 'text' : 'turn_right';
-        btnR.classList.toggle('active-turn', activeMode === 'turn_right');
-        btnL.classList.remove('active-turn');
-        tag.innerText = activeMode === 'turn_right' ? "Turn ▶▶" : "Center";
+        podR.classList.toggle('active-pod', activeMode === 'turn_right');
+        podL.classList.remove('active-pod');
       }
     }
 
-    function handleBrake() {
+    function triggerBrakeAlert() {
       const btn = document.getElementById('btnBrake');
       btn.classList.add('active-brake');
       activeMode = 'brake';
-      document.getElementById('motionTag').innerText = "BRAKE ACTIVE";
+      document.getElementById('motionStatusText').innerText = "BRAKE ACTIVE";
 
       setTimeout(() => {
         btn.classList.remove('active-brake');
         activeMode = 'text';
-        document.getElementById('motionTag').innerText = "Center";
+        document.getElementById('motionStatusText').innerText = "CRUISING";
       }, 3500);
+    }
+
+    function updateSimSpeed(val) {
+      document.getElementById('simSpeedLabel').innerText = val + " km/h";
+      document.getElementById('speedDisplay').innerText = val;
+      const motionText = document.getElementById('motionStatusText');
+      if (parseInt(val, 10) === 0) {
+        motionText.innerText = "STOPPED";
+      } else {
+        motionText.innerText = "CRUISING";
+      }
+    }
+
+    function simulateTurn(type) {
+      document.querySelectorAll('.btn-sim').forEach(b => b.classList.remove('sim-active'));
+      const podL = document.getElementById('turnPodLeft');
+      const podR = document.getElementById('turnPodRight');
+
+      if (type === 'LEFT') {
+        document.getElementById('btnSimLeft').classList.add('sim-active');
+        document.getElementById('steerAngleVal').innerText = "-28° (LEFT)";
+        activeMode = 'turn_left';
+        podL.classList.add('active-pod');
+        podR.classList.remove('active-pod');
+      } else if (type === 'RIGHT') {
+        document.getElementById('btnSimRight').classList.add('sim-active');
+        document.getElementById('steerAngleVal').innerText = "+31° (RIGHT)";
+        activeMode = 'turn_right';
+        podR.classList.add('active-pod');
+        podL.classList.remove('active-pod');
+      } else {
+        document.getElementById('btnSimStraight').classList.add('sim-active');
+        document.getElementById('steerAngleVal').innerText = "0° (CENTER)";
+        activeMode = 'text';
+        podL.classList.remove('active-pod');
+        podR.classList.remove('active-pod');
+      }
+    }
+
+    function requestDeviceSensors() {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(resp => {
+            if (resp === 'granted') {
+              window.addEventListener('devicemotion', handleMotion);
+              alert("iPhone Motion Sensors Active!");
+            }
+          })
+          .catch(console.error);
+      } else {
+        window.addEventListener('devicemotion', handleMotion);
+        alert("Sensors Active!");
+      }
+
+      if ('geolocation' in navigator) {
+        navigator.geolocation.watchPosition(pos => {
+          const kmh = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
+          document.getElementById('speedDisplay').innerText = kmh;
+          document.getElementById('gpsAccVal').innerText = `±${Math.round(pos.coords.accuracy || 10)}M`;
+        }, () => {}, { enableHighAccuracy: true });
+      }
+    }
+
+    function handleMotion(e) {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc) return;
+      const g = (acc.z / 9.8).toFixed(2);
+      document.getElementById('gDecelVal').innerText = `${Math.abs(g)} G`;
+      if (acc.z < -8.5 && activeMode !== 'brake') {
+        triggerBrakeAlert();
+      }
+    }
+
+    /* =========================================================================
+       4. PRESETS DATA & TAB NAVIGATION
+       ========================================================================= */
+    const PRESETS = {
+      meme: [
+        { title: "பேசிட்டே போலாம் வா 😎", sub: "Iconic driving dialogue" },
+        { title: "ஆஹான்?! 🤨", sub: "Vadivelu classic reaction" },
+        { title: "என்ன கொடுமை சரவணா! 🤦", sub: "Traffic bumper-to-bumper" },
+        { title: "பயபுள்ள பயந்துட்டான்! 😂", sub: "Playful overtake poke" },
+        { title: "நீ புடுங்குறது பூராம் ஆணிதான் 🔨", sub: "Classic Vadivelu punch" },
+        { title: "நாங்கெல்லாம் யாருன்னு தெரியுமா?! 🔥", sub: "Mass punch dialogue" }
+      ],
+      tamil: [
+        { title: "வணக்கம் 🤝", sub: "Traditional greetings" },
+        { title: "நன்றி 🙏", sub: "Highway courtesy thank you" },
+        { title: "முந்திச் செல்க ➡️", sub: "Overtake clearance / Pass" },
+        { title: "மன்னிக்கவும் ✌️", sub: "Apology / Pardon" },
+        { title: "வழி விடுக 🚗", sub: "Please give way" },
+        { title: "பாதுகாப்பான இடைவெளி விடுக ⛔", sub: "Keep distance reminder" }
+      ]
+    };
+
+    function populateGrids() {
+      const memeGrid = document.getElementById('memeGrid');
+      PRESETS.meme.forEach(item => {
+        const d = document.createElement('div');
+        d.className = 'deck-item';
+        d.innerHTML = `<div class="deck-item-title">${item.title}</div><div class="deck-item-sub">${item.sub}</div>`;
+        d.onclick = () => { setTextPreset(item.title); };
+        memeGrid.appendChild(d);
+      });
+
+      const tamilGrid = document.getElementById('tamilGrid');
+      PRESETS.tamil.forEach(item => {
+        const d = document.createElement('div');
+        d.className = 'deck-item';
+        d.innerHTML = `<div class="deck-item-title">${item.title}</div><div class="deck-item-sub">${item.sub}</div>`;
+        d.onclick = () => { setTextPreset(item.title); };
+        tamilGrid.appendChild(d);
+      });
+    }
+    populateGrids();
+
+    function setTextPreset(text) {
+      activeMode = 'text';
+      currentText = text;
+      textOffset = 0;
+      document.getElementById('screenStatusHeader').innerText = text;
+      switchNavTab('hud');
+    }
+
+    function setMode(mode) {
+      activeMode = mode;
+      document.getElementById('screenStatusHeader').innerText = "Devil Eyes 😈";
+      switchNavTab('hud');
+    }
+
+    function sendStudioText() {
+      const val = document.getElementById('studioInput').value.trim();
+      if (val) setTextPreset(val);
+    }
+
+    function switchNavTab(tabName) {
+      document.querySelectorAll('.tab-content-zone').forEach(z => z.classList.remove('show'));
+      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active-tab'));
+
+      document.getElementById(`view-${tabName}`).classList.add('show');
+      event.currentTarget.classList.add('active-tab');
     }
   </script>
 </body>
