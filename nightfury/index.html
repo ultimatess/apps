@@ -195,7 +195,7 @@
     <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
       <div class="flex items-center gap-2">
         <span class="text-[13px] font-bold tracking-tight text-white">iPixel Matrix</span>
-        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v1.6.0-SINOWEALTH-AE01</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v1.7.0-HEX-LAB</span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -282,6 +282,22 @@
           <button onclick="testPowerOn()" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40">⚡ Power ON</button>
           <button onclick="testSendText('HELLO')" class="px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold border border-cyan-500/40">🔤 Test "HELLO"</button>
           <button onclick="testSendText('வணக்கம்')" class="px-2 py-1 rounded bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 font-bold border border-pink-500/40">🇮🇳 Test Tamil</button>
+        </div>
+
+        <!-- Interactive Custom HEX Packet Sender -->
+        <div class="flex flex-col gap-1 pt-1.5 border-t border-white/10">
+          <span class="text-[9px] text-amber-400 font-bold">CUSTOM HEX PACKET LAB:</span>
+          <div class="flex items-center gap-1.5">
+            <input type="text" id="customHexInput" placeholder="e.g. 01 01 06 FF 00 00 05 48 45 4C 4C 4F" value="01 01 06 FF 00 00 05 48 45 4C 4C 4F" class="flex-1 bg-black/60 border border-white/20 rounded px-2 py-1 text-[10px] text-amber-300 font-mono outline-none">
+            <button onclick="sendCustomHexInput()" class="px-2.5 py-1 rounded bg-amber-500/30 hover:bg-amber-500/50 text-amber-200 font-bold border border-amber-500/40">Send HEX</button>
+          </div>
+          <div class="flex items-center gap-1 pt-0.5 flex-wrap">
+            <button onclick="sendHexPreset('01 01 06 FF 00 00 05 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">01 Text</button>
+            <button onclick="sendHexPreset('55 AA 01 01 05 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">55AA Tuya</button>
+            <button onclick="sendHexPreset('FA 02 01 06 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">FA02 Format</button>
+            <button onclick="sendHexPreset('0A 01 06 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">0A Format</button>
+            <button onclick="sendHexPreset('02 01 01')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">02 Mode</button>
+          </div>
         </div>
 
         <div id="debugConsoleLog" class="h-32 overflow-y-auto font-mono text-[10px] space-y-1 text-slate-300 pr-1 select-text">
@@ -593,7 +609,7 @@
 
     <!-- Explicit Build Identification Footer -->
     <div class="text-[10px] font-mono text-center text-slate-500 pt-1 pb-3">
-      Build: <span class="text-emerald-400 font-bold">v1.6.0-SINOWEALTH-AE01</span> · GATT: 0000ae01-0000-1000-8000-00805f9b34fb
+      Build: <span class="text-emerald-400 font-bold">v1.7.0-HEX-LAB</span> · GATT: 0000ae01-0000-1000-8000-00805f9b34fb
     </div>
   </main>
 
@@ -1528,18 +1544,56 @@
         enableBackgroundKeepAliveAudio();
         startBleHeartbeat();
 
-        // Send initialization & Mode Switch sequence (Exit Demo Mode into Custom User Mode)
+        // Step 4: Subscribe to GATT Notifications / Read responses
+        for (const service of discoveredServices) {
+          try {
+            const characteristics = await service.getCharacteristics();
+            for (const char of characteristics) {
+              if (char.properties.notify || char.properties.indicate) {
+                try {
+                  await char.startNotifications();
+                  char.addEventListener('characteristicvaluechanged', (e) => {
+                    const val = new Uint8Array(e.target.value.buffer);
+                    const hex = Array.from(val).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+                    logDebug(`RX Notify [${char.uuid.slice(0, 8)}] <- ${hex}`, "success");
+                  });
+                  logDebug(`Listening to Notifications on char: ${char.uuid.slice(0, 8)}`, "success");
+                } catch (err) {}
+              }
+            }
+          } catch (e) {}
+        }
+
+        // Send initialization & Mode Switch sequence
         logDebug("Sending Power ON & Custom Mode switch sequence...", "ble");
-        await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x02, 0x01, 0x01, 0x0A]); // Power ON
-        await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x01, 0x01, 0x00, 0x08]); // Switch to User Memory
-        await sendBleCommand([0x77, 0x28, 0x01, 0x00, 0x00, 0x00]);             // Select Program 1
-        await sendBleCommand([0x05, 0x00, 0x07, 0x01, 0x01]);
+        await sendBleCommand([0x02, 0x01, 0x01]);
+        await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x02, 0x01, 0x01, 0x0A]);
 
       } catch (err) {
         logDebug(`BLE Error: ${err.message || err}`, "error");
         document.getElementById("bleBtnText").textContent = "Pair Matrix";
         showIosToast(`BLE Error: ${err.message || 'Virtual Mode active'}`, "⚠️");
       }
+    }
+
+    function sendHexPreset(hexStr) {
+      document.getElementById("customHexInput").value = hexStr;
+      sendCustomHexInput();
+    }
+
+    async function sendCustomHexInput() {
+      const input = document.getElementById("customHexInput");
+      const hexStr = input.value.trim();
+      if (!hexStr) return;
+
+      const hexBytes = hexStr.split(/\s+/).map(h => parseInt(h, 16)).filter(n => !isNaN(n));
+      if (hexBytes.length === 0) {
+        logDebug("Invalid HEX string input", "error");
+        return;
+      }
+
+      logDebug(`Manual HEX Send (${hexBytes.length}B) -> ${hexStr.toUpperCase()}`, "ble");
+      await sendBleCommand(hexBytes);
     }
 
     async function testPowerOn() {
