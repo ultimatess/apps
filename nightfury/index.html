@@ -270,6 +270,14 @@
           </span>
           <button onclick="clearDebugConsole()" class="text-[9px] text-slate-400 hover:text-white px-2 py-0.5 rounded bg-white/10">Clear Log</button>
         </div>
+
+        <!-- Protocol Test Buttons -->
+        <div class="flex items-center gap-1.5 py-1 flex-wrap">
+          <button onclick="testPowerOn()" class="px-2 py-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/30">⚡ Power ON</button>
+          <button onclick="testSendText('HELLO')" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/30">🔤 Test "HELLO"</button>
+          <button onclick="testSendText('வணக்கம்')" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/30">🇮🇳 Test Tamil</button>
+        </div>
+
         <div id="debugConsoleLog" class="h-32 overflow-y-auto font-mono text-[10px] space-y-1 text-slate-300 pr-1 select-text">
           <div class="text-slate-500">[SYSTEM READY] Tap 'Pair Matrix' to begin BLE tracing...</div>
         </div>
@@ -1487,7 +1495,9 @@
         enableBackgroundKeepAliveAudio();
         startBleHeartbeat();
 
-        // Send initial handshake packet
+        // Send initial Power ON and Handshake packets
+        logDebug("Sending Power ON & Handshake sequence...", "ble");
+        await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x02, 0x01, 0x01, 0x0A]);
         await sendBleCommand([0x05, 0x00, 0x07, 0x01, 0x01]);
 
       } catch (err) {
@@ -1495,6 +1505,25 @@
         document.getElementById("bleBtnText").textContent = "Pair Matrix";
         showIosToast(`BLE Error: ${err.message || 'Virtual Mode active'}`, "⚠️");
       }
+    }
+
+    async function testPowerOn() {
+      if (!isBleConnected) {
+        logDebug("Cannot test Power ON: BLE not connected", "error");
+        return;
+      }
+      logDebug("Executing Manual Power ON sequence...", "ble");
+      await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x02, 0x01, 0x01, 0x0A]);
+      await sendBleCommand([0x05, 0x00, 0x07, 0x01, 0x01]);
+    }
+
+    async function testSendText(str) {
+      if (!isBleConnected) {
+        logDebug("Cannot test Text: BLE not connected", "error");
+        return;
+      }
+      logDebug(`Executing Manual Text Test for "${str}"...`, "ble");
+      sendPresetMessage(str, "#06b6d4", "scroll", 6);
     }
 
     // Alias for Bluefy iOS Browser scan trigger
@@ -1619,8 +1648,8 @@
       blePingInterval = setInterval(async () => {
         if (isBleConnected && bleCharacteristic) {
           try {
-            // Low-frequency 15s keep-alive packet to prevent GATT timeout
-            await sendBleCommand([0x00]);
+            // CoolLED framed keep-alive packet (prevents controller reset)
+            await sendBleCommand([0x77, 0x28, 0x00, 0x00, 0x00]);
           } catch (e) {
             console.warn("Heartbeat ping error:", e);
           }
