@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="ta" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iPixel Pilot">
+  <meta name="theme-color" content="#030712">
+  <title>iPixel Pilot Pro • iOS Driving HUD & Matrix Studio</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;0,800;1,700&family=Noto+Sans+Tamil:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            ios: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+            tamil: ['"Noto Sans Tamil"', '-apple-system', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            iosGlass: 'rgba(255, 255, 255, 0.08)',
+            iosGlassBorder: 'rgba(255, 255, 255, 0.14)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top, 24px);
+      --sab: env(safe-area-inset-bottom, 20px);
+      --sal: env(safe-area-inset-left, 0px);
+      --sar: env(safe-area-inset-right, 0px);
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Noto Sans Tamil", sans-serif;
+      background-color: #030712;
+      background-image: 
+        radial-gradient(at 15% 15%, rgba(59, 130, 246, 0.22) 0px, transparent 48%),
+        radial-gradient(at 85% 20%, rgba(239, 68, 68, 0.18) 0px, transparent 42%),
+        radial-gradient(at 50% 85%, rgba(168, 85, 247, 0.16) 0px, transparent 52%);
+      background-attachment: fixed;
+      color: #f3f4f6;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      padding-top: calc(var(--sat) + 8px);
+      padding-bottom: calc(var(--sab) + 84px);
+      padding-left: var(--sal);
+      padding-right: var(--sar);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* iOS 18 Liquid Glass System */
+    .ios-glass {
+      background: rgba(18, 24, 38, 0.68);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 14px 40px 0 rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+    }
+
+    .ios-glass-card {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(34px) saturate(200%);
+      -webkit-backdrop-filter: blur(34px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      box-shadow: 
+        0 10px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.22);
+    }
+
+    .ios-glass-pill {
+      background: rgba(255, 255, 255, 0.09);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.28);
+    }
+
+    .ios-island {
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0, 0, 0, 0.95);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ios-spring-btn {
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s, box-shadow 0.2s;
+    }
+    .ios-spring-btn:active {
+      transform: scale(0.94);
+    }
+
+    .glass-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 28px;
+    }
+    .glass-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .glass-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(120, 120, 128, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 34px;
+    }
+    .glass-slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #ffffff;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+      transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 50%;
+    }
+    input:checked + .glass-slider {
+      background-color: #34c759;
+    }
+    input:checked + .glass-slider:before {
+      transform: translateX(20px);
+    }
+
+    .matrix-bezel {
+      background: radial-gradient(circle at 50% 30%, #151d30 0%, #030712 100%);
+      border: 2px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 
+        0 18px 40px -5px rgba(0, 0, 0, 0.85),
+        inset 0 2px 5px rgba(255, 255, 255, 0.18),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.75);
+    }
+
+    @keyframes turnPulseLeft {
+      0%, 100% { opacity: 0.25; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(-5px); }
+    }
+    @keyframes turnPulseRight {
+      0%, 100% { opacity: 0.25; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(5px); }
+    }
+    .anim-turn-left { animation: turnPulseLeft 0.75s infinite ease-in-out; }
+    .anim-turn-right { animation: turnPulseRight 0.75s infinite ease-in-out; }
+
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+
+<body class="flex flex-col items-center">
+
+  <header class="w-full max-w-lg px-4 flex flex-col items-center z-50 mb-2">
+    <!-- Dynamic Island Container -->
+    <div id="dynamicIsland" onclick="openBleModal()" class="ios-island w-[220px] h-[36px] rounded-full px-3 py-1 flex items-center justify-between cursor-pointer hover:w-[248px]">
+      <div class="flex items-center gap-2">
+        <span id="islandDot" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+        <span id="islandPrimary" class="text-[11px] font-mono font-bold tracking-tight text-white">0 KM/H</span>
+      </div>
+      
+      <div id="islandStatus" class="flex items-center gap-1.5 text-[10px] font-mono text-amber-400">
+        <span id="islandModeLabel">PAIR MATRIX</span>
+        <svg id="islandBleIcon" class="w-3.5 h-3.5 opacity-70" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14.88 16.29L13 18.17V14.41M13 5.83l1.88 1.88-1.88 1.88M7 14.83l10-10L12 0v8.17L7.83 4 6.41 5.41 11.59 10.59 6.41 15.77 7.83 17.18 12 13v9.82l5-4.99-4.12-4.13-1-1.01z"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Quick Connectivity & Telemetry Header Bar -->
+    <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="text-[13px] font-bold tracking-tight text-white">iPixel Pilot Pro</span>
+        <span class="text-[9px] font-mono px-2 py-0.5 rounded-md bg-white/10 text-cyan-300 border border-white/10">16×96 Pro</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="openBleModal()" id="bleTopBtn" class="ios-glass-pill ios-spring-btn px-3 py-1 rounded-full flex items-center gap-1.5 text-[11px] font-medium text-slate-200">
+          <span id="bleStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span id="bleBtnText">Bluetooth Setup</span>
+        </button>
+
+        <button onclick="toggleAudio()" id="soundBtn" class="ios-glass-pill ios-spring-btn p-1.5 rounded-full text-slate-300" title="Audio Haptics">
+          <svg id="soundIcon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="w-full max-w-lg px-4 flex flex-col gap-3.5">
+    <section class="w-full ios-glass-card rounded-[28px] p-3.5 flex flex-col gap-2.5 relative overflow-hidden">
+      <!-- Screen Header with Live Status -->
+      <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
+        <div class="flex items-center gap-1.5">
+          <span id="matrixOnlineDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+          <span class="uppercase tracking-wide font-semibold text-[10px]">WINDSHIELD 16×96 MATRIX</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="liveFrameLabel" class="text-white font-tamil font-bold truncate max-w-[155px]">வணக்கம் 🤝</span>
+          <span id="bleSyncTick" class="text-[9px] text-amber-300 font-mono px-1.5 py-0.5 rounded bg-amber-400/10 border border-amber-400/20">UNPAIRED</span>
+        </div>
+      </div>
+
+      <!-- Diode Canvas Holder with Curvature and Acrylic Glow -->
+      <div class="matrix-bezel relative w-full rounded-2xl p-2.5 flex items-center justify-center overflow-hidden">
+        <canvas id="matrixCanvas" width="960" height="160" class="w-full h-auto max-h-[135px] rounded-lg object-contain"></canvas>
+        <div class="absolute inset-0 pointer-events-none rounded-2xl bg-gradient-to-b from-white/5 via-transparent to-black/35"></div>
+      </div>
+
+      <!-- Quick Sliders (Brightness & Speed) -->
+      <div class="grid grid-cols-2 gap-2 pt-0.5">
+        <div class="ios-glass-pill rounded-2xl p-2 flex flex-col justify-between">
+          <div class="flex justify-between items-center text-[11px] text-slate-400">
+            <span class="flex items-center gap-1">
+              <svg class="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>
+              Matrix Brightness
+            </span>
+            <span id="brightValLabel" class="font-mono text-white text-[10px] font-bold">85%</span>
+          </div>
+          <input type="range" min="5" max="100" value="85" oninput="setBrightness(this.value)" class="w-full accent-amber-400 mt-1 cursor-pointer">
+        </div>
+
+        <div class="ios-glass-pill rounded-2xl p-2 flex flex-col justify-between">
+          <div class="flex justify-between items-center text-[11px] text-slate-400">
+            <span class="flex items-center gap-1">
+              <svg class="w-3 h-3 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Scroll Speed
+            </span>
+            <span id="speedValLabel" class="font-mono text-white text-[10px] font-bold">6x</span>
+          </div>
+          <input type="range" min="1" max="10" value="6" oninput="setScrollSpeed(this.value)" class="w-full accent-cyan-400 mt-1 cursor-pointer">
+        </div>
+      </div>
+    </section>
+
+    <section id="viewDriving" class="flex flex-col gap-3">
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-3 relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div>
+              <h2 class="text-xs font-bold text-white uppercase tracking-wider">Automotive Telemetry</h2>
+              <p class="text-[10px] text-slate-400 font-mono">GPS + GYRO TURN SENSORS</p>
+            </div>
+          </div>
+
+          <!-- Auto HUD Mirror Switch -->
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-medium text-slate-300">Auto Mirror</span>
+            <label class="glass-switch">
+              <input type="checkbox" id="autoSyncMatrixToggle" checked onchange="toggleAutoSync(this.checked)">
+              <span class="glass-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Center Gauges: Speedometer + Steering Direction Indicator -->
+        <div class="grid grid-cols-3 items-center justify-items-center py-1">
+          <!-- Left Turn Indicator -->
+          <div id="leftTurnBox" class="flex flex-col items-center gap-1.5 transition-all duration-300 opacity-30">
+            <div class="w-12 h-12 rounded-2xl ios-glass flex items-center justify-center border border-white/10 text-emerald-400 shadow-lg shadow-emerald-500/10">
+              <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </div>
+            <span class="text-[10px] font-mono font-bold tracking-tight text-emerald-400">LEFT TURN</span>
+          </div>
+
+          <!-- Central Speedometer -->
+          <div class="flex flex-col items-center">
+            <div class="flex items-baseline">
+              <span id="speedValue" class="text-6xl font-black font-mono tracking-tighter text-white">0</span>
+              <span class="text-xs font-bold text-slate-400 ml-1 font-mono">KM/H</span>
+            </div>
+            <div id="driveStatePill" class="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-white/10 text-slate-300 border border-white/10">
+              STOPPED 🛑
+            </div>
+          </div>
+
+          <!-- Right Turn Indicator -->
+          <div id="rightTurnBox" class="flex flex-col items-center gap-1.5 transition-all duration-300 opacity-30">
+            <div class="w-12 h-12 rounded-2xl ios-glass flex items-center justify-center border border-white/10 text-emerald-400 shadow-lg shadow-emerald-500/10">
+              <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </div>
+            <span class="text-[10px] font-mono font-bold tracking-tight text-emerald-400">RIGHT TURN</span>
+          </div>
+        </div>
+
+        <!-- Telemetry Stats Strip -->
+        <div class="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+          <div class="ios-glass-pill p-2 rounded-xl">
+            <span class="text-[9px] text-slate-400 block">GPS ACCURACY</span>
+            <span id="gpsAccuracy" class="font-bold text-cyan-400 text-[11px]">ACTIVE</span>
+          </div>
+          <div class="ios-glass-pill p-2 rounded-xl">
+            <span class="text-[9px] text-slate-400 block">STEER ANGLE</span>
+            <span id="steerAngleText" class="font-bold text-white text-[11px]">0° (CENTER)</span>
+          </div>
+          <div class="ios-glass-pill p-2 rounded-xl">
+            <span class="text-[9px] text-slate-400 block">G-FORCE / BRAKE</span>
+            <span id="gMeterText" class="font-bold text-emerald-400 text-[11px]">0.00 G</span>
+          </div>
+        </div>
+
+        <!-- Sensor Activation & Permissions Bar -->
+        <div class="flex items-center justify-between pt-1 gap-2">
+          <button id="sensorPermBtn" onclick="requestDeviceSensors()" class="ios-glass-pill ios-spring-btn flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-[11px] font-semibold text-slate-200">
+            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+            <span id="sensorBtnLabel">Calibrate iPhone Sensors</span>
+          </button>
+
+          <!-- Sudden Brake Macro Trigger -->
+          <button onclick="triggerEmergencyBrakeEvent()" class="ios-spring-btn py-2 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-lg shadow-red-600/30">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <span>HARD BRAKE ⛔</span>
+          </button>
+        </div>
+
+        <!-- In-App Interactive Test Drive Simulator Control -->
+        <div class="mt-1 pt-2.5 border-t border-white/10 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <span>IN-APP TEST SIMULATOR</span>
+            <span id="simSpeedLabel">Speed: 0 km/h</span>
+          </div>
+          <input type="range" min="0" max="140" value="0" id="simSpeedSlider" oninput="updateSimSpeed(this.value)" class="w-full accent-blue-500 cursor-pointer">
+          <div class="flex gap-2 mt-1">
+            <button onclick="simulateTurn('left')" class="ios-glass-pill ios-spring-btn flex-1 py-1.5 rounded-lg text-[10px] font-mono font-semibold text-slate-300">Simulate Left</button>
+            <button onclick="simulateTurn('straight')" class="ios-glass-pill ios-spring-btn flex-1 py-1.5 rounded-lg text-[10px] font-mono font-semibold text-slate-300">Center</button>
+            <button onclick="simulateTurn('right')" class="ios-glass-pill ios-spring-btn flex-1 py-1.5 rounded-lg text-[10px] font-mono font-semibold text-slate-300">Simulate Right</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewTamilMeme" class="hidden flex-col gap-3">
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-black font-tamil text-white tracking-wide">தமிழ் சினிமா மீம் டயலாக்</h2>
+            <p class="text-[10px] text-slate-400 font-mono">TAMIL MEMES & OVERTAKING BANTER</p>
+          </div>
+          <span class="text-xl">🤣</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <button onclick="sendPresetMessage('பேசிட்டே போலாம் வா 😎', '#f59e0b', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[72px] border border-amber-500/20">
+            <span class="font-tamil font-bold text-xs text-white">பேசிட்டே போலாம் வா 😎</span>
+            <span class="text-[10px] font-mono text-amber-400">Vadivelu Classic</span>
+          </button>
+
+          <button onclick="sendPresetMessage('ஆஹான்?! 🤨', '#06b6d4', 'pulse', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[72px] border border-cyan-500/20">
+            <span class="font-tamil font-bold text-xs text-white">ஆஹான்?! 🤨</span>
+            <span class="text-[10px] font-mono text-cyan-400">Reaction Meme</span>
+          </button>
+
+          <button onclick="sendPresetMessage('என்ன கொடுமை சரவணா இது! 🤦', '#ef4444', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[72px] border border-red-500/20">
+            <span class="font-tamil font-bold text-xs text-white">என்ன கொடுமை சரவணா! 🤦</span>
+            <span class="text-[10px] font-mono text-red-400">Traffic Jam Punch</span>
+          </button>
+
+          <button onclick="sendPresetMessage('பயபுள்ள பயந்துட்டான் போல! 😂', '#10b981', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[72px] border border-emerald-500/20">
+            <span class="font-tamil font-bold text-xs text-white">பயபுள்ள பயந்துட்டான்! 😂</span>
+            <span class="text-[10px] font-mono text-emerald-400">Overtake Fun</span>
+          </button>
+
+          <button onclick="sendPresetMessage('இவனுக வேற பின்னாடியே வருவானுங்க! 🚗', '#f59e0b', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[72px] border border-white/10">
+            <span class="font-tamil font-bold text-xs text-white">இவனுக வேற பின்னாடியே!</span>
+            <span class="text-[10px] font-mono text-amber-300">Tailgating Alert</span>
+          </button>
+
+          <button onclick="sendPresetMessage('சார், நீங்க எங்கே போறீங்கனு தெரியாது...', '#06b6d4', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[72px] border border-white/10">
+            <span class="font-tamil font-bold text-xs text-white">எங்கே போறீங்க? 🤔</span>
+            <span class="text-[10px] font-mono text-cyan-300">Vadivelu Driving</span>
+          </button>
+
+          <button onclick="sendPresetMessage('யார்ரா இந்த பையன், புல்லட் மாதிரி போறான்?! 🚀', '#a855f7', 'scroll', 7)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[72px] border border-purple-500/20">
+            <span class="font-tamil font-bold text-xs text-white">புல்லட் மாதிரி போறான்?! 🚀</span>
+            <span class="text-[10px] font-mono text-purple-400">Super Fast Pass</span>
+          </button>
+
+          <button onclick="sendPresetMessage('அப்படியே ஓரமா போயிருங்க! ➡️', '#f59e0b', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[72px] border border-white/10">
+            <span class="font-tamil font-bold text-xs text-white">அப்படியே ஓரமா போங்க ➡️</span>
+            <span class="text-[10px] font-mono text-amber-300">Lane Courtesy</span>
+          </button>
+
+          <button onclick="sendPresetMessage('நீ புடுங்குறது பூராவுமே தேவையில்லாத ஆணிதான்! 🔨', '#ec4899', 'scroll', 6)" class="col-span-2 ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between border border-pink-500/20">
+            <span class="font-tamil font-bold text-xs text-white">தேவையில்லாத ஆணிதான் புடுங்குறது! 🔨</span>
+            <span class="text-[10px] font-mono text-pink-400">Ultimate Goundamani Punch</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewTamilDrive" class="hidden flex-col gap-3">
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-black font-tamil text-white tracking-wide">தமிழ் சாலைப் பயன்முறை</h2>
+            <p class="text-[10px] text-slate-400 font-mono">HIGHWAY & COURTESY MESSAGES</p>
+          </div>
+          <span class="text-xl">🇮🇳</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <button onclick="sendPresetMessage('நன்றி 🙏', '#10b981', 'scroll', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">நன்றி 🙏</span>
+            <span class="text-[10px] font-mono text-emerald-400">Courteous Thanks</span>
+          </button>
+
+          <button onclick="sendPresetMessage('வணக்கம் 🤝', '#06b6d4', 'scroll', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">வணக்கம் 🤝</span>
+            <span class="text-[10px] font-mono text-cyan-400">Vanakkam Greeting</span>
+          </button>
+
+          <button onclick="sendPresetMessage('மன்னிக்கவும் ✌️', '#f59e0b', 'static', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">மன்னிக்கவும் ✌️</span>
+            <span class="text-[10px] font-mono text-amber-400">Pardon / Apology</span>
+          </button>
+
+          <button onclick="sendPresetMessage('முந்திச் செல்லுங்கள் ➡️', '#06b6d4', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">முந்திச் செல்க ➡️</span>
+            <span class="text-[10px] font-mono text-cyan-400">Please Pass</span>
+          </button>
+
+          <button onclick="sendPresetMessage('வழி விடுக 🚗', '#38bdf8', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">வழி விடுக 🚗</span>
+            <span class="text-[10px] font-mono text-sky-400">Give Way Please</span>
+          </button>
+
+          <button onclick="sendPresetMessage('மெதுவாகச் செல்லவும் 🐢', '#f59e0b', 'scroll', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">மெதுவாகச் செல்லவும் 🐢</span>
+            <span class="text-[10px] font-mono text-amber-400">Drive Slow</span>
+          </button>
+
+          <button onclick="sendPresetMessage('பாதுகாப்பான இடைவெளி விடுக ⛔', '#ef4444', 'blink', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">இடைவெளி விடுக ⛔</span>
+            <span class="text-[10px] font-mono text-red-400">Keep Distance</span>
+          </button>
+
+          <button onclick="sendPresetMessage('எச்சரிக்கை! ⚠️', '#ef4444', 'blink', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">எச்சரிக்கை! ⚠️</span>
+            <span class="text-[10px] font-mono text-rose-400">Caution Hazard</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewDevilEyes" class="hidden flex-col gap-3">
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-black uppercase text-white tracking-wide">Windshield Devil Optics</h2>
+            <p class="text-[10px] text-slate-400 font-mono">ANIMATED EYE APERTURES</p>
+          </div>
+          <span class="text-xl">😈</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="triggerDevilOptic('angry', '#ef4444')" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-red-500/30">
+            <span class="font-bold text-xs text-white">Angry Red Eyes 😈</span>
+            <span class="text-[10px] font-mono text-red-400">Slit Pupil Tracker</span>
+          </button>
+
+          <button onclick="triggerDevilOptic('cyan_cyber', '#06b6d4')" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-cyan-500/30">
+            <span class="font-bold text-xs text-white">Cyber Hex Rings 🤖</span>
+            <span class="text-[10px] font-mono text-cyan-400">Sci-Fi Aperture</span>
+          </button>
+
+          <button onclick="triggerDevilOptic('cylon', '#ef4444')" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-red-500/30">
+            <span class="font-bold text-xs text-white">Knight Rider Bar ⚡</span>
+            <span class="text-[10px] font-mono text-red-400">Cylon Scanner</span>
+          </button>
+
+          <button onclick="triggerDevilOptic('winking', '#f59e0b')" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-amber-500/30">
+            <span class="font-bold text-xs text-white">Winking Devil 😉</span>
+            <span class="text-[10px] font-mono text-amber-400">Dynamic Wink Loop</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewCustom" class="hidden flex-col gap-3">
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-black uppercase text-white tracking-wide">Matrix Text Studio</h2>
+            <p class="text-[10px] text-slate-400 font-mono">TAMIL SPEECH & PALETTE</p>
+          </div>
+          <span class="text-xl">🎙️</span>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <div class="relative w-full">
+            <input type="text" id="customTextInput" maxlength="70" placeholder="Type or speak (தமிழ் / English)..." value="வணக்கம் 🤝" class="w-full bg-black/40 border border-white/10 rounded-2xl py-3 pl-4 pr-11 text-white font-tamil text-sm focus:border-blue-500 outline-none">
+            <button onclick="triggerTamilVoiceDictation()" id="micBtn" class="absolute right-2.5 top-2.5 p-1.5 rounded-xl bg-white/10 text-slate-300 hover:text-white transition">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between gap-2 pt-1">
+            <div class="flex items-center gap-2">
+              <button onclick="setLedColor('#ef4444')" class="w-6 h-6 rounded-full bg-red-500 border border-white/40"></button>
+              <button onclick="setLedColor('#06b6d4')" class="w-6 h-6 rounded-full bg-cyan-400 border border-white/40"></button>
+              <button onclick="setLedColor('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-400 border border-white/40"></button>
+              <button onclick="setLedColor('#10b981')" class="w-6 h-6 rounded-full bg-emerald-400 border border-white/40"></button>
+              <button onclick="setLedColor('#a855f7')" class="w-6 h-6 rounded-full bg-purple-500 border border-white/40"></button>
+              <button onclick="setLedColor('#ffffff')" class="w-6 h-6 rounded-full bg-white border border-white/40"></button>
+            </div>
+
+            <button onclick="pushCustomText()" class="ios-spring-btn px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/30">
+              Send to Matrix
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-[max(var(--sab),10px)] pt-2 px-4 pointer-events-none">
+    <div class="ios-glass rounded-full px-2.5 py-1.5 flex items-center gap-1 max-w-md w-full justify-between pointer-events-auto shadow-2xl">
+      <button onclick="navigateTab('driving')" id="nav-driving" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-blue-400 bg-white/10">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span class="text-[9px] font-semibold tracking-tight">HUD</span>
+      </button>
+
+      <button onclick="navigateTab('meme')" id="nav-meme" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-slate-400">
+        <span class="text-xs">🤣</span>
+        <span class="text-[9px] font-semibold tracking-tight font-tamil">மீம்</span>
+      </button>
+
+      <button onclick="navigateTab('tamil')" id="nav-tamil" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-slate-400">
+        <span class="text-xs">🇮🇳</span>
+        <span class="text-[9px] font-semibold tracking-tight font-tamil">தமிழ்</span>
+      </button>
+
+      <button onclick="navigateTab('devil')" id="nav-devil" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-slate-400">
+        <span class="text-xs">😈</span>
+        <span class="text-[9px] font-semibold tracking-tight">Devil</span>
+      </button>
+
+      <button onclick="navigateTab('custom')" id="nav-custom" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-slate-400">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        <span class="text-[9px] font-semibold tracking-tight">Studio</span>
+      </button>
+    </div>
+  </nav>
+
+  <div id="bleModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="ios-glass-card max-w-sm w-full rounded-[32px] p-5 flex flex-col gap-3 relative border border-white/20 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📡</span>
+          <h3 class="font-bold text-sm text-white">Connect 16×96 Matrix</h3>
+        </div>
+        <button onclick="closeBleModal()" class="p-1 rounded-full bg-white/10 text-slate-300 hover:text-white">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <p class="text-[11px] text-slate-300 leading-relaxed">
+        Choose a pairing method. Ensure the official <strong class="text-white">iPixel Color app is closed</strong>, otherwise Bluetooth will be busy.
+      </p>
+
+      <!-- Diagnostic Console Box -->
+      <div class="bg-black/60 rounded-xl p-2.5 font-mono text-[10px] text-emerald-400 border border-white/10 h-28 overflow-y-auto flex flex-col gap-1" id="bleConsole">
+        <span class="text-slate-500">// Diagnostic Log</span>
+        <span id="bleDiagReady">Browser BLE: Ready for scanning.</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col gap-2 pt-1">
+        <!-- Method 1: Filter by known LED names -->
+        <button onclick="startBlePairing(false)" class="ios-spring-btn py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          Scan for iPixel / LED_BLE
+        </button>
+
+        <!-- Method 2: Accept All Devices (Emergency Fallback) -->
+        <button onclick="startBlePairing(true)" class="ios-glass-pill ios-spring-btn py-2 px-4 rounded-xl text-slate-200 text-[11px] font-semibold flex items-center justify-center gap-2 border border-white/15">
+          Show All Nearby Bluetooth Devices
+        </button>
+
+        <button onclick="disconnectBleDevice()" id="modalDisconnectBtn" class="py-1.5 px-4 rounded-xl text-rose-400 text-[11px] font-medium hidden">
+          Disconnect Matrix
+        </button>
+      </div>
+
+      <!-- iOS Bluefy Instructions Notice -->
+      <div class="pt-2 border-t border-white/10 text-[10px] text-slate-400 leading-normal">
+        <strong class="text-slate-200">iPhone User Notice:</strong> Apple Safari blocks Web Bluetooth. Open this link inside the free <strong class="text-cyan-300">Bluefy BLE Browser</strong> from the App Store.
+      </div>
+    </div>
+  </div>
+
+  <!-- iOS Dynamic Toast Island Banner -->
+  <div id="iosToast" class="fixed top-12 z-50 transform -translate-y-24 opacity-0 transition-all duration-300 pointer-events-none ios-glass rounded-full px-4 py-2 border border-white/20 flex items-center gap-2 shadow-2xl">
+    <span id="toastIcon" class="text-sm">⚡</span>
+    <span id="toastMessage" class="text-xs font-semibold text-white">Alert</span>
+  </div>
+
+  <script>
+    const COLS = 96;
+    const ROWS = 16;
+    
+    // Comprehensive UUID definitions for iPixel and iDotMatrix controllers
+    const IPIXEL_SERVICE_UUID = "0000fa02-0000-1000-8000-00805f9b34fb";
+    const IPIXEL_NOTIFY_UUID  = "0000fa03-0000-1000-8000-00805f9b34fb";
+    const ALL_OPTIONAL_SERVICES = [
+      '0000fa02-0000-1000-8000-00805f9b34fb',
+      '0000fa03-0000-1000-8000-00805f9b34fb',
+      '0000fa00-0000-1000-8000-00805f9b34fb',
+      0xfa00,
+      0xfa02,
+      0xfa03,
+      '0000fee7-0000-1000-8000-00805f9b34fb',
+      'generic_access'
+    ];
+
+    // Hardware and Connection State
+    let bleDevice = null;
+    let bleCharacteristic = null;
+    let isBleConnected = false;
+    let audioMuted = false;
+
+    // Display rendering state
+    let currentDisplayMode = "text"; // text, devil, hud_turn, hud_brake
+    let currentText = "வணக்கம் 🤝";
+    let currentColor = "#06b6d4";
+    let animStyle = "scroll"; // scroll, static, pulse, blink
+    let scrollSpeed = 6;
+    let brightness = 85;
+    let devilEyeType = "angry";
+
+    // Driving Telemetry state
+    let autoSyncMatrix = true;
+    let currentSpeedKmh = 0;
+    let currentTurnState = "straight"; // left, right, straight
+    let isEmergencyBraking = false;
+    let sensorPermissionsGranted = false;
+
+    // 16x96 Matrix Array Buffer
+    const matrixBuffer = Array.from({ length: ROWS }, () => new Uint8Array(COLS));
+
+    // Canvas Context
+    const canvas = document.getElementById("matrixCanvas");
+    const ctx = canvas.getContext("2d");
+    let frameTick = 0;
+    let scrollOffset = COLS;
+
+    let audioCtx = null;
+    function playIosHapticSound(type = "tick") {
+      if (audioMuted) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const t = audioCtx.currentTime;
+
+        if (type === "tick") {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(1200, t);
+          osc.frequency.exponentialRampToValueAtTime(500, t + 0.03);
+          gain.gain.setValueAtTime(0.12, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.03);
+          osc.start(t);
+          osc.stop(t + 0.03);
+        } else if (type === "brake") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(360, t);
+          osc.frequency.exponentialRampToValueAtTime(110, t + 0.3);
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+          osc.start(t);
+          osc.stop(t + 0.3);
+        }
+      } catch (e) {
+        console.warn("Audio note:", e);
+      }
+    }
+
+    function triggerVibration(pattern = 25) {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    }
+
+    function toggleAudio() {
+      audioMuted = !audioMuted;
+      document.getElementById("soundBtn").classList.toggle("opacity-40", audioMuted);
+      showIosToast(audioMuted ? "Sound Muted" : "Haptic Audio Active", "🔊");
+    }
+
+    let toastTimer = null;
+    function showIosToast(msg, icon = "⚡") {
+      const toast = document.getElementById("iosToast");
+      document.getElementById("toastIcon").textContent = icon;
+      document.getElementById("toastMessage").textContent = msg;
+      toast.classList.remove("-translate-y-24", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+      
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add("-translate-y-24", "opacity-0");
+        toast.classList.remove("translate-y-0", "opacity-100");
+      }, 2500);
+    }
+
+    function openBleModal() {
+      document.getElementById("bleModal").classList.remove("hidden");
+      logToBleConsole("Modal opened. Select scan type.");
+    }
+
+    function closeBleModal() {
+      document.getElementById("bleModal").classList.add("hidden");
+    }
+
+    function logToBleConsole(msg) {
+      const consoleBox = document.getElementById("bleConsole");
+      const span = document.createElement("span");
+      const time = new Date().toTimeString().split(' ')[0];
+      span.textContent = `[${time}] ${msg}`;
+      consoleBox.appendChild(span);
+      consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    async function startBlePairing(acceptAll = false) {
+      playIosHapticSound("tick");
+      logToBleConsole(`Starting scan (acceptAllDevices=${acceptAll})...`);
+
+      // 1. Verify Browser Support
+      if (!navigator.bluetooth) {
+        logToBleConsole("ERROR: navigator.bluetooth is undefined!");
+        showIosToast("Bluetooth unsupported! Open in Bluefy (iOS) or Chrome", "❌");
+        alert("Web Bluetooth is not supported in this browser.\n\n• If on iPhone: Download 'Bluefy - Web BLE Browser' from App Store.\n• If on Android: Open in Google Chrome.\n• Ensure site is served over HTTPS.");
+        return;
+      }
+
+      try {
+        logToBleConsole("Opening native Bluetooth picker dialog...");
+        
+        let device = null;
+        if (!acceptAll) {
+          // Method A: Name filter
+          device = await navigator.bluetooth.requestDevice({
+            filters: [
+              { namePrefix: "LED_BLE" },
+              { namePrefix: "LED" },
+              { namePrefix: "iPixel" },
+              { namePrefix: "WC" }
+            ],
+            optionalServices: ALL_OPTIONAL_SERVICES
+          });
+        } else {
+          // Method B: Accept all devices
+          device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: ALL_OPTIONAL_SERVICES
+          });
+        }
+
+        if (!device) {
+          logToBleConsole("No device chosen by user.");
+          return;
+        }
+
+        logToBleConsole(`Selected: "${device.name || 'Unnamed'}" (${device.id})`);
+        bleDevice = device;
+        bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);
+
+        // 2. Connect to GATT Server
+        logToBleConsole("Connecting to GATT server...");
+        const server = await bleDevice.gatt.connect();
+        logToBleConsole("GATT Server connected. Discovering services...");
+
+        // 3. Find Primary Writable Characteristic
+        let targetService = null;
+        try {
+          targetService = await server.getPrimaryService(IPIXEL_SERVICE_UUID);
+        } catch (e) {
+          logToBleConsole("Primary fa02 service query failed. Searching all services...");
+          const services = await server.getPrimaryServices();
+          logToBleConsole(`Found ${services.length} services.`);
+          targetService = services[0];
+        }
+
+        if (!targetService) {
+          throw new Error("Could not acquire GATT Service on device.");
+        }
+
+        // 4. Retrieve write characteristic
+        let char = null;
+        try {
+          char = await targetService.getCharacteristic(IPIXEL_SERVICE_UUID);
+        } catch (e) {
+          logToBleConsole("Standard fa02 characteristic search failed. Reading all characteristics...");
+          const chars = await targetService.getCharacteristics();
+          char = chars.find(c => c.properties.write || c.properties.writeWithoutResponse) || chars[0];
+        }
+
+        if (!char) {
+          throw new Error("No writable characteristic found on this device.");
+        }
+
+        bleCharacteristic = char;
+        isBleConnected = true;
+        logToBleConsole("SUCCESS: Connected to matrix write pipe!");
+
+        // Update UI Badges
+        document.getElementById("bleStatusDot").className = "w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-400";
+        document.getElementById("islandDot").className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+        document.getElementById("bleBtnText").textContent = "Connected";
+        document.getElementById("bleSyncTick").textContent = "BLE SYNCED";
+        document.getElementById("bleSyncTick").className = "text-[9px] text-emerald-400 font-mono px-1.5 py-0.5 rounded bg-emerald-400/10 border border-emerald-400/20";
+        document.getElementById("islandBleIcon").classList.remove("opacity-70");
+        document.getElementById("islandBleIcon").classList.add("text-emerald-400");
+        document.getElementById("islandModeLabel").textContent = "LINKED";
+        document.getElementById("modalDisconnectBtn").classList.remove("hidden");
+
+        showIosToast(`Paired to ${device.name || 'Matrix'}!`, "✅");
+        setTimeout(closeBleModal, 1400);
+
+        // Send Initial Handshake & Brightness Packet
+        await sendBleCommand([0x05, 0x00, 0x07, 0x01, 0x01]);
+        setBrightness(brightness);
+
+      } catch (err) {
+        logToBleConsole(`FAILED: ${err.message}`);
+        console.warn("Pairing failure:", err);
+        showIosToast(err.message.includes("cancelled") ? "Pairing cancelled" : "Connection failed", "⚠️");
+      }
+    }
+
+    function onBleDisconnected() {
+      isBleConnected = false;
+      bleCharacteristic = null;
+      document.getElementById("bleStatusDot").className = "w-2 h-2 rounded-full bg-amber-400";
+      document.getElementById("islandDot").className = "w-2.5 h-2.5 rounded-full bg-amber-400";
+      document.getElementById("bleBtnText").textContent = "Bluetooth Setup";
+      document.getElementById("bleSyncTick").textContent = "UNPAIRED";
+      document.getElementById("bleSyncTick").className = "text-[9px] text-amber-300 font-mono px-1.5 py-0.5 rounded bg-amber-400/10 border border-amber-400/20";
+      document.getElementById("islandBleIcon").classList.add("opacity-70");
+      document.getElementById("islandBleIcon").classList.remove("text-emerald-400");
+      document.getElementById("islandModeLabel").textContent = "PAIR MATRIX";
+      document.getElementById("modalDisconnectBtn").classList.add("hidden");
+      logToBleConsole("Device disconnected.");
+      showIosToast("Matrix Disconnected", "🔌");
+    }
+
+    function disconnectBleDevice() {
+      if (bleDevice && bleDevice.gatt.connected) {
+        bleDevice.gatt.disconnect();
+      }
+      onBleDisconnected();
+    }
+
+    async function sendBleCommand(byteArray) {
+      if (!isBleConnected || !bleCharacteristic) return;
+      try {
+        const data = new Uint8Array(byteArray);
+        if (bleCharacteristic.properties.writeWithoutResponse) {
+          await bleCharacteristic.writeValueWithoutResponse(data);
+        } else {
+          await bleCharacteristic.writeValue(data);
+        }
+      } catch (e) {
+        console.warn("BLE Write Error:", e);
+      }
+    }
+
+    let offscreenCanvas = null;
+    let offscreenCtx = null;
+    let cachedString = "";
+    let cachedRaster = null;
+
+    function rasterize16RowText(str) {
+      if (cachedString === str && cachedRaster) return cachedRaster;
+
+      if (!offscreenCanvas) {
+        offscreenCanvas = document.createElement("canvas");
+        offscreenCanvas.height = 16;
+        offscreenCtx = offscreenCanvas.getContext("2d", { willReadFrequently: true });
+      }
+
+      const fontSpec = "bold 13px 'Noto Sans Tamil', -apple-system, sans-serif";
+      offscreenCtx.font = fontSpec;
+      const textMetrics = offscreenCtx.measureText(str);
+      const width = Math.max(1, Math.ceil(textMetrics.width) + 6);
+
+      offscreenCanvas.width = width;
+      offscreenCtx.fillStyle = "#000000";
+      offscreenCtx.fillRect(0, 0, width, 16);
+
+      offscreenCtx.fillStyle = "#ffffff";
+      offscreenCtx.font = fontSpec;
+      offscreenCtx.textBaseline = "middle";
+      offscreenCtx.textAlign = "left";
+      offscreenCtx.fillText(str, 3, 8.5);
+
+      const imgData = offscreenCtx.getImageData(0, 0, width, 16);
+      const pixels = imgData.data;
+
+      const binaryMap = Array.from({ length: 16 }, () => new Uint8Array(width));
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4;
+          const lum = 0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2];
+          binaryMap[y][x] = lum > 75 ? 1 : 0;
+        }
+      }
+
+      cachedString = str;
+      cachedRaster = { width, map: binaryMap };
+      return cachedRaster;
+    }
+
+    function blitTextToBuffer(str, offsetCol = 0) {
+      for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+      const raster = rasterize16RowText(str);
+
+      for (let x = 0; x < raster.width; x++) {
+        const targetX = offsetCol + x;
+        if (targetX >= 0 && targetX < COLS) {
+          for (let y = 0; y < ROWS; y++) {
+            matrixBuffer[y][targetX] = raster.map[y][x];
+          }
+        }
+      }
+      return raster.width;
+    }
+
+    function renderTurningArrows(direction, tick) {
+      for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+      const animOffset = Math.floor((tick * 0.45) % 14);
+
+      if (direction === "left") {
+        for (let baseCol = 10; baseCol < COLS - 8; baseCol += 16) {
+          const chevronX = baseCol - animOffset;
+          for (let y = 0; y < 16; y++) {
+            const dy = Math.abs(y - 7.5);
+            const x = Math.round(chevronX + dy * 1.15);
+            if (x >= 0 && x < COLS) matrixBuffer[y][x] = 1;
+            if (x + 1 >= 0 && x + 1 < COLS) matrixBuffer[y][x + 1] = 1;
+          }
+        }
+      } else if (direction === "right") {
+        for (let baseCol = 2; baseCol < COLS - 2; baseCol += 16) {
+          const chevronX = baseCol + animOffset;
+          for (let y = 0; y < 16; y++) {
+            const dy = Math.abs(y - 7.5);
+            const x = Math.round(chevronX - dy * 1.15);
+            if (x >= 0 && x < COLS) matrixBuffer[y][x] = 1;
+            if (x + 1 >= 0 && x + 1 < COLS) matrixBuffer[y][x + 1] = 1;
+          }
+        }
+      }
+    }
+
+    function renderDevilEyes(mode, frame) {
+      for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+      const leftCenter = 24;
+      const rightCenter = 72;
+
+      if (mode === "angry") {
+        const eyeW = 24;
+        for (let dy = 0; dy < 12; dy++) {
+          const row = 2 + dy;
+          const leftStart = leftCenter - Math.floor(eyeW / 2) + Math.floor(dy * 1.1);
+          for (let dx = 0; dx < (eyeW - dy * 1.3); dx++) {
+            const lx = leftStart + dx;
+            const rx = rightCenter - Math.floor(eyeW / 2) + Math.floor(dy * 0.3) + dx;
+            if (lx >= 0 && lx < COLS) matrixBuffer[row][lx] = 1;
+            if (rx >= 0 && rx < COLS) matrixBuffer[row][rx] = 1;
+          }
+        }
+        const slitOffset = Math.sin(frame * 0.08) * 3;
+        for (let r = 4; r <= 11; r++) {
+          const pxL = Math.round(leftCenter + slitOffset);
+          const pxR = Math.round(rightCenter + slitOffset);
+          if (pxL >= 0 && pxL < COLS) matrixBuffer[r][pxL] = 0;
+          if (pxR >= 0 && pxR < COLS) matrixBuffer[r][pxR] = 0;
+        }
+      } else if (mode === "cyan_cyber") {
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const dL = Math.hypot(c - leftCenter, (r - 8) * 1.5);
+            const dR = Math.hypot(c - rightCenter, (r - 8) * 1.5);
+            if ((dL < 7.2 && dL > 3.8) || (dR < 7.2 && dR > 3.8)) matrixBuffer[r][c] = 1;
+          }
+        }
+      } else if (mode === "cylon") {
+        const scan = Math.floor((Math.sin(frame * 0.07) + 1) * 0.5 * (COLS - 20));
+        for (let r = 5; r <= 10; r++) {
+          for (let c = scan; c < scan + 20; c++) matrixBuffer[r][c] = 1;
+        }
+      } else if (mode === "winking") {
+        const isWink = (frame % 120) > 85;
+        for (let r = 3; r <= 12; r++) {
+          for (let c = leftCenter - 8; c <= leftCenter + 8; c++) {
+            if (Math.hypot(c - leftCenter, (r - 7.5) * 1.6) < 6) matrixBuffer[r][c] = 1;
+          }
+        }
+        if (isWink) {
+          for (let c = rightCenter - 8; c <= rightCenter + 8; c++) {
+            matrixBuffer[8][c] = 1;
+            matrixBuffer[7][c] = 1;
+          }
+        } else {
+          for (let r = 3; r <= 12; r++) {
+            for (let c = rightCenter - 8; c <= rightCenter + 8; c++) {
+              if (Math.hypot(c - rightCenter, (r - 7.5) * 1.6) < 6) matrixBuffer[r][c] = 1;
+            }
+          }
+        }
+      }
+    }
+
+    function renderVirtualMatrix() {
+      frameTick++;
+
+      if (currentDisplayMode === "hud_turn") {
+        renderTurningArrows(currentTurnState, frameTick);
+      } else if (currentDisplayMode === "hud_brake") {
+        const isBlinkOn = (Math.floor(frameTick / 8) % 2) === 0;
+        if (isBlinkOn) blitTextToBuffer("⛔ BRAKE / நில்! ⛔", 6);
+        else for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+      } else if (currentDisplayMode === "devil") {
+        renderDevilEyes(devilEyeType, frameTick);
+      } else {
+        const raster = rasterize16RowText(currentText);
+        if (animStyle === "scroll") {
+          scrollOffset -= (scrollSpeed * 0.28);
+          if (scrollOffset < -raster.width) scrollOffset = COLS;
+          blitTextToBuffer(currentText, Math.floor(scrollOffset));
+        } else if (animStyle === "static") {
+          const centered = Math.max(0, Math.floor((COLS - raster.width) / 2));
+          blitTextToBuffer(currentText, centered);
+        } else if (animStyle === "blink") {
+          const isFlash = (Math.floor(frameTick / 10) % 2) === 0;
+          if (isFlash) blitTextToBuffer(currentText, Math.max(0, Math.floor((COLS - raster.width) / 2)));
+          else for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+        } else if (animStyle === "pulse") {
+          const centered = Math.max(0, Math.floor((COLS - raster.width) / 2));
+          blitTextToBuffer(currentText, centered);
+        }
+      }
+
+      ctx.fillStyle = "#010409";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cellW = canvas.width / COLS;
+      const cellH = canvas.height / ROWS;
+      const radius = 3.6;
+
+      const r = parseInt(currentColor.slice(1, 3), 16) || 255;
+      const g = parseInt(currentColor.slice(3, 5), 16) || 255;
+      const b = parseInt(currentColor.slice(5, 7), 16) || 255;
+
+      let brightnessFactor = (brightness / 100);
+      if (animStyle === "pulse" && currentDisplayMode === "text") {
+        brightnessFactor *= (0.4 + (Math.sin(frameTick * 0.1) + 1) * 0.3);
+      }
+
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const cx = col * cellW + cellW / 2;
+          const cy = row * cellH + cellH / 2;
+          const lit = matrixBuffer[row][col] === 1;
+
+          if (lit) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius + 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.36 * brightnessFactor})`;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${brightnessFactor})`;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(cx - 1, cy - 1, radius * 0.32, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.75 * brightnessFactor})`;
+            ctx.fill();
+          } else {
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.75, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+            ctx.fill();
+          }
+        }
+      }
+
+      requestAnimationFrame(renderVirtualMatrix);
+    }
+
+    function initGpsTracking() {
+      if (!("geolocation" in navigator)) {
+        document.getElementById("gpsAccuracy").textContent = "NO GPS";
+        return;
+      }
+
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          const speed = pos.coords.speed;
+          const speedKmh = (speed !== null && speed >= 0) ? Math.round(speed * 3.6) : 0;
+          updateTelemetrySpeed(speedKmh);
+          document.getElementById("gpsAccuracy").textContent = `±${Math.round(pos.coords.accuracy || 5)}M`;
+        },
+        (err) => {
+          console.warn("GPS note:", err.message);
+          document.getElementById("gpsAccuracy").textContent = "READY";
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
+      );
+    }
+
+    async function requestDeviceSensors() {
+      playIosHapticSound("tick");
+      triggerVibration(30);
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const perm = await DeviceOrientationEvent.requestPermission();
+          if (perm === 'granted') {
+            attachSensorListeners();
+            sensorPermissionsGranted = true;
+            document.getElementById("sensorBtnLabel").textContent = "Sensors Active";
+            document.getElementById("sensorPermBtn").classList.add("bg-emerald-500/20", "text-emerald-400");
+            showIosToast("Sensors Armed", "🧭");
+          } else {
+            showIosToast("Sensors permission denied", "⚠️");
+          }
+        } catch (e) {
+          console.warn("Sensor request error:", e);
+        }
+      } else {
+        attachSensorListeners();
+        sensorPermissionsGranted = true;
+        document.getElementById("sensorBtnLabel").textContent = "Sensors Active";
+        showIosToast("Orientation Sensors Armed", "🧭");
+      }
+    }
+
+    function attachSensorListeners() {
+      window.addEventListener("deviceorientation", handleOrientation);
+      window.addEventListener("devicemotion", handleMotion);
+    }
+
+    let smoothedGamma = 0;
+    function handleOrientation(event) {
+      const gamma = event.gamma || 0;
+      smoothedGamma = smoothedGamma * 0.7 + gamma * 0.3;
+      
+      const angle = Math.round(smoothedGamma);
+      document.getElementById("steerAngleText").textContent = `${Math.abs(angle)}° (${angle < -8 ? 'LEFT' : angle > 8 ? 'RIGHT' : 'CENTER'})`;
+
+      if (angle < -16) {
+        setTurnState("left");
+      } else if (angle > 16) {
+        setTurnState("right");
+      } else if (Math.abs(angle) < 9) {
+        setTurnState("straight");
+      }
+    }
+
+    function handleMotion(event) {
+      if (!event.accelerationIncludingGravity) return;
+      const accZ = event.accelerationIncludingGravity.z || 0;
+      const decel = Math.abs(accZ).toFixed(2);
+      document.getElementById("gMeterText").textContent = `-${decel} G`;
+
+      if (accZ > 13.5 && !isEmergencyBraking) {
+        triggerEmergencyBrakeEvent();
+      }
+    }
+
+    function updateTelemetrySpeed(kmh) {
+      currentSpeedKmh = kmh;
+      document.getElementById("speedValue").textContent = kmh;
+      document.getElementById("islandPrimary").textContent = `${kmh} KM/H`;
+
+      let status = "STOPPED 🛑";
+      if (kmh > 0 && kmh <= 25) status = "SLOW TRAFFIC 🐢";
+      else if (kmh > 25 && kmh <= 75) status = "CRUISING 🚗";
+      else if (kmh > 75) status = "HIGHWAY ⚡";
+
+      const pill = document.getElementById("driveStatePill");
+      pill.textContent = status;
+
+      if (autoSyncMatrix && currentTurnState === "straight" && !isEmergencyBraking && currentDisplayMode.startsWith("hud")) {
+        if (kmh === 0) {
+          currentDisplayMode = "text";
+          currentText = "STOPPED 🛑";
+          currentColor = "#ef4444";
+          animStyle = "static";
+        } else {
+          currentDisplayMode = "text";
+          currentText = `${kmh} KM/H 🏎️`;
+          currentColor = "#06b6d4";
+          animStyle = "static";
+        }
+      }
+    }
+
+    function setTurnState(dir) {
+      if (currentTurnState === dir) return;
+      currentTurnState = dir;
+
+      const leftBox = document.getElementById("leftTurnBox");
+      const rightBox = document.getElementById("rightTurnBox");
+
+      if (dir === "left") {
+        leftBox.classList.remove("opacity-30");
+        leftBox.classList.add("opacity-100", "anim-turn-left");
+        rightBox.classList.add("opacity-30");
+        rightBox.classList.remove("opacity-100", "anim-turn-right");
+
+        if (autoSyncMatrix && !isEmergencyBraking) {
+          currentDisplayMode = "hud_turn";
+          currentColor = "#10b981";
+          document.getElementById("liveFrameLabel").textContent = "⬅️ TURNING LEFT";
+        }
+      } else if (dir === "right") {
+        rightBox.classList.remove("opacity-30");
+        rightBox.classList.add("opacity-100", "anim-turn-right");
+        leftBox.classList.add("opacity-30");
+        leftBox.classList.remove("opacity-100", "anim-turn-left");
+
+        if (autoSyncMatrix && !isEmergencyBraking) {
+          currentDisplayMode = "hud_turn";
+          currentColor = "#10b981";
+          document.getElementById("liveFrameLabel").textContent = "TURNING RIGHT ➡️";
+        }
+      } else {
+        leftBox.classList.add("opacity-30");
+        leftBox.classList.remove("opacity-100", "anim-turn-left");
+        rightBox.classList.add("opacity-30");
+        rightBox.classList.remove("opacity-100", "anim-turn-right");
+
+        if (autoSyncMatrix && currentDisplayMode === "hud_turn") {
+          currentDisplayMode = "text";
+          updateTelemetrySpeed(currentSpeedKmh);
+        }
+      }
+    }
+
+    function triggerEmergencyBrakeEvent() {
+      if (isEmergencyBraking) return;
+      isEmergencyBraking = true;
+      playIosHapticSound("brake");
+      triggerVibration([80, 50, 80]);
+
+      const priorMode = currentDisplayMode;
+      const priorText = currentText;
+      const priorColor = currentColor;
+      const priorStyle = animStyle;
+
+      currentDisplayMode = "hud_brake";
+      currentColor = "#ef4444";
+      document.getElementById("liveFrameLabel").textContent = "⛔ BRAKING DETECTED";
+      showIosToast("HARD BRAKE DETECTED!", "🚨");
+
+      setTimeout(() => {
+        isEmergencyBraking = false;
+        currentDisplayMode = priorMode;
+        currentText = priorText;
+        currentColor = priorColor;
+        animStyle = priorStyle;
+        document.getElementById("liveFrameLabel").textContent = currentText;
+      }, 3500);
+    }
+
+    function updateSimSpeed(val) {
+      const spd = parseInt(val);
+      document.getElementById("simSpeedLabel").textContent = `Speed: ${spd} km/h`;
+      updateTelemetrySpeed(spd);
+    }
+
+    function simulateTurn(dir) {
+      playIosHapticSound("tick");
+      setTurnState(dir);
+      showIosToast(`Simulator: ${dir.toUpperCase()}`, "🧭");
+    }
+
+    function toggleAutoSync(val) {
+      autoSyncMatrix = val;
+      showIosToast(val ? "Auto HUD Mirroring ON" : "Manual Override", "🔄");
+    }
+
+    function sendPresetMessage(text, color, style = "scroll", speed = 6) {
+      playIosHapticSound("tick");
+      triggerVibration(25);
+
+      currentDisplayMode = "text";
+      currentText = text;
+      currentColor = color;
+      animStyle = style;
+      scrollSpeed = speed;
+      scrollOffset = COLS;
+
+      document.getElementById("liveFrameLabel").textContent = text;
+      showIosToast(`Matrix Pushed: ${text}`, "🚀");
+    }
+
+    function triggerDevilOptic(type, color = "#ef4444") {
+      playIosHapticSound("tick");
+      triggerVibration(35);
+
+      currentDisplayMode = "devil";
+      devilEyeType = type;
+      currentColor = color;
+
+      document.getElementById("liveFrameLabel").textContent = `Devil: ${type.toUpperCase()}`;
+      showIosToast(`Devil Eyes: ${type.toUpperCase()}`, "😈");
+    }
+
+    function pushCustomText() {
+      const input = document.getElementById("customTextInput");
+      const val = input.value.trim();
+      if (!val) return;
+
+      sendPresetMessage(val, currentColor, "scroll", scrollSpeed);
+    }
+
+    function setLedColor(hex) {
+      playIosHapticSound("tick");
+      currentColor = hex;
+      showIosToast("Color Updated", "🎨");
+    }
+
+    function setBrightness(val) {
+      brightness = parseInt(val);
+      document.getElementById("brightValLabel").textContent = `${brightness}%`;
+      sendBleCommand([0x06, 0x00, 0x02, 0x01, 0x00, brightness]);
+    }
+
+    function setScrollSpeed(val) {
+      scrollSpeed = parseInt(val);
+      document.getElementById("speedValLabel").textContent = `${scrollSpeed}x`;
+    }
+
+    function triggerTamilVoiceDictation() {
+      playIosHapticSound("tick");
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showIosToast("Speech Recognition unsupported here", "⚠️");
+        return;
+      }
+
+      const micBtn = document.getElementById("micBtn");
+      micBtn.classList.add("text-red-500", "animate-pulse");
+
+      const rec = new SpeechRecognition();
+      rec.lang = 'ta-IN';
+      rec.interimResults = false;
+
+      showIosToast("Listening (Tamil / English)...", "🎙️");
+
+      rec.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        if (transcript) {
+          document.getElementById("customTextInput").value = transcript;
+          sendPresetMessage(transcript, currentColor, "scroll", scrollSpeed);
+        }
+      };
+
+      rec.onerror = () => showIosToast("Voice input ended", "🎙️");
+      rec.onend = () => micBtn.classList.remove("text-red-500", "animate-pulse");
+      rec.start();
+    }
+
+    function navigateTab(tabId) {
+      playIosHapticSound("tick");
+      triggerVibration(20);
+
+      const views = {
+        driving: document.getElementById("viewDriving"),
+        meme: document.getElementById("viewTamilMeme"),
+        tamil: document.getElementById("viewTamilDrive"),
+        devil: document.getElementById("viewDevilEyes"),
+        custom: document.getElementById("viewCustom")
+      };
+
+      const navButtons = {
+        driving: document.getElementById("nav-driving"),
+        meme: document.getElementById("nav-meme"),
+        tamil: document.getElementById("nav-tamil"),
+        devil: document.getElementById("nav-devil"),
+        custom: document.getElementById("nav-custom")
+      };
+
+      Object.keys(views).forEach(key => {
+        if (key === tabId) {
+          views[key].classList.remove("hidden");
+          views[key].classList.add("flex");
+          navButtons[key].classList.add("text-blue-400", "bg-white/10");
+          navButtons[key].classList.remove("text-slate-400");
+        } else {
+          views[key].classList.add("hidden");
+          views[key].classList.remove("flex");
+          navButtons[key].classList.remove("text-blue-400", "bg-white/10");
+          navButtons[key].classList.add("text-slate-400");
+        }
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initGpsTracking();
+      renderVirtualMatrix();
+    });
+  </script>
+</body>
+</html>
