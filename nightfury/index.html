@@ -1423,6 +1423,9 @@
         
         bleCharacteristic = null;
 
+        // Collect all writable characteristics discovered across all services
+        bleWritableCharacteristics = [];
+
         // Step 1: Try getPrimaryServices()
         let discoveredServices = [];
         try {
@@ -1438,22 +1441,20 @@
             try {
               const characteristics = await service.getCharacteristics();
               for (const char of characteristics) {
-                logDebug(`Found char: ${char.uuid} (write:${char.properties.write}, writeNoResp:${char.properties.writeWithoutResponse})`, "ble");
+                logDebug(`Discovered char: ${char.uuid} (write:${char.properties.write}, writeNoResp:${char.properties.writeWithoutResponse})`, "ble");
                 if (char.properties.write || char.properties.writeWithoutResponse) {
-                  bleCharacteristic = char;
-                  logDebug(`Latched onto char: ${char.uuid} in service: ${service.uuid}`, "success");
-                  break;
+                  bleWritableCharacteristics.push(char);
+                  logDebug(`Registered writable endpoint: ${char.uuid}`, "success");
                 }
               }
             } catch (e) {
               logDebug(`Char discovery error in service ${service.uuid}: ${e.message}`, "error");
             }
-            if (bleCharacteristic) break;
           }
         }
 
-        // Step 3: Sweep candidate UUIDs individually if getPrimaryServices failed or yielded no writable characteristic
-        if (!bleCharacteristic) {
+        // Step 3: Sweep candidate UUIDs individually if needed
+        if (bleWritableCharacteristics.length === 0) {
           logDebug("Sweeping candidate UUIDs individually...", "ble");
           for (const uuid of candidateServices) {
             try {
@@ -1462,24 +1463,25 @@
                 logDebug(`Service match: ${uuid}`, "ble");
                 const characteristics = await service.getCharacteristics();
                 for (const char of characteristics) {
-                  logDebug(`Found char: ${char.uuid} (write:${char.properties.write}, writeNoResp:${char.properties.writeWithoutResponse})`, "ble");
+                  logDebug(`Discovered char: ${char.uuid} (write:${char.properties.write}, writeNoResp:${char.properties.writeWithoutResponse})`, "ble");
                   if (char.properties.write || char.properties.writeWithoutResponse) {
-                    bleCharacteristic = char;
-                    logDebug(`Latched onto char: ${char.uuid} in service: ${uuid}`, "success");
-                    break;
+                    bleWritableCharacteristics.push(char);
+                    logDebug(`Registered writable endpoint: ${char.uuid}`, "success");
                   }
                 }
               }
             } catch (err) {
               // Ignore non-matching candidate UUIDs
             }
-            if (bleCharacteristic) break;
           }
         }
 
-        if (!bleCharacteristic) {
-          throw new Error("No writable GATT characteristic found on device.");
+        if (bleWritableCharacteristics.length === 0) {
+          throw new Error("No writable GATT characteristics found on device.");
         }
+
+        bleCharacteristic = bleWritableCharacteristics[0];
+        logDebug(`Primary endpoint set. Total writable characteristics: ${bleWritableCharacteristics.length}`, "success");
 
         isBleConnected = true;
         document.getElementById("bleStatusDot").className = "w-2 h-2 rounded-full bg-emerald-500";
@@ -1495,9 +1497,11 @@
         enableBackgroundKeepAliveAudio();
         startBleHeartbeat();
 
-        // Send initial Power ON and Handshake packets
-        logDebug("Sending Power ON & Handshake sequence...", "ble");
-        await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x02, 0x01, 0x01, 0x0A]);
+        // Send initialization & Mode Switch sequence (Exit Demo Mode into Custom User Mode)
+        logDebug("Sending Power ON & Custom Mode switch sequence...", "ble");
+        await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x02, 0x01, 0x01, 0x0A]); // Power ON
+        await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x01, 0x01, 0x00, 0x08]); // Switch to User Memory
+        await sendBleCommand([0x77, 0x28, 0x01, 0x00, 0x00, 0x00]);             // Select Program 1
         await sendBleCommand([0x05, 0x00, 0x07, 0x01, 0x01]);
 
       } catch (err) {
@@ -1545,24 +1549,32 @@
       onBleDisconnected();
     }
 
+    let bleWritableCharacteristics = [];
+
     async function sendBleCommand(byteArray) {
-      if (!isBleConnected || !bleCharacteristic) {
-        logDebug("sendBleCommand called without connection", "error");
+      if (!isBleConnected || bleWritableCharacteristics.length === 0) {
+        logDebug("sendBleCommand called without active GATT endpoints", "error");
         return;
       }
       try {
         const data = new Uint8Array(byteArray);
         const hexStr = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
         
-        if (bleCharacteristic.properties.writeWithoutResponse) {
-          logDebug(`TX (NoResp) -> ${hexStr}`, "hex");
-          await bleCharacteristic.writeValueWithoutResponse(data);
-        } else {
-          logDebug(`TX (WithResp) -> ${hexStr}`, "hex");
-          await bleCharacteristic.writeValue(data);
+        for (const char of bleWritableCharacteristics) {
+          try {
+            if (char.properties.writeWithoutResponse) {
+              logDebug(`TX [${char.uuid.slice(0, 8)}] (NoResp) -> ${hexStr}`, "hex");
+              await char.writeValueWithoutResponse(data);
+            } else if (char.properties.write) {
+              logDebug(`TX [${char.uuid.slice(0, 8)}] (WithResp) -> ${hexStr}`, "hex");
+              await char.writeValue(data);
+            }
+          } catch (err) {
+            console.warn(`Write error on endpoint ${char.uuid}:`, err);
+          }
         }
       } catch (e) {
-        logDebug(`BLE Write Error: ${e.message || e}`, "error");
+        logDebug(`BLE Write Exception: ${e.message || e}`, "error");
       }
     }
 
