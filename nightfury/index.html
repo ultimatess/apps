@@ -271,11 +271,17 @@
           <button onclick="clearDebugConsole()" class="text-[9px] text-slate-400 hover:text-white px-2 py-0.5 rounded bg-white/10">Clear Log</button>
         </div>
 
-        <!-- Protocol Test Buttons -->
+        <!-- Protocol Test & Mode Selector Buttons -->
         <div class="flex items-center gap-1.5 py-1 flex-wrap">
-          <button onclick="testPowerOn()" class="px-2 py-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/30">⚡ Power ON</button>
-          <button onclick="testSendText('HELLO')" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/30">🔤 Test "HELLO"</button>
-          <button onclick="testSendText('வணக்கம்')" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/30">🇮🇳 Test Tamil</button>
+          <span class="text-[9px] text-slate-400 font-bold block w-full">PROTOCOL MODE:</span>
+          <button onclick="setBleProtocol('ae01_sinowealth')" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40">1. AE01 Sinowealth</button>
+          <button onclick="setBleProtocol('coolled_7728')" class="px-2 py-0.5 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40">2. CoolLED 7728</button>
+          <button onclick="setBleProtocol('bitmap_stream')" class="px-2 py-0.5 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/40">3. Bitmap Stream</button>
+
+          <span class="text-[9px] text-slate-400 font-bold block w-full pt-1">TEST ACTIONS:</span>
+          <button onclick="testPowerOn()" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40">⚡ Power ON</button>
+          <button onclick="testSendText('HELLO')" class="px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold border border-cyan-500/40">🔤 Test "HELLO"</button>
+          <button onclick="testSendText('வணக்கம்')" class="px-2 py-1 rounded bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 font-bold border border-pink-500/40">🇮🇳 Test Tamil</button>
         </div>
 
         <div id="debugConsoleLog" class="h-32 overflow-y-auto font-mono text-[10px] space-y-1 text-slate-300 pr-1 select-text">
@@ -1202,70 +1208,95 @@
       if (consoleEl) consoleEl.innerHTML = '<div class="text-slate-500">[CONSOLE CLEARED] Ready...</div>';
     }
 
+    // Active Protocol Mode: "ae01_sinowealth" (default for AE01 hardware), "coolled_7728", "bitmap_stream"
+    let activeBleProtocol = "ae01_sinowealth";
+
+    function setBleProtocol(mode) {
+      activeBleProtocol = mode;
+      logDebug(`Selected BLE Protocol: ${mode.toUpperCase()}`, "info");
+      showIosToast(`Protocol: ${mode.toUpperCase()}`, "⚡");
+    }
+
     async function pushMatrixToHardware(text, colorHex, style = "scroll", speed = 6) {
-      if (!isBleConnected || !bleCharacteristic) {
+      if (!isBleConnected || bleWritableCharacteristics.length === 0) {
         logDebug("Cannot push matrix: BLE not connected", "error");
         return;
       }
 
-      logDebug(`Pushing payload: "${text}" (${colorHex}, ${style}, ${speed}x)`, "ble");
+      logDebug(`Pushing "${text}" using protocol [${activeBleProtocol.toUpperCase()}]`, "ble");
 
       try {
         const r = parseInt(colorHex.slice(1, 3), 16) || 255;
         const g = parseInt(colorHex.slice(3, 5), 16) || 255;
         const b = parseInt(colorHex.slice(5, 7), 16) || 255;
+        const spd = Math.max(1, Math.min(10, parseInt(speed)));
 
-        // 1. Protocol Variant A (CoolLED1248 0x77 0x28 Format)
         const encoder = new TextEncoder();
         const textBytes = Array.from(encoder.encode(text));
-        const textHeader = [0x77, 0x28, textBytes.length + 7, 0x01, parseInt(speed), r, g, b, 0x01];
-        const textPacket = [...textHeader, ...textBytes];
-        let checksum = 0;
-        for (let i = 2; i < textPacket.length; i++) checksum = (checksum + textPacket[i]) & 0xFF;
-        textPacket.push(checksum);
 
-        logDebug(`Sending Protocol A (CoolLED Text, ${textPacket.length}B)`, "info");
-        for (let i = 0; i < textPacket.length; i += 20) {
-          await sendBleCommand(textPacket.slice(i, i + 20));
-          await new Promise(res => setTimeout(res, 15));
-        }
+        if (activeBleProtocol === "ae01_sinowealth") {
+          // Protocol 1: Native AE01 Sinowealth / YX_LED Matrix Protocol
+          // Step A: Power ON / Switch to User Program
+          await sendBleCommand([0x02, 0x01, 0x01]);
+          await new Promise(res => setTimeout(res, 20));
 
-        // 2. Protocol Variant B (iPixel / Sinowealth 0x00 0x05 Format)
-        const altHeader = [0x05, 0x00, 0x07, 0x01, r, g, b];
-        const altPacket = [...altHeader, ...textBytes];
-        logDebug(`Sending Protocol B (iPixel Text, ${altPacket.length}B)`, "info");
-        for (let i = 0; i < altPacket.length; i += 20) {
-          await sendBleCommand(altPacket.slice(i, i + 20));
-          await new Promise(res => setTimeout(res, 15));
-        }
+          // Step B: Text Display Command Frame: [0x01, Mode(0x01), Speed, R, G, B, Len, Text..., Checksum]
+          const modeByte = style === "static" ? 0x00 : style === "blink" ? 0x03 : 0x01;
+          const payload = [0x01, modeByte, spd, r, g, b, textBytes.length, ...textBytes];
+          
+          let checksum = 0;
+          for (let i = 0; i < payload.length; i++) checksum = (checksum + payload[i]) & 0xFF;
+          payload.push(checksum);
 
-        // 3. Protocol Variant C (16x96 Diode Bitmap Stream)
-        const bitmapBytes = [];
-        for (let col = 0; col < COLS; col++) {
-          let byte1 = 0; // Rows 0..7
-          let byte2 = 0; // Rows 8..15
-          for (let row = 0; row < 8; row++) {
-            if (matrixBuffer[row][col]) byte1 |= (1 << row);
+          logDebug(`AE01 Text Frame (${payload.length}B): ${text}`, "info");
+          for (let i = 0; i < payload.length; i += 20) {
+            await sendBleCommand(payload.slice(i, i + 20));
+            await new Promise(res => setTimeout(res, 20));
           }
-          for (let row = 8; row < 16; row++) {
-            if (matrixBuffer[row][col]) byte2 |= (1 << (row - 8));
+
+        } else if (activeBleProtocol === "coolled_7728") {
+          // Protocol 2: CoolLED1248 0x77 0x28 Format
+          const textHeader = [0x77, 0x28, textBytes.length + 7, 0x01, spd, r, g, b, 0x01];
+          const textPacket = [...textHeader, ...textBytes];
+          let checksum = 0;
+          for (let i = 2; i < textPacket.length; i++) checksum = (checksum + textPacket[i]) & 0xFF;
+          textPacket.push(checksum);
+
+          logDebug(`CoolLED 0x7728 Text Frame (${textPacket.length}B)`, "info");
+          for (let i = 0; i < textPacket.length; i += 20) {
+            await sendBleCommand(textPacket.slice(i, i + 20));
+            await new Promise(res => setTimeout(res, 20));
           }
-          bitmapBytes.push(byte1, byte2);
+
+        } else if (activeBleProtocol === "bitmap_stream") {
+          // Protocol 3: 16x96 Bitmap Diode Stream (Chunked for Tamil Unicode)
+          const bitmapBytes = [];
+          for (let col = 0; col < COLS; col++) {
+            let byte1 = 0; // Rows 0..7
+            let byte2 = 0; // Rows 8..15
+            for (let row = 0; row < 8; row++) {
+              if (matrixBuffer[row][col]) byte1 |= (1 << row);
+            }
+            for (let row = 8; row < 16; row++) {
+              if (matrixBuffer[row][col]) byte2 |= (1 << (row - 8));
+            }
+            bitmapBytes.push(byte1, byte2);
+          }
+
+          const bmpHeader = [0x77, 0x28, bitmapBytes.length + 8, 0x02, 0x60, 0x10, r, g, b];
+          const bmpPacket = [...bmpHeader, ...bitmapBytes];
+          let bmpChecksum = 0;
+          for (let i = 2; i < bmpPacket.length; i++) bmpChecksum = (bmpChecksum + bmpPacket[i]) & 0xFF;
+          bmpPacket.push(bmpChecksum);
+
+          logDebug(`Bitmap Diode Stream (${bmpPacket.length}B)`, "info");
+          for (let i = 0; i < bmpPacket.length; i += 20) {
+            await sendBleCommand(bmpPacket.slice(i, i + 20));
+            await new Promise(res => setTimeout(res, 20));
+          }
         }
 
-        const bmpHeader = [0x77, 0x28, bitmapBytes.length + 8, 0x02, 0x60, 0x10, r, g, b];
-        const bmpPacket = [...bmpHeader, ...bitmapBytes];
-        let bmpChecksum = 0;
-        for (let i = 2; i < bmpPacket.length; i++) bmpChecksum = (bmpChecksum + bmpPacket[i]) & 0xFF;
-        bmpPacket.push(bmpChecksum);
-
-        logDebug(`Sending Bitmap Stream (${bmpPacket.length}B, 96x16)`, "info");
-        for (let i = 0; i < bmpPacket.length; i += 20) {
-          await sendBleCommand(bmpPacket.slice(i, i + 20));
-          await new Promise(res => setTimeout(res, 15));
-        }
-
-        logDebug("All payload variants transmitted successfully!", "success");
+        logDebug("Payload transmission complete!", "success");
       } catch (e) {
         logDebug(`BLE push exception: ${e.message || e}`, "error");
       }
