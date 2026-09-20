@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Multiplication Match</title>
+
+  <style>
+    :root {
+      --bg: #f5f7ff;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --primary: #5b5bd6;
+      --primary-light: #eef0ff;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --danger: #ef4444;
+      --danger-bg: #fee2e2;
+      --warning: #8a5a00;
+      --warning-bg: #fff7db;
+      --shadow: 0 10px 30px rgba(30, 40, 90, 0.1);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+      color: var(--text);
+      background: linear-gradient(145deg, #f8f9ff, #eef1ff);
+    }
+
+    button {
+      font: inherit;
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      padding:
+        max(18px, env(safe-area-inset-top))
+        16px
+        max(32px, env(safe-area-inset-bottom));
+    }
+
+    /* ---------------- HEADER ---------------- */
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 900;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .owner-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .stars {
+      padding: 10px 14px;
+      background: white;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      font-weight: 800;
+    }
+
+    /* ---------------- NAVIGATION ---------------- */
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .nav button {
+      flex: 1;
+      padding: 11px;
+      border-radius: 14px;
+      background: white;
+      color: #555;
+      box-shadow: var(--shadow);
+      font-weight: 700;
+    }
+
+    .nav button.active {
+      background: #e9e9ff;
+      color: #3436a4;
+    }
+
+    /* ---------------- SCREENS ---------------- */
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* ---------------- HERO ---------------- */
+
+    .hero {
+      padding: 26px;
+      margin-bottom: 18px;
+      color: white;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #625df0, #8d68ff);
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+
+    .hero p {
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    /* ---------------- CARDS ---------------- */
+
+    .card {
+      padding: 20px;
+      margin-bottom: 16px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    h2 {
+      margin: 4px 0 16px;
+      font-size: 22px;
+    }
+
+    /* ---------------- TABLE SELECTOR ---------------- */
+
+    .table-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .table-btn {
+      padding: 15px 8px;
+      color: #3436a4;
+      background: #f1f2ff;
+      border-radius: 16px;
+      font-weight: 800;
+      transition: 0.15s;
+    }
+
+    .table-btn.selected {
+      color: white;
+      background: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    /* ---------------- BUTTONS ---------------- */
+
+    .big-btn {
+      width: 100%;
+      padding: 16px;
+      margin-top: 10px;
+      color: white;
+      background: var(--primary);
+      border-radius: 17px;
+      font-weight: 900;
+    }
+
+    .secondary {
+      color: #3436a4;
+      background: var(--primary-light);
+    }
+
+    .ask {
+      color: var(--warning);
+      background: var(--warning-bg);
+    }
+
+    /* ---------------- GAME MODES ---------------- */
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mode {
+      padding: 16px;
+      text-align: left;
+      background: #f7f8ff;
+      border-radius: 18px;
+      font-weight: 800;
+    }
+
+    .mode small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ---------------- PROGRESS BAR ---------------- */
+
+    .progressbar {
+      height: 12px;
+      margin-top: 10px;
+      overflow: hidden;
+      background: #e8eaff;
+      border-radius: 99px;
+    }
+
+    .progressbar span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #5b5bd6, #9b72ff);
+      transition: 0.3s;
+    }
+
+    /* ---------------- QUESTION ---------------- */
+
+    .question {
+      padding: 25px 10px;
+      text-align: center;
+    }
+
+    .question .label {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .equation {
+      margin: 12px 0;
+      font-size: 54px;
+      font-weight: 950;
+    }
+
+    /* ---------------- ANSWERS ---------------- */
+
+    .answers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .answer {
+      padding: 22px;
+      color: #30338f;
+      background: #f3f4ff;
+      border-radius: 20px;
+      font-size: 28px;
+      font-weight: 900;
+      transition: 0.15s;
+    }
+
+    .answer:disabled {
+      cursor: not-allowed;
+    }
+
+    .answer.correct {
+      color: #166534;
+      background: var(--success-bg);
+      animation: pop 0.25s;
+    }
+
+    .answer.wrong {
+      color: #991b1b;
+      background: var(--danger-bg);
+      animation: shake 0.25s;
+    }
+
+    @keyframes pop {
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    @keyframes shake {
+      25% {
+        transform: translateX(-5px);
+      }
+      75% {
+        transform: translateX(5px);
+      }
+    }
+
+    /* ---------------- FEEDBACK ---------------- */
+
+    .feedback {
+      min-height: 40px;
+      margin-top: 12px;
+      text-align: center;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    /* ---------------- STATS ---------------- */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .stat {
+      padding: 14px;
+      text-align: center;
+      background: #f6f7ff;
+      border-radius: 16px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 24px;
+    }
+
+    /* ---------------- LEARN ---------------- */
+
+    .teach-box {
+      padding: 18px;
+      margin: 8px 0;
+      text-align: center;
+      font-size: 20px;
+      background: #f7f8ff;
+      border-radius: 18px;
+    }
+
+    .teach-box .sum {
+      margin: 8px;
+      font-size: 32px;
+      font-weight: 900;
+    }
+
+    /* ---------------- PROGRESS ---------------- */
+
+    .table-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 9px 0;
+    }
+
+    .table-row b {
+      width: 65px;
+    }
+
+    .mini {
+      flex: 1;
+    }
+
+    .mini span {
+      display: block;
+      height: 10px;
+      overflow: hidden;
+      background: #e7e8f8;
+      border-radius: 99px;
+    }
+
+    .mini i {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: #6d63ee;
+    }
+
+    /* ---------------- RESULT ---------------- */
+
+    .result {
+      text-align: center;
+    }
+
+    .result .score {
+      color: var(--primary);
+      font-size: 54px;
+      font-weight: 950;
+    }
+
+    /* ---------------- MOBILE ---------------- */
+
+    @media (max-width: 480px) {
+      .table-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .hero h1 {
+        font-size: 29px;
+      }
+
+      .equation {
+        font-size: 46px;
+      }
+
+      .answers {
+        gap: 9px;
+      }
+
+      .answer {
+        padding: 19px;
+        font-size: 25px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <span>🧮 Multiplication Match</span>
+      <span class="owner-tag">Owner: elpaari</span>
+    </div>
+
+    <div class="stars">
+      ⭐ <span id="totalStars">0</span>
+    </div>
+  </header>
+
+  <!-- NAVIGATION -->
+  <div class="nav">
+    <button class="active" onclick="show('home', this)">
+      Play
+    </button>
+    <button onclick="show('learn', this)">
+      Learn
+    </button>
+    <button onclick="show('progress', this)">
+      Progress
+    </button>
+  </div>
+
+  <!-- ================= HOME ================= -->
+  <section id="home" class="screen active">
+    <div class="hero">
+      <h1>Tables 1–12 🎮</h1>
+      <p>Learn • Match • Earn Stars • Have Fun!</p>
+    </div>
+
+    <!-- TABLE SELECTION -->
+    <div class="card">
+      <h2>Choose a table</h2>
+      <div class="table-grid" id="tableGrid"></div>
+      <button class="big-btn secondary" onclick="selectMixed()">
+        🎲 Mixed Tables 1–12
+      </button>
+    </div>
+
+    <!-- GAME MODES -->
+    <div class="card">
+      <h2>Game mode</h2>
+      <div class="mode-grid">
+        <button class="mode" onclick="startGame('quick')">
+          🎯 Quick Match
+          <small>10 questions</small>
+        </button>
+
+        <button class="mode" onclick="startGame('table')">
+          🧩 Match Table
+          <small>Complete a table</small>
+        </button>
+
+        <button class="mode" onclick="startGame('speed')">
+          ⚡ Speed Match
+          <small>30 seconds</small>
+        </button>
+
+        <button class="mode" onclick="startGame('challenge')">
+          🌟 Star Challenge
+          <small>20 questions</small>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GAME ================= -->
+  <section id="game" class="screen">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; font-weight:800;">
+        <span id="gameTitle">Quick Match</span>
+        <span id="counter">1 / 10</span>
+      </div>
+
+      <div class="progressbar">
+        <span id="bar"></span>
+      </div>
+
+      <!-- QUESTION -->
+      <div class="question">
+        <div class="label">What is this?</div>
+        <div class="equation" id="equation">7 × 8 = ?</div>
+      </div>
+
+      <!-- ANSWERS -->
+      <div class="answers" id="answers"></div>
+
+      <!-- ASK / TEACH -->
+      <button class="big-btn ask" onclick="askHelp()">
+        ❓ Ask — Teach me
+      </button>
+
+      <!-- FEEDBACK -->
+      <div class="feedback" id="feedback"></div>
+
+      <!-- GAME STATS -->
+      <div class="stats">
+        <div class="stat">
+          <b id="score">0</b>
+          Score
+        </div>
+        <div class="stat">
+          <b id="streak">0</b>
+          Streak
+        </div>
+        <div class="stat">
+          <b id="gameStars">0</b>
+          Stars
+        </div>
+      </div>
+    </div>
+
+    <button class="big-btn secondary" onclick="showHome()">
+      ← Leave Game
+    </button>
+  </section>
+
+  <!-- ================= LEARN ================= -->
+  <section id="learn" class="screen">
+    <div class="card">
+      <h2>📚 Learn Tables 1–12</h2>
+      <div class="table-grid" id="learnGrid"></div>
+    </div>
+
+    <div class="card" id="teachCard">
+      <h2>Pick a table to learn</h2>
+      <p style="color:var(--muted)">
+        See every multiplication fact with a simple group explanation.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= PROGRESS ================= -->
+  <section id="progress" class="screen">
+    <div class="card">
+      <h2>🏆 Your Progress</h2>
+      <div id="progressRows"></div>
+    </div>
+
+    <div class="card">
+      <h2>⭐ How to earn stars</h2>
+      <p>Correct answer = ⭐⭐</p>
+      <p>Correct answer after using help = ⭐</p>
+      <p>Complete a table match = bonus ⭐⭐</p>
+    </div>
+  </section>
+
+  <!-- ================= RESULT ================= -->
+  <section id="result" class="screen">
+    <div class="card result">
+      <div style="font-size:48px">🎉</div>
+      <h2>Great Job!</h2>
+      <div class="score" id="finalScore">8 / 10</div>
+      <p id="resultText"></p>
+      <div style="font-size:28px; margin:12px;">
+        ⭐ <span id="finalStars">0</span>
+      </div>
+      <button class="big-btn" onclick="showHome()">Play Again</button>
+      <button class="big-btn secondary" onclick="show('progress')">See Progress</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* =========================================================
+   AUDIO FEEDBACK (Web Audio API)
+========================================================= */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playTone(type) {
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  if (type === "correct") {
+    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.25);
+  } else {
+    osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.2);
+  }
+}
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+const state = {
+  table: 2,
+  score: 0,
+  streak: 0,
+  stars: 0,
+  q: 0,
+  total: 10,
+  mode: "quick",
+  help: false,
+  timer: null,
+  timeLeft: 30,
+  progress: JSON.parse(localStorage.getItem("multProgress") || "{}")
+};
+
+let selected = 2;
+let current = { a: 2, b: 3, answer: 6 };
+
+state.stars = Number(localStorage.getItem("multStars") || 0);
+
+/* =========================================================
+   SAVE GAME
+========================================================= */
+function save() {
+  localStorage.setItem("multProgress", JSON.stringify(state.progress));
+  localStorage.setItem("multStars", state.stars);
+  document.getElementById("totalStars").textContent = state.stars;
+}
+
+/* =========================================================
+   SCREEN NAVIGATION
+========================================================= */
+function show(id, btn) {
+  // Always stop timer when leaving screens
+  if (state.timer) {
+    clearInterval(state.timer);
+    state.timer = null;
+  }
+
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.remove("active");
+  });
+
+  const screen = document.getElementById(id);
+  if (screen) screen.classList.add("active");
+
+  if (btn) {
+    document.querySelectorAll(".nav button").forEach(button => {
+      button.classList.remove("active");
+    });
+    btn.classList.add("active");
+  }
+
+  if (id === "progress") renderProgress();
+  if (id === "learn") renderLearn();
+}
+
+function showHome() {
+  if (state.timer) {
+    clearInterval(state.timer);
+    state.timer = null;
+  }
+  show("home");
+}
+
+/* =========================================================
+   TABLE BUTTONS (1–12)
+========================================================= */
+function buildTableButtons() {
+  let html = "";
+  for (let i = 1; i <= 12; i++) {
+    html += `
+      <button
+        class="table-btn ${i === selected ? "selected" : ""}"
+        onclick="selectTable(${i})"
+      >
+        ${i}
+      </button>
+    `;
+  }
+  document.getElementById("tableGrid").innerHTML = html;
+}
+
+function selectTable(n) {
+  selected = n;
+  buildTableButtons();
+}
+
+function selectMixed() {
+  selected = 0;
+  buildTableButtons();
+  startGame("quick");
+}
+
+/* =========================================================
+   LEARN SCREEN (1–12)
+========================================================= */
+function renderLearn() {
+  let html = "";
+  for (let i = 1; i <= 12; i++) {
+    html += `
+      <button class="table-btn" onclick="teach(${i})">
+        ${i}
+      </button>
+    `;
+  }
+  document.getElementById("learnGrid").innerHTML = html;
+}
+
+function teach(n) {
+  let rows = "";
+  for (let b = 1; b <= 12; b++) {
+    const repeatedAddition = Array.from({ length: n }, () => b).join(" + ");
+    rows += `
+      <div class="teach-box">
+        <b>${n} × ${b} = ${n * b}</b>
+        <br>
+        <small>${repeatedAddition} = ${n * b}</small>
+      </div>
+    `;
+  }
+
+  document.getElementById("teachCard").innerHTML = `
+    <h2>Table ${n} ✨</h2>
+    ${rows}
+  `;
+}
+
+/* =========================================================
+   START GAME
+========================================================= */
+function startGame(mode) {
+  if (state.timer) clearInterval(state.timer);
+
+  state.mode = mode;
+  state.score = 0;
+  state.streak = 0;
+  state.q = 0;
+  state.help = false;
+  state.timeLeft = 30;
+
+  if (mode === "challenge") {
+    state.total = 20;
+  } else if (mode === "table") {
+    state.total = 12;
+  } else {
+    state.total = 10;
+  }
+
+  if (mode === "speed") {
+    state.total = 999;
+  }
+
+  const titles = {
+    quick: "🎯 Quick Match",
+    table: "🧩 Match Table",
+    speed: "⚡ Speed Match",
+    challenge: "🌟 Star Challenge"
+  };
+
+  document.getElementById("gameTitle").textContent = titles[mode];
+  show("game");
+  nextQuestion();
+
+  /* SPEED TIMER - Fixed countdown display */
+  if (mode === "speed") {
+    document.getElementById("counter").textContent = `${state.timeLeft}s`;
+    state.timer = setInterval(() => {
+      state.timeLeft--;
+      document.getElementById("counter").textContent = `${state.timeLeft}s`;
+      if (state.timeLeft <= 0) {
+        finish();
+      }
+    }, 1000);
+  }
+}
+
+/* =========================================================
+   NEXT QUESTION
+========================================================= */
+function nextQuestion() {
+  if (state.mode !== "speed" && state.q >= state.total) {
+    finish();
+    return;
+  }
+
+  state.help = false;
+  state.q++;
+
+  let a, b;
+  if (state.mode === "table" && selected) {
+    a = selected;
+    b = state.q;
+  } else {
+    a = selected || rand(1, 12);
+    b = rand(1, 12);
+  }
+
+  current = { a: a, b: b, answer: a * b };
+
+  document.getElementById("equation").textContent = `${a} × ${b} = ?`;
+
+  if (state.mode !== "speed") {
+    document.getElementById("counter").textContent = `${state.q} / ${state.total}`;
+    const progress = ((state.q - 1) / state.total) * 100;
+    document.getElementById("bar").style.width = progress + "%";
+  } else {
+    document.getElementById("bar").style.width = "100%";
+  }
+
+  document.getElementById("feedback").textContent = "";
+
+  /* SMART DISTRACTOR CHOICES */
+  const choices = new Set([current.answer]);
+  const plausible = [
+    current.a * (current.b + 1),
+    current.a * Math.max(1, current.b - 1),
+    (current.a + 1) * current.b,
+    Math.max(1, (current.a - 1) * current.b),
+    current.a + current.b,
+    current.answer + 10,
+    Math.max(1, current.answer - 10)
+  ].filter(v => v !== current.answer);
+
+  while (choices.size < 4 && plausible.length) {
+    const pick = plausible.splice(Math.floor(Math.random() * plausible.length), 1)[0];
+    choices.add(pick);
+  }
+
+  while (choices.size < 4) {
+    choices.add(Math.max(1, current.answer + rand(-8, 8)));
+  }
+
+  const answers = [...choices].sort(() => Math.random() - 0.5);
+
+  document.getElementById("answers").innerHTML = answers
+    .map(answer => `
+      <button class="answer" onclick="answer(${answer}, this)">
+        ${answer}
+      </button>
+    `)
+    .join("");
+
+  updateStats();
+}
+
+/* =========================================================
+   ANSWER HANDLING
+========================================================= */
+function answer(value, button) {
+  if (document.querySelector(".answer.correct")) return;
+
+  if (value === current.answer) {
+    playTone("correct");
+    button.classList.add("correct");
+
+    state.score++;
+    state.streak++;
+    const gainedStars = state.help ? 1 : 2;
+    state.stars += gainedStars;
+
+    state.progress[current.a] = (state.progress[current.a] || 0) + 1;
+
+    document.getElementById("feedback").textContent = state.help
+      ? "Correct! 🌟"
+      : "Perfect! 🎉 +2 stars";
+
+    save();
+    updateStats();
+    setTimeout(nextQuestion, 600);
+  } else {
+    playTone("wrong");
+    button.classList.add("wrong");
+    button.disabled = true;
+    button.style.opacity = "0.5";
+
+    state.streak = 0;
+    document.getElementById("feedback").textContent = "Almost! Try another choice 😊";
+    updateStats();
+  }
+}
+
+/* =========================================================
+   ASK / TEACH (No direct answer spoiler)
+========================================================= */
+function askHelp() {
+  state.help = true;
+  const repeated = Array.from({ length: current.a }, () => current.b).join(" + ");
+
+  document.getElementById("feedback").innerHTML = `
+    💡 <b>${current.a} groups of ${current.b}:</b><br>
+    ${repeated} = ❓
+  `;
+}
+
+/* =========================================================
+   FINISH GAME
+========================================================= */
+function finish() {
+  if (state.timer) {
+    clearInterval(state.timer);
+    state.timer = null;
+  }
+
+  if (state.mode === "table" && selected) {
+    state.stars += 2;
+  }
+
+  save();
+
+  const scoreText = state.mode === "speed"
+    ? `${state.score} correct`
+    : `${state.score} / ${state.total}`;
+
+  document.getElementById("finalScore").textContent = scoreText;
+  document.getElementById("finalStars").textContent = state.stars;
+  document.getElementById("resultText").textContent =
+    `You completed your ${state.mode === "table" ? "table" : "multiplication"} session. Keep practicing and collect more stars!`;
+
+  show("result");
+}
+
+/* =========================================================
+   UPDATE STATS
+========================================================= */
+function updateStats() {
+  document.getElementById("score").textContent = state.score;
+  document.getElementById("streak").textContent = state.streak;
+  document.getElementById("gameStars").textContent = state.stars;
+  document.getElementById("totalStars").textContent = state.stars;
+}
+
+/* =========================================================
+   PROGRESS SCREEN (1–12)
+========================================================= */
+function renderProgress() {
+  let html = "";
+  for (let i = 1; i <= 12; i++) {
+    const correct = state.progress[i] || 0;
+    const percentage = Math.min(100, (correct / 12) * 100);
+
+    html += `
+      <div class="table-row">
+        <b>Table ${i}</b>
+        <div class="mini">
+          <span><i style="width:${percentage}%"></i></span>
+        </div>
+        <small>${correct} correct</small>
+      </div>
+    `;
+  }
+  document.getElementById("progressRows").innerHTML = html;
+}
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/* INITIALIZE */
+buildTableButtons();
+renderLearn();
+renderProgress();
+document.getElementById("totalStars").textContent = state.stars;
+</script>
+
+</body>
+</html>

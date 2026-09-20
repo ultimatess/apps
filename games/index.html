@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Games | Web App Launcher</title>
+  <meta name="description" content="Minimalist web app launcher for browser games." />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover-border: rgba(255, 255, 255, 0.22);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.05) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px 64px;
+      flex: 1;
+    }
+
+    /* Header Nav */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 44px;
+    }
+
+    .nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav a:hover {
+      color: var(--text-main);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(168, 85, 247, 0.1);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .header {
+      margin-bottom: 36px;
+    }
+
+    .header h1 {
+      font-size: clamp(2rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    /* Search Bar */
+    .search-bar {
+      margin-bottom: 32px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      max-width: 400px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input:focus {
+      border-color: var(--accent);
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-hover-border);
+      box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .arrow-icon {
+      color: var(--text-muted);
+      opacity: 0.6;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .card:hover .arrow-icon {
+      transform: translate(2px, -2px);
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    .card h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .skeleton-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      height: 160px;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="nav">
+      <a href="../index.html">← Back to Apps</a>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        <span id="game-counter">Scanning...</span>
+      </div>
+    </div>
+
+    <div class="header">
+      <h1>Games Collection</h1>
+      <p>Self-discoverable browser games and interactive web apps.</p>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search games..." autocomplete="off">
+    </div>
+
+    <div id="games-grid" class="grid">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Arunkumar Shanmugam • Hosted via GitHub Pages</p>
+  </footer>
+
+  <script>
+    const GITHUB_USERNAME = 'ultimatess'; 
+    const REPO_NAME = 'apps';
+    const GAMES_PATH = 'games';
+
+    const EXCLUDED = new Set(['CNAME', 'index.html', 'README.md', '.github', '.git', 'assets']);
+
+    const GRADIENTS = [
+      'linear-gradient(135deg, #a855f7, #6366f1)',
+      'linear-gradient(135deg, #ec4899, #8b5cf6)',
+      'linear-gradient(135deg, #38bdf8, #2563eb)',
+      'linear-gradient(135deg, #10b981, #06b6d4)',
+      'linear-gradient(135deg, #f97316, #ec4899)'
+    ];
+
+    const KNOWN_GAMES = [
+      { name: 'party-games', title: 'Party Games', desc: 'Pass-the-phone party games for groups: Secret Names, Mafia, Spyfall & more.' },
+      { name: 'math-table', title: 'Math Table', desc: 'Interactive math tables practice and learning game.' }
+    ];
+
+    let allGames = [];
+
+    function hashString(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) hash = (hash << 5) - hash + str.charCodeAt(i);
+      return Math.abs(hash);
+    }
+
+    function formatTitle(name) {
+      return name.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    async function fetchGameMetadata(folderName) {
+      const known = KNOWN_GAMES.find(g => g.name === folderName);
+      if (known) return known;
+
+      let title = formatTitle(folderName);
+      let desc = 'Interactive web game';
+
+      try {
+        const res = await fetch(`./${folderName}/index.html`);
+        if (res.ok) {
+          const htmlText = await res.text();
+          const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+          const pageTitle = doc.querySelector('title')?.textContent;
+          const pageDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content');
+          if (pageTitle) title = pageTitle.split('-')[0].trim();
+          if (pageDesc) desc = pageDesc;
+        }
+      } catch (e) {}
+
+      return { name: folderName, title, desc };
+    }
+
+    async function loadGames() {
+      const counter = document.getElementById('game-counter');
+
+      try {
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${GAMES_PATH}`);
+        let folderItems = [];
+
+        if (response.ok) {
+          const items = await response.json();
+          folderItems = items.filter(item => item.type === 'dir' && !EXCLUDED.has(item.name));
+        }
+
+        if (folderItems.length === 0) {
+          folderItems = KNOWN_GAMES.map(g => ({ name: g.name }));
+        }
+
+        allGames = await Promise.all(folderItems.map(item => fetchGameMetadata(item.name)));
+        renderGrid(allGames);
+
+      } catch (err) {
+        console.error(err);
+        allGames = KNOWN_GAMES;
+        renderGrid(allGames);
+      }
+    }
+
+    function renderGrid(games) {
+      const grid = document.getElementById('games-grid');
+      const counter = document.getElementById('game-counter');
+      grid.innerHTML = '';
+
+      counter.textContent = `${games.length} Game${games.length === 1 ? '' : 's'}`;
+
+      if (games.length === 0) {
+        grid.innerHTML = `<p style="color: var(--text-muted); grid-column: 1 / -1;">No games found matching your search.</p>`;
+        return;
+      }
+
+      games.forEach(game => {
+        const initial = game.title.charAt(0).toUpperCase();
+        const gradient = GRADIENTS[hashString(game.name) % GRADIENTS.length];
+
+        const card = document.createElement('a');
+        card.className = 'card';
+        card.href = `./${game.name}/`;
+
+        card.innerHTML = `
+          <div>
+            <div class="card-top">
+              <div class="icon-box" style="background: ${gradient};">
+                ${initial}
+              </div>
+              <svg class="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7"></line>
+                <polyline points="7 7 17 7 17 17"></polyline>
+              </svg>
+            </div>
+            <h3>${game.title}</h3>
+            <p>${game.desc}</p>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = allGames.filter(g => g.title.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q));
+      renderGrid(filtered);
+    });
+
+    loadGames();
+  </script>
+</body>
+</html>
