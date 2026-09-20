@@ -1,1332 +1,1543 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ta" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>iPixel Pilot HUD • Windshield Matrix</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Noto+Sans+Tamil:wght@500;700;900&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iPixel Pilot">
+  <meta name="theme-color" content="#030712">
+  <title>iPixel Pilot Pro • iOS Driving HUD</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700;800;900&family=SF+Pro+Text:wght@400;500;600&family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+Tamil:wght@500;700;900&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            ios: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+            tamil: ['"Noto Sans Tamil"', '-apple-system', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            iosGlass: 'rgba(255, 255, 255, 0.08)',
+            iosGlassBorder: 'rgba(255, 255, 255, 0.14)',
+            iosCard: 'rgba(17, 24, 39, 0.72)',
+          }
+        }
+      }
+    }
+  </script>
 
   <style>
     :root {
-      --bg-dark: #0b0d17;
-      --card-bg: #151828;
-      --card-inner: #1c2035;
-      --card-border: #232742;
-      --border-subtle: rgba(255, 255, 255, 0.08);
-
-      --cyan-led: #22d3ee;
-      --amber-led: #f59e0b;
-      --emerald-led: #10b981;
-      --rose-led: #ef4444;
-      --blue-led: #3b82f6;
-
-      --text-white: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
+      --sat: env(safe-area-inset-top, 20px);
+      --sab: env(safe-area-inset-bottom, 20px);
+      --sal: env(safe-area-inset-left, 0px);
+      --sar: env(safe-area-inset-right, 0px);
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Noto Sans Tamil", sans-serif;
+      background-color: #030712;
+      background-image: 
+        radial-gradient(at 15% 15%, rgba(59, 130, 246, 0.18) 0px, transparent 50%),
+        radial-gradient(at 85% 25%, rgba(239, 68, 68, 0.15) 0px, transparent 45%),
+        radial-gradient(at 50% 80%, rgba(168, 85, 247, 0.12) 0px, transparent 55%);
+      background-attachment: fixed;
+      color: #f3f4f6;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      background-image: 
-        radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.08) 0px, transparent 60%),
-        radial-gradient(at 80% 40%, rgba(244, 63, 94, 0.06) 0px, transparent 50%);
-      background-attachment: fixed;
-      color: var(--text-white);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans Tamil", sans-serif;
+      -webkit-user-select: none;
+      padding-top: var(--sat);
+      padding-bottom: calc(var(--sab) + 76px);
+      padding-left: var(--sal);
+      padding-right: var(--sar);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: max(env(safe-area-inset-top), 12px) 14px calc(max(env(safe-area-inset-bottom), 12px) + 94px) 14px;
+      overflow-x: hidden;
     }
 
-    .hud-container {
-      width: 100%;
-      max-width: 480px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    /* iOS 18 Liquid Glass System */
+    .ios-glass {
+      background: rgba(18, 24, 38, 0.65);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 12px 36px 0 rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.35);
     }
 
-    /* =========================================================================
-       SECTION 1: WINDSHIELD MATRIX 16x96 CARD
-       ========================================================================= */
-    .screen-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+    .ios-glass-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(32px) saturate(190%);
+      -webkit-backdrop-filter: blur(32px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      box-shadow: 
+        0 8px 30px rgba(0, 0, 0, 0.35),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.22);
     }
 
-    .screen-top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+    .ios-glass-pill {
+      background: rgba(255, 255, 255, 0.09);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.25);
     }
 
-    .screen-tag {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-muted);
+    .ios-island {
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.9);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .dot-matrix-indicator {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--emerald-led);
-      box-shadow: 0 0 10px var(--emerald-led);
+    .ios-spring-btn {
+      transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s, box-shadow 0.2s;
+    }
+    .ios-spring-btn:active {
+      transform: scale(0.94);
     }
 
-    .screen-meta-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .active-text-badge {
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .mode-badge {
-      color: var(--cyan-led);
-      font-size: 11px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .version-pill {
-      font-size: 9px;
-      color: var(--amber-led);
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      padding: 1px 6px;
-      border-radius: 8px;
-    }
-
-    /* Screen Canvas & Diode Grid */
-    .bezel-frame {
-      background: #05060a;
-      border: 2px solid #141726;
-      border-radius: 16px;
-      padding: 10px 8px;
-      box-shadow: inset 0 2px 10px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.6);
-      position: relative;
-    }
-
-    #matrixCanvas {
-      width: 100%;
-      height: 72px;
-      display: block;
-      border-radius: 8px;
-      background: #020204;
-      image-rendering: pixelated;
-    }
-
-    /* Brightness and Speed Dual Sliders */
-    .sliders-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .slider-pill {
-      background: var(--card-inner);
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 10px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .slider-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
-    .slider-info span:first-child {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .slider-val {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    input[type=range] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 6px;
-      border-radius: 4px;
-      background: #111422;
-      outline: none;
-    }
-
-    #brightnessRange::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--amber-led);
-      box-shadow: 0 0 10px var(--amber-led);
-      cursor: pointer;
-    }
-
-    #speedRange::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--cyan-led);
-      box-shadow: 0 0 10px var(--cyan-led);
-      cursor: pointer;
-    }
-
-    /* =========================================================================
-       SECTION 2: AUTOMOTIVE TELEMETRY CARD
-       ========================================================================= */
-    .telemetry-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 18px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
-    }
-
-    .telemetry-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .telemetry-title-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .icon-box-hud {
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
-      background: rgba(59, 130, 246, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--blue-led);
-      font-size: 16px;
-    }
-
-    .title-subgroup h3 {
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .title-subgroup span {
-      font-size: 10px;
-      color: var(--text-dim);
-      font-family: 'JetBrains Mono', monospace;
-      letter-spacing: 0.5px;
-    }
-
-    /* Auto Mirror Switch */
-    .mirror-toggle-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
-    .switch {
+    .glass-switch {
       position: relative;
       display: inline-block;
-      width: 44px;
-      height: 24px;
+      width: 48px;
+      height: 28px;
     }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider-toggle {
+    .glass-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .glass-slider {
       position: absolute;
       cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #262c45;
-      transition: .3s;
-      border-radius: 24px;
+      background-color: rgba(120, 120, 128, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 34px;
     }
-    .slider-toggle:before {
+    .glass-slider:before {
       position: absolute;
       content: "";
-      height: 18px; width: 18px;
-      left: 3px; bottom: 3px;
-      background-color: white;
-      transition: .3s;
+      height: 22px;
+      width: 22px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #ffffff;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+      transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
       border-radius: 50%;
     }
-    input:checked + .slider-toggle { background-color: var(--emerald-led); }
-    input:checked + .slider-toggle:before { transform: translateX(20px); }
-
-    /* Cockpit Main Stage: Turns & Speedometer */
-    .cockpit-stage {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      padding: 6px 0;
+    input:checked + .glass-slider {
+      background-color: #34c759;
+    }
+    input:checked + .glass-slider:before {
+      transform: translateX(20px);
     }
 
-    .turn-pod {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      opacity: 0.35;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+    /* Screen Bezel Diode Simulation */
+    .matrix-bezel {
+      background: linear-gradient(180deg, #111827 0%, #030712 100%);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 15px 35px -5px rgba(0, 0, 0, 0.8),
+        inset 0 2px 4px rgba(255, 255, 255, 0.15),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.7);
     }
 
-    .turn-pod.active-pod {
-      opacity: 1;
-      transform: scale(1.06);
+    /* Directional Indicator Pulses */
+    @keyframes turnPulseLeft {
+      0%, 100% { opacity: 0.2; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(-4px); }
     }
-
-    .turn-circle {
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      background: var(--card-inner);
-      border: 1.5px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      color: var(--text-dim);
-      transition: all 0.2s ease;
+    @keyframes turnPulseRight {
+      0%, 100% { opacity: 0.2; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(4px); }
     }
+    .anim-turn-left { animation: turnPulseLeft 0.8s infinite ease-in-out; }
+    .anim-turn-right { animation: turnPulseRight 0.8s infinite ease-in-out; }
 
-    .turn-pod.active-pod .turn-circle {
-      border-color: var(--emerald-led);
-      color: var(--emerald-led);
-      box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
-    }
-
-    .turn-pod span {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-dim);
-    }
-
-    .turn-pod.active-pod span {
-      color: var(--emerald-led);
-    }
-
-    .speedo-cluster {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .speed-reading {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-    }
-
-    .speed-val-big {
-      font-size: 54px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      line-height: 1;
-      color: #fff;
-    }
-
-    .speed-unit-txt {
-      font-size: 12px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-dim);
-    }
-
-    .stopped-pill {
-      background: #1c2035;
-      border: 1px solid var(--border-subtle);
-      border-radius: 20px;
-      padding: 4px 12px;
-      font-size: 10px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      letter-spacing: 0.8px;
-    }
-
-    .stopped-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--rose-led);
-      box-shadow: 0 0 8px var(--rose-led);
-    }
-
-    /* 3-Column Stats Strip */
-    .metrics-strip {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .metric-cell {
-      background: var(--card-inner);
-      border: 1px solid var(--border-subtle);
-      border-radius: 14px;
-      padding: 10px 8px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .metric-label {
-      font-size: 9px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-dim);
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-    }
-
-    .metric-value {
-      font-size: 12px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-white);
-    }
-
-    /* Actions Row: Enable Sensors & Emergency Brake */
-    .action-row {
-      display: grid;
-      grid-template-columns: 1.6fr 1fr;
-      gap: 10px;
-    }
-
-    .btn-sensors {
-      background: var(--card-inner);
-      border: 1px solid rgba(59, 130, 246, 0.4);
-      border-radius: 16px;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      height: 44px;
-      cursor: pointer;
-    }
-
-    .btn-sensors:active {
-      background: rgba(59, 130, 246, 0.2);
-    }
-
-    .btn-brake-action {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      border: none;
-      border-radius: 16px;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      height: 44px;
-      cursor: pointer;
-      box-shadow: 0 4px 18px rgba(239, 68, 68, 0.45);
-    }
-
-    .btn-brake-action:active, .btn-brake-action.active-brake {
-      transform: scale(0.97);
-      background: #b91c1c;
-      box-shadow: 0 0 24px rgba(239, 68, 68, 0.8);
-    }
-
-    /* Desk Simulator Controls */
-    .sim-bar {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      border-top: 1px solid var(--border-subtle);
-      padding-top: 12px;
-    }
-
-    .sim-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 800;
-      color: var(--text-dim);
-      letter-spacing: 0.6px;
-    }
-
-    .sim-header span:last-child {
-      color: var(--text-muted);
-    }
-
-    #simSpeedRange::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--blue-led);
-      box-shadow: 0 0 8px var(--blue-led);
-      cursor: pointer;
-    }
-
-    .sim-buttons-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
-
-    .btn-sim {
-      background: var(--card-inner);
-      border: 1px solid var(--border-subtle);
-      border-radius: 12px;
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 9px 4px;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .btn-sim:active, .btn-sim.sim-active {
-      background: rgba(34, 211, 238, 0.15);
-      border-color: var(--cyan-led);
-      color: #fff;
-    }
-
-    /* Content Views (Meme / Tamil / Devil / Studio) */
-    .tab-content-zone {
-      display: none;
-      width: 100%;
-    }
-
-    .tab-content-zone.show {
-      display: block;
-    }
-
-    .deck-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-
-    .deck-item {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 14px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      cursor: pointer;
-    }
-
-    .deck-item:active {
-      border-color: var(--cyan-led);
-      transform: scale(0.97);
-    }
-
-    .deck-item-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .deck-item-sub {
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    /* =========================================================================
-       SECTION 3: FLOATING BOTTOM GLASS NAVIGATION BAR
-       ========================================================================= */
-    .bottom-nav-wrapper {
-      position: fixed;
-      bottom: max(env(safe-area-inset-bottom), 12px);
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      z-index: 99;
-      pointer-events: none;
-    }
-
-    .floating-nav {
-      pointer-events: auto;
-      background: rgba(21, 24, 40, 0.85);
-      backdrop-filter: blur(28px) saturate(200%);
-      -webkit-backdrop-filter: blur(28px) saturate(200%);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 36px;
-      padding: 6px 10px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
-    }
-
-    .nav-tab-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      padding: 6px 14px;
-      border-radius: 24px;
-      color: var(--text-dim);
-      cursor: pointer;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.4px;
-      transition: all 0.25s ease;
-    }
-
-    .nav-tab-btn .tab-ico {
-      font-size: 15px;
-    }
-
-    .nav-tab-btn.active-tab {
-      background: rgba(59, 130, 246, 0.22);
-      color: #fff;
-      border: 1px solid rgba(59, 130, 246, 0.4);
-    }
-
-    /* Bluefy BLE Modal */
-    .modal-veil {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      display: none;
-      align-items: flex-end;
-      justify-content: center;
-      z-index: 999;
-    }
-
-    .modal-veil.open { display: flex; }
-
-    .sheet-card {
-      background: #131624;
-      border: 1px solid var(--card-border);
-      border-radius: 28px 28px 0 0;
-      width: 100%;
-      max-width: 480px;
-      padding: 22px 18px calc(max(env(safe-area-inset-bottom), 12px) + 20px) 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      box-shadow: 0 -16px 40px rgba(0,0,0,0.8);
-    }
-
-    .sheet-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .sheet-top h2 { font-size: 18px; font-weight: 800; }
-    .sheet-close-btn {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      border: none; color: #fff; cursor: pointer;
-    }
-
-    .console-terminal {
-      background: #08090f;
-      border: 1px solid var(--border-subtle);
-      border-radius: 14px;
-      padding: 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--emerald-led);
-      height: 100px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-
-    .btn-connect-primary {
-      background: linear-gradient(135deg, var(--blue-led), #6366f1);
-      border: none; border-radius: 16px;
-      padding: 14px; color: #fff; font-weight: 800; font-size: 14px;
-      cursor: pointer;
-    }
+    /* Custom iOS Scrollbar */
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body>
 
-  <div class="hud-container">
+<body class="flex flex-col items-center">
 
-    <!-- =====================================================================
-         1. WINDSHIELD MATRIX (16x96) CARD
-         ===================================================================== -->
-    <div class="screen-card">
-      <div class="screen-top-bar">
-        <div class="screen-tag">
-          <span class="dot-matrix-indicator"></span>
-          <span>WINDSHIELD MATRIX (16×96)</span>
-        </div>
-        <div class="screen-meta-right">
-          <span class="active-text-badge" id="screenStatusHeader">வணக்கம் 🤝</span>
-          <span class="mode-badge" onclick="openBleSheet()" id="bleBadge">SIMULATED</span>
-          <span class="version-pill">v1.4.0-COCKPIT-EXACT</span>
-        </div>
+  <header class="w-full max-w-lg px-4 pt-1 pb-3 flex flex-col items-center z-50">
+    <!-- Dynamic Island Container -->
+    <div id="dynamicIsland" class="ios-island w-[205px] h-[34px] rounded-full px-3 py-1 flex items-center justify-between cursor-pointer hover:w-[240px] transition-all">
+      <div class="flex items-center gap-2">
+        <span id="islandDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="islandPrimary" class="text-[11px] font-mono font-semibold tracking-tight text-white/90">0 KM/H</span>
       </div>
-
-      <div class="bezel-frame">
-        <canvas id="matrixCanvas" width="96" height="16"></canvas>
-      </div>
-
-      <div class="sliders-grid">
-        <div class="slider-pill">
-          <div class="slider-info">
-            <span>☀️ Brightness</span>
-            <span class="slider-val" id="brightnessVal">85%</span>
-          </div>
-          <input type="range" id="brightnessRange" min="10" max="100" value="85" oninput="updateBrightness(this.value)" />
-        </div>
-
-        <div class="slider-pill">
-          <div class="slider-info">
-            <span>⚡ Speed</span>
-            <span class="slider-val" id="speedVal">6x</span>
-          </div>
-          <input type="range" id="speedRange" min="1" max="10" value="6" oninput="updateSpeed(this.value)" />
-        </div>
+      
+      <div id="islandStatus" class="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400">
+        <span id="islandModeLabel">CRUISING</span>
+        <svg id="islandBleIcon" class="w-3 h-3 text-blue-400 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14.88 16.29L13 18.17V14.41M13 5.83l1.88 1.88-1.88 1.88M7 14.83l10-10L12 0v8.17L7.83 4 6.41 5.41 11.59 10.59 6.41 15.77 7.83 17.18 12 13v9.82l5-4.99-4.12-4.13-1-1.01z"/>
+        </svg>
       </div>
     </div>
 
-    <!-- =====================================================================
-         2. AUTOMOTIVE TELEMETRY CARD (HUD VIEW)
-         ===================================================================== -->
-    <div class="tab-content-zone show" id="view-hud">
-      <div class="telemetry-card">
-        <div class="telemetry-header">
-          <div class="telemetry-title-group">
-            <div class="icon-box-hud">📊</div>
-            <div class="title-subgroup">
-              <h3>Automotive Telemetry</h3>
-              <span>GPS + GYROSCOPE + G-METER</span>
+    <!-- Quick Connectivity & Telemetry Subheader -->
+    <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="text-[13px] font-bold tracking-tight text-white">iPixel Matrix</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v1.5.1-COCKPIT-EXACT-FIX</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- BLE Button -->
+        <button id="bleBtn" onclick="handleBluetoothConnection()" class="ios-glass-pill ios-spring-btn px-3 py-1 rounded-full flex items-center gap-1.5 text-[11px] font-medium text-slate-200">
+          <span id="bleStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span id="bleBtnText">Pair Matrix</span>
+        </button>
+
+        <!-- Sound FX Button -->
+        <button onclick="toggleAudio()" id="soundBtn" class="ios-glass-pill ios-spring-btn p-1.5 rounded-full text-slate-300">
+          <svg id="soundIcon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="w-full max-w-lg px-4 flex flex-col gap-3.5">
+    <!-- Matrix HUD Bezel -->
+    <section class="w-full ios-glass-card rounded-[28px] p-3.5 flex flex-col gap-2.5 relative overflow-hidden">
+      <!-- Screen Header with Live Matrix Mode Status -->
+      <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
+        <div class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+          <span class="uppercase tracking-wide">Windshield Matrix (16×96)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="liveFrameLabel" class="text-white/90 font-tamil font-bold truncate max-w-[170px]">வணக்கம் 🤝</span>
+          <span id="bleSyncTick" class="text-[10px] text-cyan-400/90 font-mono">SIMULATED</span>
+        </div>
+      </div>
+
+      <!-- Diode Canvas Holder with Curvature & Smoked Acrylic Glass -->
+      <div class="matrix-bezel relative w-full rounded-2xl p-2.5 flex items-center justify-center overflow-hidden">
+        <canvas id="matrixCanvas" width="960" height="160" class="w-full h-auto max-h-[140px] rounded-lg object-contain"></canvas>
+        <div class="absolute inset-0 pointer-events-none rounded-2xl bg-gradient-to-b from-white/5 via-transparent to-black/30"></div>
+      </div>
+
+      <!-- Quick Sliders (Brightness & Speed) -->
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <div class="ios-glass-pill rounded-2xl p-2 flex flex-col justify-between">
+          <div class="flex justify-between items-center text-[11px] text-slate-400">
+            <span class="flex items-center gap-1">
+              <svg class="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>
+              Brightness
+            </span>
+            <span id="brightValLabel" class="font-mono text-white text-[10px] font-bold">85%</span>
+          </div>
+          <input type="range" min="10" max="100" value="85" oninput="setBrightness(this.value)" class="w-full accent-amber-400 mt-1 cursor-pointer">
+        </div>
+
+        <div class="ios-glass-pill rounded-2xl p-2 flex flex-col justify-between">
+          <div class="flex justify-between items-center text-[11px] text-slate-400">
+            <span class="flex items-center gap-1">
+              <svg class="w-3 h-3 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Speed
+            </span>
+            <span id="speedValLabel" class="font-mono text-white text-[10px] font-bold">6x</span>
+          </div>
+          <input type="range" min="1" max="10" value="6" oninput="setScrollSpeed(this.value)" class="w-full accent-cyan-400 mt-1 cursor-pointer">
+        </div>
+      </div>
+    </section>
+
+    <!-- REAL-TIME DRIVING TELEMETRY & TURN SENSORS (Active Screen 1) -->
+    <section id="viewDriving" class="flex flex-col gap-3">
+      <!-- High-End iOS Speed & Turn Telemetry Cluster -->
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-3 relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div>
+              <h2 class="text-xs font-bold text-white uppercase tracking-wider">Automotive Telemetry</h2>
+              <p class="text-[10px] text-slate-400 font-mono">GPS + GYROSCOPE + G-METER</p>
             </div>
           </div>
 
-          <div class="mirror-toggle-group">
-            <span>Auto Mirror</span>
-            <label class="switch">
-              <input type="checkbox" id="mirrorToggle" checked onchange="toggleAutoMirror(this.checked)">
-              <span class="slider-toggle"></span>
+          <!-- Auto HUD Mirror Switch -->
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-medium text-slate-300">Auto Mirror</span>
+            <label class="glass-switch">
+              <input type="checkbox" id="autoSyncMatrixToggle" checked onchange="toggleAutoSync(this.checked)">
+              <span class="glass-slider"></span>
             </label>
           </div>
         </div>
 
-        <!-- Turns and Speedometer Cluster -->
-        <div class="cockpit-stage">
-          <div class="turn-pod" id="turnPodLeft" onclick="toggleTurnSignal('LEFT')">
-            <div class="turn-circle">←</div>
-            <span>LEFT TURN</span>
-          </div>
-
-          <div class="speedo-cluster">
-            <div class="speed-reading">
-              <span class="speed-val-big" id="speedDisplay">0</span>
-              <span class="speed-unit-txt">KM/H</span>
+        <!-- Center Gauges: Speedometer + Steering Direction Indicator -->
+        <div class="grid grid-cols-3 items-center justify-items-center py-2">
+          <!-- Left Turn Indicator -->
+          <div id="leftTurnBox" class="flex flex-col items-center gap-1.5 transition-all duration-300 opacity-30">
+            <div class="w-12 h-12 rounded-2xl ios-glass flex items-center justify-center border border-white/10 text-emerald-400">
+              <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
             </div>
-            <div class="stopped-pill" id="motionPill">
-              <span class="stopped-dot"></span>
-              <span id="motionStatusText">STOPPED</span>
+            <span class="text-[10px] font-mono font-bold tracking-tight text-emerald-400">LEFT TURN</span>
+          </div>
+
+          <!-- Central Speedometer -->
+          <div class="flex flex-col items-center">
+            <div class="flex items-baseline">
+              <span id="speedValue" class="text-6xl font-black font-mono tracking-tighter text-white">0</span>
+              <span class="text-xs font-bold text-slate-400 ml-1 font-mono">KM/H</span>
+            </div>
+            <div id="driveStatePill" class="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-white/10 text-slate-300 border border-white/10">
+              STOPPED 🛑
             </div>
           </div>
 
-          <div class="turn-pod" id="turnPodRight" onclick="toggleTurnSignal('RIGHT')">
-            <div class="turn-circle">→</div>
-            <span>RIGHT TURN</span>
+          <!-- Right Turn Indicator -->
+          <div id="rightTurnBox" class="flex flex-col items-center gap-1.5 transition-all duration-300 opacity-30">
+            <div class="w-12 h-12 rounded-2xl ios-glass flex items-center justify-center border border-white/10 text-emerald-400">
+              <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </div>
+            <span class="text-[10px] font-mono font-bold tracking-tight text-emerald-400">RIGHT TURN</span>
           </div>
         </div>
 
-        <!-- 3 Metric Readings Strip -->
-        <div class="metrics-strip">
-          <div class="metric-cell">
-            <span class="metric-label">GPS ACCURACY</span>
-            <span class="metric-value" id="gpsAccVal">±20M</span>
+        <!-- Telemetry Stats Strip -->
+        <div class="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+          <div class="ios-glass-pill p-2 rounded-xl">
+            <span class="text-[10px] text-slate-400 block">GPS ACCURACY</span>
+            <span id="gpsAccuracy" class="font-bold text-white text-[11px]">READY</span>
           </div>
-          <div class="metric-cell">
-            <span class="metric-label">STEER ANGLE</span>
-            <span class="metric-value" id="steerAngleVal">0° (CENTER)</span>
+          <div class="ios-glass-pill p-2 rounded-xl">
+            <span class="text-[10px] text-slate-400 block">STEER ANGLE</span>
+            <span id="steerAngleText" class="font-bold text-white text-[11px]">0° (CENTER)</span>
           </div>
-          <div class="metric-cell">
-            <span class="metric-label">G-DECEL</span>
-            <span class="metric-value" id="gDecelVal">0.00 G</span>
+          <div class="ios-glass-pill p-2 rounded-xl">
+            <span class="text-[10px] text-slate-400 block">G-DECEL</span>
+            <span id="gMeterText" class="font-bold text-white text-[11px]">0.00 G</span>
           </div>
         </div>
 
-        <!-- Action Row: Enable Sensors & Brake -->
-        <div class="action-row">
-          <button class="btn-sensors" onclick="requestDeviceSensors()">
-            <span>📱</span> Enable iPhone Sensors
+        <!-- Sensor Activation & Permissions Bar -->
+        <div class="flex items-center justify-between pt-1 gap-2">
+          <button id="sensorPermBtn" onclick="requestDeviceSensors()" class="ios-glass-pill ios-spring-btn flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-[11px] font-semibold text-slate-200">
+            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+            <span id="sensorBtnLabel">Enable iPhone Sensors</span>
           </button>
-          <button class="btn-brake-action" id="btnBrake" onclick="triggerBrakeAlert()">
-            <span>⚠️</span> BRAKE! ⛔
+
+          <!-- Sudden Brake Macro Trigger -->
+          <button onclick="triggerEmergencyBrakeEvent()" class="ios-spring-btn py-2 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-lg shadow-red-600/30">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <span>BRAKE! ⛔</span>
           </button>
         </div>
 
-        <!-- Indoor Desk Simulator -->
-        <div class="sim-bar">
-          <div class="sim-header">
+        <!-- Desk / Test Drive Simulator Control -->
+        <div class="mt-1 pt-2.5 border-t border-white/10 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-[10px] font-mono text-slate-400">
             <span>INDOOR DESK SIMULATOR</span>
-            <span>Test Speed: <b id="simSpeedLabel" style="color:#fff;">45 km/h</b></span>
+            <span id="simSpeedLabel">Test Speed: 45 km/h</span>
           </div>
-
-          <input type="range" id="simSpeedRange" min="0" max="140" value="45" oninput="updateSimSpeed(this.value)" />
-
-          <div class="sim-buttons-row">
-            <button class="btn-sim" id="btnSimLeft" onclick="simulateTurn('LEFT')">Simulate Left Turn</button>
-            <button class="btn-sim sim-active" id="btnSimStraight" onclick="simulateTurn('STRAIGHT')">Straight</button>
-            <button class="btn-sim" id="btnSimRight" onclick="simulateTurn('RIGHT')">Simulate Right Turn</button>
+          <input type="range" min="0" max="140" value="0" id="simSpeedSlider" oninput="updateSimSpeed(this.value)" class="w-full accent-blue-500 cursor-pointer">
+          <div class="flex gap-2 mt-1">
+            <button onclick="simulateTurn('left')" class="ios-glass-pill ios-spring-btn flex-1 py-1.5 rounded-lg text-[10px] font-mono font-semibold text-slate-300">Simulate Left Turn</button>
+            <button onclick="simulateTurn('straight')" class="ios-glass-pill ios-spring-btn flex-1 py-1.5 rounded-lg text-[10px] font-mono font-semibold text-slate-300">Straight</button>
+            <button onclick="simulateTurn('right')" class="ios-glass-pill ios-spring-btn flex-1 py-1.5 rounded-lg text-[10px] font-mono font-semibold text-slate-300">Simulate Right Turn</button>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- =====================================================================
-         TAB 2: TAMIL MEMES VIEW
-         ===================================================================== -->
-    <div class="tab-content-zone" id="view-meme">
-      <div class="deck-grid" id="memeGrid"></div>
-    </div>
-
-    <!-- =====================================================================
-         TAB 3: TAMIL ROAD GREETINGS VIEW
-         ===================================================================== -->
-    <div class="tab-content-zone" id="view-tamil">
-      <div class="deck-grid" id="tamilGrid"></div>
-    </div>
-
-    <!-- =====================================================================
-         TAB 4: DEVIL EYES VIEW
-         ===================================================================== -->
-    <div class="tab-content-zone" id="view-devil">
-      <div class="deck-grid">
-        <div class="deck-item" onclick="setMode('devil')">
-          <div class="deck-item-title">Devil Eyes 😈</div>
-          <div class="deck-item-sub">Red animated blinking optics</div>
+    <!-- TAMIL MEME MODE (Active Screen 2) -->
+    <section id="viewTamilMeme" class="hidden flex-col gap-3">
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-black font-tamil text-white tracking-wide">தமிழ் சினிமா மீம் டயலாக்</h2>
+            <p class="text-[10px] text-slate-400 font-mono">ICONIC CAR MEMES & BANTER</p>
+          </div>
+          <span class="text-xl">🤣</span>
         </div>
-        <div class="deck-item" onclick="setMode('devil')">
-          <div class="deck-item-title">Cyber Gaze 🤖</div>
-          <div class="deck-item-sub">Electric scanner eyes</div>
+
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <!-- Meme 1 -->
+          <button onclick="sendPresetMessage('பேசிட்டே போலாம் வா 😎', '#f59e0b', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-amber-500/20 hover:border-amber-400/50">
+            <span class="font-tamil font-bold text-xs text-white">பேசிட்டே போலாம் வா 😎</span>
+            <span class="text-[10px] font-mono text-amber-400">Vadivelu Classic • 6x</span>
+          </button>
+
+          <!-- Meme 2 -->
+          <button onclick="sendPresetMessage('ஆஹான்?! 🤨', '#06b6d4', 'pulse', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-cyan-500/20 hover:border-cyan-400/50">
+            <span class="font-tamil font-bold text-xs text-white">ஆஹான்?! 🤨</span>
+            <span class="text-[10px] font-mono text-cyan-400">Reaction Meme • Pulse</span>
+          </button>
+
+          <!-- Meme 3 -->
+          <button onclick="sendPresetMessage('என்ன கொடுமை சரவணா இது! 🤦', '#ef4444', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-red-500/20 hover:border-red-400/50">
+            <span class="font-tamil font-bold text-xs text-white">என்ன கொடுமை சரவணா! 🤦</span>
+            <span class="text-[10px] font-mono text-red-400">Traffic Jam Punch • 6x</span>
+          </button>
+
+          <!-- Meme 4 -->
+          <button onclick="sendPresetMessage('பயபுள்ள பயந்துட்டான் போல! 😂', '#10b981', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-emerald-500/20 hover:border-emerald-400/50">
+            <span class="font-tamil font-bold text-xs text-white">பயபுள்ள பயந்துட்டான்! 😂</span>
+            <span class="text-[10px] font-mono text-emerald-400">Overtake Banter • 6x</span>
+          </button>
+
+          <!-- Meme 5 -->
+          <button onclick="sendPresetMessage('இவனுக வேற பின்னாடியே வருவானுங்க! 🚗', '#f59e0b', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-white/10">
+            <span class="font-tamil font-bold text-xs text-white">இவனுக வேற பின்னாடியே!</span>
+            <span class="text-[10px] font-mono text-amber-300">Tailgating Alert</span>
+          </button>
+
+          <!-- Meme 6 -->
+          <button onclick="sendPresetMessage('சார், எங்கே போறீங்கனு தெரியாது...', '#06b6d4', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-white/10">
+            <span class="font-tamil font-bold text-xs text-white">நீங்க எங்கே போறீங்க? 🤔</span>
+            <span class="text-[10px] font-mono text-cyan-300">Vadivelu Driving</span>
+          </button>
+
+          <!-- Meme 7 -->
+          <button onclick="sendPresetMessage('புல்லட் மாதிரி போறான்?! 🚀', '#a855f7', 'scroll', 7)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-white/10">
+            <span class="font-tamil font-bold text-xs text-white">புல்லட் மாதிரி போறான்?! 🚀</span>
+            <span class="text-[10px] font-mono text-purple-400">Super Fast Pass</span>
+          </button>
+
+          <!-- Meme 8 -->
+          <button onclick="sendPresetMessage('அப்படியே ஓரமா போயிருங்க! ➡️', '#f59e0b', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-white/10">
+            <span class="font-tamil font-bold text-xs text-white">அப்படியே ஓரமா போங்க ➡️</span>
+            <span class="text-[10px] font-mono text-amber-300">Lane Courtesy</span>
+          </button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- =====================================================================
-         TAB 5: STUDIO / CUSTOM SENDER
-         ===================================================================== -->
-    <div class="tab-content-zone" id="view-studio">
-      <div class="telemetry-card">
-        <h3 style="font-size: 14px; font-weight: 800;">✍️ Custom Message Studio</h3>
-        <div style="display: flex; gap: 8px;">
-          <input type="text" id="studioInput" placeholder="Enter custom message..." style="flex:1; background: var(--card-inner); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 10px 14px; color: #fff; outline:none;" />
-          <button onclick="sendStudioText()" style="background: var(--blue-led); border: none; border-radius: 12px; padding: 10px 16px; color:#fff; font-weight:700; cursor:pointer;">Push</button>
+    <!-- TAMIL ROAD DRIVE MODE (Active Screen 3) -->
+    <section id="viewTamilDrive" class="hidden flex-col gap-3">
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-black font-tamil text-white tracking-wide">தமிழ் சாலைப் பயன்முறை</h2>
+            <p class="text-[10px] text-slate-400 font-mono">HIGHWAY & COURTESY MESSAGES</p>
+          </div>
+          <span class="text-xl">🇮🇳</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <button onclick="sendPresetMessage('நன்றி 🙏', '#10b981', 'scroll', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">நன்றி 🙏</span>
+            <span class="text-[10px] font-mono text-emerald-400">Courteous Thanks</span>
+          </button>
+
+          <button onclick="sendPresetMessage('வணக்கம் 🤝', '#06b6d4', 'scroll', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">வணக்கம் 🤝</span>
+            <span class="text-[10px] font-mono text-cyan-400">Vanakkam Greeting</span>
+          </button>
+
+          <button onclick="sendPresetMessage('மன்னிக்கவும் ✌️', '#f59e0b', 'static', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">மன்னிக்கவும் ✌️</span>
+            <span class="text-[10px] font-mono text-amber-400">Pardon / Apology</span>
+          </button>
+
+          <button onclick="sendPresetMessage('முந்திச் செல்லுங்கள் ➡️', '#06b6d4', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">முந்திச் செல்க ➡️</span>
+            <span class="text-[10px] font-mono text-cyan-400">Please Pass</span>
+          </button>
+
+          <button onclick="sendPresetMessage('வழி விடுக 🚗', '#38bdf8', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">வழி விடுக 🚗</span>
+            <span class="text-[10px] font-mono text-sky-400">Give Way Please</span>
+          </button>
+
+          <button onclick="sendPresetMessage('மெதுவாகச் செல்லவும் 🐢', '#f59e0b', 'scroll', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">மெதுவாகச் செல்லவும் 🐢</span>
+            <span class="text-[10px] font-mono text-amber-400">Drive Slow</span>
+          </button>
+
+          <button onclick="sendPresetMessage('பாதுகாப்பான இடைவெளி விடுக ⛔', '#ef4444', 'blink', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">இடைவெளி விடுக ⛔</span>
+            <span class="text-[10px] font-mono text-red-400">Keep Distance</span>
+          </button>
+
+          <button onclick="sendPresetMessage('எச்சரிக்கை! ⚠️', '#ef4444', 'blink', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+            <span class="font-tamil font-bold text-xs text-white">எச்சரிக்கை! ⚠️</span>
+            <span class="text-[10px] font-mono text-rose-400">Caution Hazard</span>
+          </button>
         </div>
       </div>
-    </div>
+    </section>
 
-  </div>
+    <!-- DEVIL EYES & OPTICS (Active Screen 4) -->
+    <section id="viewDevilEyes" class="hidden flex-col gap-3">
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-black uppercase text-white tracking-wide">Windshield Devil Optics</h2>
+            <p class="text-[10px] text-slate-400 font-mono">ANIMATED EYE APERTURES</p>
+          </div>
+          <span class="text-xl">😈</span>
+        </div>
 
-  <!-- =====================================================================
-       3. FLOATING BOTTOM GLASS NAVIGATION BAR
-       ===================================================================== -->
-  <div class="bottom-nav-wrapper">
-    <div class="floating-nav">
-      <div class="nav-tab-btn active-tab" onclick="switchNavTab('hud')">
-        <span class="tab-ico">⚡</span>
-        <span>HUD</span>
-      </div>
-      <div class="nav-tab-btn" onclick="switchNavTab('meme')">
-        <span class="tab-ico">🤣</span>
-        <span>மீம்</span>
-      </div>
-      <div class="nav-tab-btn" onclick="switchNavTab('tamil')">
-        <span class="tab-ico">🇮🇳</span>
-        <span>தமிழ்</span>
-      </div>
-      <div class="nav-tab-btn" onclick="switchNavTab('devil')">
-        <span class="tab-ico">😈</span>
-        <span>Devil</span>
-      </div>
-      <div class="nav-tab-btn" onclick="switchNavTab('studio')">
-        <span class="tab-ico">✍️</span>
-        <span>Studio</span>
-      </div>
-    </div>
-  </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="triggerDevilOptic('angry', '#ef4444')" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-red-500/30">
+            <span class="font-bold text-xs text-white">Angry Red Eyes 😈</span>
+            <span class="text-[10px] font-mono text-red-400">Slit Pupil Tracker</span>
+          </button>
 
-  <!-- Bluefy-Safe Bluetooth Connection Modal Sheet -->
-  <div class="modal-veil" id="bleSheet">
-    <div class="sheet-card">
-      <div class="sheet-top">
-        <h2>Connect 16×96 Matrix</h2>
-        <button class="sheet-close-btn" onclick="closeBleSheet()">✕</button>
+          <button onclick="triggerDevilOptic('cyan_cyber', '#06b6d4')" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-cyan-500/30">
+            <span class="font-bold text-xs text-white">Cyber Hex Rings 🤖</span>
+            <span class="text-[10px] font-mono text-cyan-400">Sci-Fi Aperture</span>
+          </button>
+
+          <button onclick="triggerDevilOptic('cylon', '#ef4444')" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-red-500/30">
+            <span class="font-bold text-xs text-white">Knight Rider Bar ⚡</span>
+            <span class="text-[10px] font-mono text-red-400">Cylon Scanner</span>
+          </button>
+
+          <button onclick="triggerDevilOptic('winking', '#f59e0b')" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-amber-500/30">
+            <span class="font-bold text-xs text-white">Winking Devil 😉</span>
+            <span class="text-[10px] font-mono text-amber-400">Dynamic Wink Loop</span>
+          </button>
+        </div>
       </div>
-      <div style="font-size: 12px; color: var(--text-dim);">
-        Strictly compliant with <b>Bluefy Browser</b> (iPhone) & <b>Chrome</b> (Android).
+    </section>
+
+    <!-- CUSTOM COMPOSER & VOICE (Active Screen 5) -->
+    <section id="viewCustom" class="hidden flex-col gap-3">
+      <div class="ios-glass-card rounded-[28px] p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-black uppercase text-white tracking-wide">Matrix Text Studio</h2>
+            <p class="text-[10px] text-slate-400 font-mono">TAMIL SPEECH & PALETTE</p>
+          </div>
+          <span class="text-xl">🎙️</span>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <div class="relative w-full">
+            <input type="text" id="customTextInput" maxlength="70" placeholder="Type or speak (தமிழ் / English)..." value="வணக்கம் 🤝" class="w-full bg-black/40 border border-white/10 rounded-2xl py-3 pl-4 pr-11 text-white font-tamil text-sm focus:border-blue-500 outline-none">
+            <button onclick="triggerTamilVoiceDictation()" id="micBtn" class="absolute right-2.5 top-2.5 p-1 rounded-xl bg-white/10 text-slate-300 hover:text-white transition">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between gap-2 pt-1">
+            <div class="flex items-center gap-1.5">
+              <button onclick="setLedColor('#ef4444')" class="w-6 h-6 rounded-full bg-red-500 border border-white"></button>
+              <button onclick="setLedColor('#06b6d4')" class="w-6 h-6 rounded-full bg-cyan-400 border border-white/20"></button>
+              <button onclick="setLedColor('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-400 border border-white/20"></button>
+              <button onclick="setLedColor('#10b981')" class="w-6 h-6 rounded-full bg-emerald-400 border border-white/20"></button>
+              <button onclick="setLedColor('#a855f7')" class="w-6 h-6 rounded-full bg-purple-500 border border-white/20"></button>
+              <button onclick="setLedColor('#ffffff')" class="w-6 h-6 rounded-full bg-white border border-white/20"></button>
+            </div>
+
+            <button onclick="pushCustomText()" class="ios-spring-btn px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/30">
+              Send to Matrix
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="console-terminal" id="bleConsole">[Ready] Tap scan to discover your 16×96 LED screen.</div>
-      <button class="btn-connect-primary" onclick="startBluefyScan()">🔍 Scan for LED Matrix</button>
-      <div style="font-size: 10px; color: var(--text-dim); text-align: center;">
-        Build: <b>v1.4.0-COCKPIT-EXACT</b> • GATT: 0000fa02-0000-1000-8000-00805f9b34fb
-      </div>
+    </section>
+
+    <!-- Explicit Build Identification Footer -->
+    <div class="text-[10px] font-mono text-center text-slate-500 pt-1 pb-3">
+      Build: <span class="text-emerald-400 font-bold">v1.5.1-COCKPIT-EXACT-FIX</span> · GATT: 0000fa02-0000-1000-8000-00805f9b34fb
     </div>
+  </main>
+
+  <nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-[max(var(--sab),10px)] pt-2 px-4 pointer-events-none">
+    <div class="ios-glass rounded-full px-2.5 py-1.5 flex items-center gap-1 max-w-md w-full justify-between pointer-events-auto shadow-2xl">
+      <!-- Nav Item 1: HUD -->
+      <button onclick="navigateTab('driving')" id="nav-driving" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-blue-400 bg-white/10">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span class="text-[9px] font-semibold tracking-tight">HUD</span>
+      </button>
+
+      <!-- Nav Item 2: Meme -->
+      <button onclick="navigateTab('meme')" id="nav-meme" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-slate-400">
+        <span class="text-xs">🤣</span>
+        <span class="text-[9px] font-semibold tracking-tight font-tamil">மீம்</span>
+      </button>
+
+      <!-- Nav Item 3: Tamil -->
+      <button onclick="navigateTab('tamil')" id="nav-tamil" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-slate-400">
+        <span class="text-xs">🇮🇳</span>
+        <span class="text-[9px] font-semibold tracking-tight font-tamil">தமிழ்</span>
+      </button>
+
+      <!-- Nav Item 4: Devil -->
+      <button onclick="navigateTab('devil')" id="nav-devil" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-slate-400">
+        <span class="text-xs">😈</span>
+        <span class="text-[9px] font-semibold tracking-tight">Devil</span>
+      </button>
+
+      <!-- Nav Item 5: Studio -->
+      <button onclick="navigateTab('custom')" id="nav-custom" class="ios-spring-btn flex-1 py-1 px-1 flex flex-col items-center gap-0.5 rounded-full text-slate-400">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        <span class="text-[9px] font-semibold tracking-tight">Studio</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- iOS Dynamic Toast Island Banner -->
+  <div id="iosToast" class="fixed top-12 z-50 transform -translate-y-20 opacity-0 transition-all duration-300 pointer-events-none ios-glass rounded-full px-4 py-2 border border-white/20 flex items-center gap-2 shadow-2xl">
+    <span id="toastIcon" class="text-sm">⚡</span>
+    <span id="toastMessage" class="text-xs font-semibold text-white">Alert</span>
   </div>
 
   <script>
-    /* =========================================================================
-       1. BLE ENGINE (BLUEFY COMPLIANT 128-BIT LOWERCASE UUIDs)
-       ========================================================================= */
-    const SERVICE_UUID = '0000fa02-0000-1000-8000-00805f9b34fb';
-    const NOTIFY_UUID = '0000fa03-0000-1000-8000-00805f9b34fb';
+    const COLS = 96;
+    const ROWS = 16;
+    
+    // BLE Specifications for iPixel Controller
+    const IPIXEL_SERVICE_UUID = "0000fa02-0000-1000-8000-00805f9b34fb";
+    const IPIXEL_WRITE_UUID   = "0000fa02-0000-1000-8000-00805f9b34fb";
+    const IPIXEL_NOTIFY_UUID  = "0000fa03-0000-1000-8000-00805f9b34fb";
 
+    // Application state
     let bleDevice = null;
-    let bleWriteChar = null;
+    let bleCharacteristic = null;
+    let isBleConnected = false;
+    let audioMuted = false;
 
-    function openBleSheet() { document.getElementById('bleSheet').classList.add('open'); }
-    function closeBleSheet() { document.getElementById('bleSheet').classList.remove('open'); }
+    // Display configuration
+    let currentDisplayMode = "text"; // text, devil, hud_turn, hud_brake, hud_speed
+    let currentText = "வணக்கம் 🤝";
+    let currentColor = "#06b6d4";
+    let animStyle = "scroll"; // scroll, static, pulse, blink
+    let scrollSpeed = 6;
+    let brightness = 85;
+    let devilEyeType = "angry";
 
-    function logBle(msg) {
-      const el = document.getElementById('bleConsole');
-      const time = new Date().toTimeString().split(' ')[0];
-      el.innerText += `\n[${time}] ${msg}`;
-      el.scrollTop = el.scrollHeight;
+    // Driving & Telemetry state
+    let autoSyncMatrix = true;
+    let currentSpeedKmh = 0;
+    let vehicleHeading = 0;
+    let currentTurnState = "straight"; // left, right, straight
+    let currentDriveStatus = "STOPPED"; // STOPPED, SLOW, CRUISING, HIGH SPEED
+    let isEmergencyBraking = false;
+    let sensorPermissionsGranted = false;
+    let lastZAcceleration = 0;
+
+    // Buffer for 16x96 diodes
+    const matrixBuffer = Array.from({ length: ROWS }, () => new Uint8Array(COLS));
+
+    // Canvas elements
+    const canvas = document.getElementById("matrixCanvas");
+    const ctx = canvas.getContext("2d");
+    let frameTick = 0;
+    let scrollOffset = COLS;
+
+    // Web Audio synthesizer for haptics
+    let audioCtx = null;
+    function playIosHapticSound(type = "tick") {
+      if (audioMuted) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const t = audioCtx.currentTime;
+
+        if (type === "tick") {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(1200, t);
+          osc.frequency.exponentialRampToValueAtTime(500, t + 0.03);
+          gain.gain.setValueAtTime(0.12, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.03);
+          osc.start(t);
+          osc.stop(t + 0.03);
+        } else if (type === "brake") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(360, t);
+          osc.frequency.exponentialRampToValueAtTime(110, t + 0.3);
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+          osc.start(t);
+          osc.stop(t + 0.3);
+        }
+      } catch (e) {
+        console.warn("Audio error:", e);
+      }
     }
 
-    async function startBluefyScan() {
-      logBle("Requesting BLE peripheral...");
+    function triggerVibration(pattern = 25) {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    }
+
+    function toggleAudio() {
+      audioMuted = !audioMuted;
+      document.getElementById("soundBtn").classList.toggle("opacity-40", audioMuted);
+      showIosToast(audioMuted ? "Sound Muted" : "Haptic Audio Active", "🔊");
+    }
+
+    let toastTimer = null;
+    function showIosToast(msg, icon = "⚡") {
+      const toast = document.getElementById("iosToast");
+      document.getElementById("toastIcon").textContent = icon;
+      document.getElementById("toastMessage").textContent = msg;
+      toast.classList.remove("-translate-y-20", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+      
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add("-translate-y-20", "opacity-0");
+        toast.classList.remove("translate-y-0", "opacity-100");
+      }, 2200);
+    }
+
+    let offscreenCanvas = null;
+    let offscreenCtx = null;
+    let cachedString = "";
+    let cachedRaster = null;
+
+    function rasterize16RowText(str) {
+      if (cachedString === str && cachedRaster) return cachedRaster;
+
+      if (!offscreenCanvas) {
+        offscreenCanvas = document.createElement("canvas");
+        offscreenCanvas.height = 16;
+        offscreenCtx = offscreenCanvas.getContext("2d", { willReadFrequently: true });
+      }
+
+      const fontSpec = "bold 13px 'Noto Sans Tamil', -apple-system, sans-serif";
+      offscreenCtx.font = fontSpec;
+      const textMetrics = offscreenCtx.measureText(str);
+      const width = Math.max(1, Math.ceil(textMetrics.width) + 4);
+
+      offscreenCanvas.width = width;
+      offscreenCtx.fillStyle = "#000";
+      offscreenCtx.fillRect(0, 0, width, 16);
+
+      offscreenCtx.fillStyle = "#fff";
+      offscreenCtx.font = fontSpec;
+      offscreenCtx.textBaseline = "middle";
+      offscreenCtx.textAlign = "left";
+      offscreenCtx.fillText(str, 2, 8.5);
+
+      const imgData = offscreenCtx.getImageData(0, 0, width, 16);
+      const pixels = imgData.data;
+
+      const binaryMap = Array.from({ length: 16 }, () => new Uint8Array(width));
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4;
+          const lum = 0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2];
+          binaryMap[y][x] = lum > 80 ? 1 : 0;
+        }
+      }
+
+      cachedString = str;
+      cachedRaster = { width, map: binaryMap };
+      return cachedRaster;
+    }
+
+    function blitTextToBuffer(str, offsetCol = 0) {
+      for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+      const raster = rasterize16RowText(str);
+
+      for (let x = 0; x < raster.width; x++) {
+        const targetX = offsetCol + x;
+        if (targetX >= 0 && targetX < COLS) {
+          for (let y = 0; y < ROWS; y++) {
+            matrixBuffer[y][targetX] = raster.map[y][x];
+          }
+        }
+      }
+      return raster.width;
+    }
+
+    function renderTurningArrows(direction, tick) {
+      for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+
+      const animOffset = Math.floor((tick * 0.4) % 12);
+
+      if (direction === "left") {
+        // Draw multiple animated chevron arrows pointing left (<<<)
+        for (let baseCol = 12; baseCol < COLS - 12; baseCol += 16) {
+          const chevronX = baseCol - animOffset;
+          for (let y = 0; y < 16; y++) {
+            const dy = Math.abs(y - 7.5);
+            const x = Math.round(chevronX + dy * 1.1);
+            if (x >= 0 && x < COLS) matrixBuffer[y][x] = 1;
+            if (x + 1 >= 0 && x + 1 < COLS) matrixBuffer[y][x + 1] = 1;
+          }
+        }
+      } else if (direction === "right") {
+        // Draw multiple animated chevron arrows pointing right (>>>)
+        for (let baseCol = 4; baseCol < COLS - 4; baseCol += 16) {
+          const chevronX = baseCol + animOffset;
+          for (let y = 0; y < 16; y++) {
+            const dy = Math.abs(y - 7.5);
+            const x = Math.round(chevronX - dy * 1.1);
+            if (x >= 0 && x < COLS) matrixBuffer[y][x] = 1;
+            if (x + 1 >= 0 && x + 1 < COLS) matrixBuffer[y][x + 1] = 1;
+          }
+        }
+      }
+    }
+
+    function renderDevilEyes(mode, frame) {
+      for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+      const leftCenter = 24;
+      const rightCenter = 72;
+
+      if (mode === "angry") {
+        const eyeW = 24;
+        for (let dy = 0; dy < 12; dy++) {
+          const row = 2 + dy;
+          const leftStart = leftCenter - Math.floor(eyeW / 2) + Math.floor(dy * 1.1);
+          for (let dx = 0; dx < (eyeW - dy * 1.3); dx++) {
+            const lx = leftStart + dx;
+            const rx = rightCenter - Math.floor(eyeW / 2) + Math.floor(dy * 0.3) + dx;
+            if (lx >= 0 && lx < COLS) matrixBuffer[row][lx] = 1;
+            if (rx >= 0 && rx < COLS) matrixBuffer[row][rx] = 1;
+          }
+        }
+        const slitOffset = Math.sin(frame * 0.08) * 3;
+        for (let r = 4; r <= 11; r++) {
+          const pxL = Math.round(leftCenter + slitOffset);
+          const pxR = Math.round(rightCenter + slitOffset);
+          if (pxL >= 0 && pxL < COLS) matrixBuffer[r][pxL] = 0;
+          if (pxR >= 0 && pxR < COLS) matrixBuffer[r][pxR] = 0;
+        }
+      } else if (mode === "cyan_cyber") {
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const dL = Math.hypot(c - leftCenter, (r - 8) * 1.5);
+            const dR = Math.hypot(c - rightCenter, (r - 8) * 1.5);
+            if ((dL < 7 && dL > 4) || (dR < 7 && dR > 4)) matrixBuffer[r][c] = 1;
+          }
+        }
+      } else if (mode === "cylon") {
+        const scan = Math.floor((Math.sin(frame * 0.07) + 1) * 0.5 * (COLS - 18));
+        for (let r = 5; r <= 10; r++) {
+          for (let c = scan; c < scan + 18; c++) matrixBuffer[r][c] = 1;
+        }
+      } else if (mode === "winking") {
+        const isWink = (frame % 120) > 85;
+        for (let r = 3; r <= 12; r++) {
+          for (let c = leftCenter - 8; c <= leftCenter + 8; c++) {
+            if (Math.hypot(c - leftCenter, (r - 7.5) * 1.6) < 6) matrixBuffer[r][c] = 1;
+          }
+        }
+        if (isWink) {
+          for (let c = rightCenter - 8; c <= rightCenter + 8; c++) {
+            matrixBuffer[8][c] = 1;
+            matrixBuffer[7][c] = 1;
+          }
+        } else {
+          for (let r = 3; r <= 12; r++) {
+            for (let c = rightCenter - 8; c <= rightCenter + 8; c++) {
+              if (Math.hypot(c - rightCenter, (r - 7.5) * 1.6) < 6) matrixBuffer[r][c] = 1;
+            }
+          }
+        }
+      }
+    }
+
+    function renderVirtualMatrix() {
+      frameTick++;
+
+      // Active Mode Selection
+      if (currentDisplayMode === "hud_turn") {
+        renderTurningArrows(currentTurnState, frameTick);
+      } else if (currentDisplayMode === "hud_brake") {
+        const isBlinkOn = (Math.floor(frameTick / 8) % 2) === 0;
+        if (isBlinkOn) blitTextToBuffer("⛔ BRAKE / நில்! ⛔", 6);
+        else for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+      } else if (currentDisplayMode === "devil") {
+        renderDevilEyes(devilEyeType, frameTick);
+      } else {
+        // Standard Text Mode (Meme / Tamil / Custom)
+        const raster = rasterize16RowText(currentText);
+        if (animStyle === "scroll") {
+          scrollOffset -= (scrollSpeed * 0.28);
+          if (scrollOffset < -raster.width) scrollOffset = COLS;
+          blitTextToBuffer(currentText, Math.floor(scrollOffset));
+        } else if (animStyle === "static") {
+          const centered = Math.max(0, Math.floor((COLS - raster.width) / 2));
+          blitTextToBuffer(currentText, centered);
+        } else if (animStyle === "blink") {
+          const isFlash = (Math.floor(frameTick / 10) % 2) === 0;
+          if (isFlash) blitTextToBuffer(currentText, Math.max(0, Math.floor((COLS - raster.width) / 2)));
+          else for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+        } else if (animStyle === "pulse") {
+          const centered = Math.max(0, Math.floor((COLS - raster.width) / 2));
+          blitTextToBuffer(currentText, centered);
+        }
+      }
+
+      // Draw onto Canvas
+      ctx.fillStyle = "#010409";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cellW = canvas.width / COLS;
+      const cellH = canvas.height / ROWS;
+      const radius = 3.6;
+
+      const r = parseInt(currentColor.slice(1, 3), 16) || 255;
+      const g = parseInt(currentColor.slice(3, 5), 16) || 255;
+      const b = parseInt(currentColor.slice(5, 7), 16) || 255;
+
+      let brightnessFactor = (brightness / 100);
+      if (animStyle === "pulse" && currentDisplayMode === "text") {
+        brightnessFactor *= (0.4 + (Math.sin(frameTick * 0.1) + 1) * 0.3);
+      }
+
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const cx = col * cellW + cellW / 2;
+          const cy = row * cellH + cellH / 2;
+          const lit = matrixBuffer[row][col] === 1;
+
+          if (lit) {
+            // Glow dispersion
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius + 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.35 * brightnessFactor})`;
+            ctx.fill();
+
+            // Diode
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${brightnessFactor})`;
+            ctx.fill();
+
+            // Specular Reflection
+            ctx.beginPath();
+            ctx.arc(cx - 1, cy - 1, radius * 0.32, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.75 * brightnessFactor})`;
+            ctx.fill();
+          } else {
+            // Inactive LED
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.75, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+            ctx.fill();
+          }
+        }
+      }
+
+      requestAnimationFrame(renderVirtualMatrix);
+    }
+
+    function initGpsTracking() {
+      if (!("geolocation" in navigator)) {
+        document.getElementById("gpsAccuracy").textContent = "NO GPS";
+        return;
+      }
+
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          const speed = pos.coords.speed; // meters per second
+          const speedKmh = (speed !== null && speed >= 0) ? Math.round(speed * 3.6) : 0;
+          updateTelemetrySpeed(speedKmh);
+          document.getElementById("gpsAccuracy").textContent = `±${Math.round(pos.coords.accuracy || 5)}M`;
+        },
+        (err) => {
+          console.warn("GPS watch position note:", err.message);
+          document.getElementById("gpsAccuracy").textContent = "SIMULATING";
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
+      );
+    }
+
+    async function requestDeviceSensors() {
+      playIosHapticSound("tick");
+      triggerVibration(30);
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const perm = await DeviceOrientationEvent.requestPermission();
+          if (perm === 'granted') {
+            attachSensorListeners();
+            sensorPermissionsGranted = true;
+            document.getElementById("sensorBtnLabel").textContent = "Sensors Active";
+            document.getElementById("sensorPermBtn").classList.add("bg-emerald-500/20", "text-emerald-400");
+            showIosToast("iOS Sensors Armed", "🧭");
+          } else {
+            showIosToast("Sensors permission denied", "⚠️");
+          }
+        } catch (e) {
+          console.warn("Sensor request error:", e);
+        }
+      } else {
+        // Android / Desktop standard
+        attachSensorListeners();
+        sensorPermissionsGranted = true;
+        document.getElementById("sensorBtnLabel").textContent = "Sensors Active";
+        showIosToast("Orientation Sensors Armed", "🧭");
+      }
+    }
+
+    function attachSensorListeners() {
+      window.addEventListener("deviceorientation", handleOrientation);
+      window.addEventListener("devicemotion", handleMotion);
+    }
+
+    let smoothedGamma = 0;
+    function handleOrientation(event) {
+      const gamma = event.gamma || 0; // Left-to-right tilt in degrees (-90 to +90)
+      smoothedGamma = smoothedGamma * 0.7 + gamma * 0.3;
+      
+      const angle = Math.round(smoothedGamma);
+      document.getElementById("steerAngleText").textContent = `${Math.abs(angle)}° (${angle < -8 ? 'LEFT' : angle > 8 ? 'RIGHT' : 'CENTER'})`;
+
+      if (angle < -16) {
+        setTurnState("left");
+      } else if (angle > 16) {
+        setTurnState("right");
+      } else if (Math.abs(angle) < 9) {
+        setTurnState("straight");
+      }
+    }
+
+    function handleMotion(event) {
+      if (!event.accelerationIncludingGravity) return;
+      const accZ = event.accelerationIncludingGravity.z || 0;
+      const decel = Math.abs(accZ).toFixed(2);
+      document.getElementById("gMeterText").textContent = `-${decel} G`;
+
+      // Sudden brake detection
+      if (accZ > 13.5 && !isEmergencyBraking) {
+        triggerEmergencyBrakeEvent();
+      }
+    }
+
+    function updateTelemetrySpeed(kmh) {
+      currentSpeedKmh = kmh;
+      document.getElementById("speedValue").textContent = kmh;
+      document.getElementById("islandPrimary").textContent = `${kmh} KM/H`;
+
+      let status = "STOPPED 🛑";
+      let statusColor = "text-slate-300";
+      if (kmh > 0 && kmh <= 25) {
+        status = "SLOW TRAFFIC 🐢";
+        statusColor = "text-amber-400";
+      } else if (kmh > 25 && kmh <= 75) {
+        status = "CRUISING 🚗";
+        statusColor = "text-emerald-400";
+      } else if (kmh > 75) {
+        status = "HIGHWAY SPEED ⚡";
+        statusColor = "text-cyan-400";
+      }
+
+      currentDriveStatus = status;
+      const pill = document.getElementById("driveStatePill");
+      pill.textContent = status;
+      document.getElementById("islandModeLabel").textContent = status.split(' ')[0];
+
+      if (autoSyncMatrix && currentTurnState === "straight" && !isEmergencyBraking && currentDisplayMode.startsWith("hud")) {
+        if (kmh === 0) {
+          currentDisplayMode = "text";
+          currentText = "STOPPED 🛑";
+          currentColor = "#ef4444";
+          animStyle = "static";
+        } else {
+          currentDisplayMode = "text";
+          currentText = `${kmh} KM/H 🏎️`;
+          currentColor = "#06b6d4";
+          animStyle = "static";
+        }
+      }
+    }
+
+    function setTurnState(dir) {
+      if (currentTurnState === dir) return;
+      currentTurnState = dir;
+
+      const leftBox = document.getElementById("leftTurnBox");
+      const rightBox = document.getElementById("rightTurnBox");
+
+      if (dir === "left") {
+        leftBox.classList.remove("opacity-30");
+        leftBox.classList.add("opacity-100", "anim-turn-left");
+        rightBox.classList.add("opacity-30");
+        rightBox.classList.remove("opacity-100", "anim-turn-right");
+
+        if (autoSyncMatrix && !isEmergencyBraking) {
+          currentDisplayMode = "hud_turn";
+          currentColor = "#10b981";
+          document.getElementById("liveFrameLabel").textContent = "⬅️ TURNING LEFT";
+        }
+      } else if (dir === "right") {
+        rightBox.classList.remove("opacity-30");
+        rightBox.classList.add("opacity-100", "anim-turn-right");
+        leftBox.classList.add("opacity-30");
+        leftBox.classList.remove("opacity-100", "anim-turn-left");
+
+        if (autoSyncMatrix && !isEmergencyBraking) {
+          currentDisplayMode = "hud_turn";
+          currentColor = "#10b981";
+          document.getElementById("liveFrameLabel").textContent = "TURNING RIGHT ➡️";
+        }
+      } else {
+        leftBox.classList.add("opacity-30");
+        leftBox.classList.remove("opacity-100", "anim-turn-left");
+        rightBox.classList.add("opacity-30");
+        rightBox.classList.remove("opacity-100", "anim-turn-right");
+
+        if (autoSyncMatrix && currentDisplayMode === "hud_turn") {
+          currentDisplayMode = "text";
+          updateTelemetrySpeed(currentSpeedKmh);
+        }
+      }
+    }
+
+    function triggerEmergencyBrakeEvent() {
+      if (isEmergencyBraking) return;
+      isEmergencyBraking = true;
+      playIosHapticSound("brake");
+      triggerVibration([80, 50, 80]);
+
+      const priorMode = currentDisplayMode;
+      const priorText = currentText;
+      const priorColor = currentColor;
+      const priorStyle = animStyle;
+
+      currentDisplayMode = "hud_brake";
+      currentColor = "#ef4444";
+      document.getElementById("liveFrameLabel").textContent = "⛔ BRAKING DETECTED";
+      showIosToast("EMERGENCY BRAKE DETECTED!", "🚨");
+
+      setTimeout(() => {
+        isEmergencyBraking = false;
+        currentDisplayMode = priorMode;
+        currentText = priorText;
+        currentColor = priorColor;
+        animStyle = priorStyle;
+        document.getElementById("liveFrameLabel").textContent = currentText;
+      }, 3500);
+    }
+
+    // Desk Simulator Handlers
+    function updateSimSpeed(val) {
+      const spd = parseInt(val);
+      document.getElementById("simSpeedLabel").textContent = `Test Speed: ${spd} km/h`;
+      updateTelemetrySpeed(spd);
+    }
+
+    function simulateTurn(dir) {
+      playIosHapticSound("tick");
+      setTurnState(dir);
+      showIosToast(`Simulating: ${dir.toUpperCase()}`, "🧭");
+    }
+
+    function toggleAutoSync(val) {
+      autoSyncMatrix = val;
+      showIosToast(val ? "Auto HUD Mirroring ON" : "Manual Mode", "🔄");
+    }
+
+    function sendPresetMessage(text, color, style = "scroll", speed = 6) {
+      playIosHapticSound("tick");
+      triggerVibration(25);
+
+      currentDisplayMode = "text";
+      currentText = text;
+      currentColor = color;
+      animStyle = style;
+      scrollSpeed = speed;
+      scrollOffset = COLS;
+
+      document.getElementById("liveFrameLabel").textContent = text;
+      showIosToast(`Matrix Pushed: ${text}`, "🚀");
+    }
+
+    function triggerDevilOptic(type, color = "#ef4444") {
+      playIosHapticSound("tick");
+      triggerVibration(35);
+
+      currentDisplayMode = "devil";
+      devilEyeType = type;
+      currentColor = color;
+
+      document.getElementById("liveFrameLabel").textContent = `Devil: ${type.toUpperCase()}`;
+      showIosToast(`Devil Eyes: ${type.toUpperCase()}`, "😈");
+    }
+
+    function pushCustomText() {
+      const input = document.getElementById("customTextInput");
+      const val = input.value.trim();
+      if (!val) return;
+
+      sendPresetMessage(val, currentColor, "scroll", scrollSpeed);
+    }
+
+    function setLedColor(hex) {
+      playIosHapticSound("tick");
+      currentColor = hex;
+      showIosToast("Color Updated", "🎨");
+    }
+
+    function setBrightness(val) {
+      brightness = parseInt(val);
+      document.getElementById("brightValLabel").textContent = `${brightness}%`;
+      sendBleCommand([0x06, 0x00, 0x02, 0x01, 0x00, brightness]);
+    }
+
+    function setScrollSpeed(val) {
+      scrollSpeed = parseInt(val);
+      document.getElementById("speedValLabel").textContent = `${scrollSpeed}x`;
+    }
+
+    function triggerTamilVoiceDictation() {
+      playIosHapticSound("tick");
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showIosToast("Speech Recognition unsupported in this browser", "⚠️");
+        return;
+      }
+
+      const micBtn = document.getElementById("micBtn");
+      micBtn.classList.add("text-red-500", "animate-pulse");
+
+      const rec = new SpeechRecognition();
+      rec.lang = 'ta-IN';
+      rec.interimResults = false;
+
+      showIosToast("Listening in Tamil / English...", "🎙️");
+
+      rec.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        if (transcript) {
+          document.getElementById("customTextInput").value = transcript;
+          sendPresetMessage(transcript, currentColor, "scroll", scrollSpeed);
+        }
+      };
+
+      rec.onerror = () => showIosToast("Voice input cancelled", "🎙️");
+      rec.onend = () => micBtn.classList.remove("text-red-500", "animate-pulse");
+      rec.start();
+    }
+
+    async function handleBluetoothConnection() {
+      playIosHapticSound("tick");
+      triggerVibration(40);
+
+      if (isBleConnected) {
+        disconnectBle();
+        return;
+      }
+
       if (!navigator.bluetooth) {
-        logBle("ERROR: Web Bluetooth unsupported.");
-        alert("Please open this link inside Bluefy Browser (on iPhone) or Google Chrome (on Android).");
+        showIosToast("Web Bluetooth requires Chrome / Bluefy on iOS", "⚠️");
         return;
       }
 
       try {
-        // Zero numbers, zero non-128bit strings (prevents Bluefy payload parse crash)
-        const device = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices: [SERVICE_UUID, NOTIFY_UUID]
+        document.getElementById("bleBtnText").textContent = "Searching...";
+        
+        // Clean 128-bit canonical string UUIDs for Web Bluetooth / Bluefy compatibility
+        const candidateServices = [
+          "0000fa02-0000-1000-8000-00805f9b34fb",
+          "0000fa00-0000-1000-8000-00805f9b34fb",
+          "0000fa01-0000-1000-8000-00805f9b34fb",
+          "0000fa03-0000-1000-8000-00805f9b34fb",
+          "0000ffe0-0000-1000-8000-00805f9b34fb",
+          "0000ffe1-0000-1000-8000-00805f9b34fb",
+          "0000ffe5-0000-1000-8000-00805f9b34fb",
+          "0000fff0-0000-1000-8000-00805f9b34fb",
+          "0000fff1-0000-1000-8000-00805f9b34fb",
+          "0000ffd0-0000-1000-8000-00805f9b34fb",
+          "0000ae01-0000-1000-8000-00805f9b34fb",
+          "0000af00-0000-1000-8000-00805f9b34fb",
+          "0000cc01-0000-1000-8000-00805f9b34fb",
+          "0000ee01-0000-1000-8000-00805f9b34fb",
+          "00001000-0000-1000-8000-00805f9b34fb",
+          "00001800-0000-1000-8000-00805f9b34fb",
+          "00001801-0000-1000-8000-00805f9b34fb",
+          "0000180a-0000-1000-8000-00805f9b34fb"
+        ];
+
+        bleDevice = await navigator.bluetooth.requestDevice({
+          filters: [
+            { namePrefix: "LED_BLE" },
+            { namePrefix: "LED" },
+            { namePrefix: "iPixel" },
+            { namePrefix: "CoolLED" }
+          ],
+          optionalServices: candidateServices
         });
 
-        logBle(`Device selected: ${device.name || "16x96 Matrix"}`);
-        bleDevice = device;
+        bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);
+        showIosToast(`Connecting to ${bleDevice.name || 'Matrix'}...`, "📡");
 
-        logBle("Connecting to GATT server...");
-        const server = await device.gatt.connect();
+        const server = await bleDevice.gatt.connect();
+        
+        bleCharacteristic = null;
 
-        logBle("Finding service...");
-        const service = await server.getPrimaryService(SERVICE_UUID);
+        // Step 1: Try getPrimaryServices()
+        let discoveredServices = [];
+        try {
+          discoveredServices = await server.getPrimaryServices();
+        } catch (e) {
+          console.warn("getPrimaryServices error, falling back to candidate sweep:", e);
+        }
 
-        logBle("Acquiring characteristic...");
-        bleWriteChar = await service.getCharacteristic(SERVICE_UUID);
+        // Step 2: Inspect discovered services if available
+        if (discoveredServices && discoveredServices.length > 0) {
+          for (const service of discoveredServices) {
+            try {
+              const characteristics = await service.getCharacteristics();
+              for (const char of characteristics) {
+                if (char.properties.write || char.properties.writeWithoutResponse) {
+                  bleCharacteristic = char;
+                  console.log(`Latched onto characteristic: ${char.uuid} via getPrimaryServices`);
+                  break;
+                }
+              }
+            } catch (e) {
+              console.warn(`Could not inspect service ${service.uuid}:`, e);
+            }
+            if (bleCharacteristic) break;
+          }
+        }
 
-        logBle("SUCCESS: 16x96 Matrix Connected!");
-        document.getElementById('bleBadge').innerText = "LINKED 🟢";
-        document.getElementById('bleBadge').style.color = "var(--emerald-led)";
-        setTimeout(closeBleSheet, 800);
+        // Step 3: Sweep candidate UUIDs individually if getPrimaryServices failed or yielded no writable characteristic
+        if (!bleCharacteristic) {
+          console.log("Sweeping candidate UUIDs individually...");
+          for (const uuid of candidateServices) {
+            try {
+              const service = await server.getPrimaryService(uuid);
+              if (service) {
+                const characteristics = await service.getCharacteristics();
+                for (const char of characteristics) {
+                  if (char.properties.write || char.properties.writeWithoutResponse) {
+                    bleCharacteristic = char;
+                    console.log(`Latched onto characteristic: ${char.uuid} in service: ${uuid}`);
+                    break;
+                  }
+                }
+              }
+            } catch (err) {
+              // Ignore non-matching candidate UUIDs
+            }
+            if (bleCharacteristic) break;
+          }
+        }
+
+        if (!bleCharacteristic) {
+          throw new Error("No writable GATT characteristic found on device.");
+        }
+
+        isBleConnected = true;
+        document.getElementById("bleStatusDot").className = "w-2 h-2 rounded-full bg-emerald-500";
+        document.getElementById("bleBtnText").textContent = "Disconnect";
+        document.getElementById("bleSyncTick").textContent = "GATT SYNC";
+        document.getElementById("bleSyncTick").className = "text-[10px] text-emerald-400 font-mono font-bold";
+        document.getElementById("islandBleIcon").classList.remove("opacity-60");
+        document.getElementById("islandBleIcon").classList.add("text-emerald-400");
+        showIosToast("Connected to Windshield Display!", "✅");
+
+        // Engage background keep-alive audio, screen wake-lock & heartbeat
+        requestWakeLock();
+        enableBackgroundKeepAliveAudio();
+        startBleHeartbeat();
+
+        // Send initial handshake packet
+        await sendBleCommand([0x05, 0x00, 0x07, 0x01, 0x01]);
 
       } catch (err) {
-        logBle(`BLE Error: ${err.message || err}`);
+        console.warn("BLE Pairing Note / Error:", err);
+        document.getElementById("bleBtnText").textContent = "Pair Matrix";
+        showIosToast(`BLE Error: ${err.message || 'Virtual Mode active'}`, "⚠️");
       }
     }
 
-    /* =========================================================================
-       2. 16x96 DIODE CANVAS ENGINE
-       ========================================================================= */
-    const canvas = document.getElementById('matrixCanvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    // Alias for Bluefy iOS Browser scan trigger
+    const startBluefyScan = handleBluetoothConnection;
 
-    let matrixBuffer = Array.from({ length: 16 }, () => Array(96).fill('#000000'));
-    let activeMode = 'text';
-    let currentText = "வணக்கம் 🤝";
-    let textOffset = 0;
-    let scrollSpeed = 6;
-    let brightness = 0.85;
-    let autoMirror = true;
-
-    function clearBuffer() {
-      for (let r = 0; r < 16; r++) {
-        for (let c = 0; c < 96; c++) matrixBuffer[r][c] = '#000000';
-      }
+    function onBleDisconnected() {
+      isBleConnected = false;
+      stopBleHeartbeat();
+      document.getElementById("bleStatusDot").className = "w-2 h-2 rounded-full bg-amber-400";
+      document.getElementById("bleBtnText").textContent = "Pair Matrix";
+      document.getElementById("bleSyncTick").textContent = "SIMULATED";
+      document.getElementById("bleSyncTick").className = "text-[10px] text-cyan-400/90 font-mono";
+      showIosToast("Matrix disconnected", "🔌");
     }
 
-    function renderMatrixDiodeView() {
-      ctx.fillStyle = '#020204';
-      ctx.fillRect(0, 0, 96, 16);
-
-      for (let r = 0; r < 16; r++) {
-        for (let c = 0; c < 96; c++) {
-          const col = matrixBuffer[r][c];
-          if (col !== '#000000') {
-            ctx.fillStyle = col;
-            ctx.fillRect(c, r, 1, 1);
-          }
-        }
-      }
+    function disconnectBle() {
+      if (bleDevice && bleDevice.gatt.connected) bleDevice.gatt.disconnect();
+      onBleDisconnected();
     }
 
-    const offscreenCanvas = document.createElement('canvas');
-    const offscreenCtx = offscreenCanvas.getContext('2d');
-    offscreenCanvas.height = 16;
-
-    function renderTextDiode(text, color = "#22d3ee") {
-      offscreenCtx.font = "bold 13px 'Noto Sans Tamil', -apple-system, sans-serif";
-      const measured = Math.ceil(offscreenCtx.measureText(text).width) + 14;
-      offscreenCanvas.width = measured;
-
-      offscreenCtx.fillStyle = '#000000';
-      offscreenCtx.fillRect(0, 0, measured, 16);
-
-      offscreenCtx.font = "bold 13px 'Noto Sans Tamil', -apple-system, sans-serif";
-      offscreenCtx.fillStyle = '#FFFFFF';
-      offscreenCtx.textBaseline = 'middle';
-      offscreenCtx.fillText(text, 2, 8);
-
-      const pixels = offscreenCtx.getImageData(0, 0, measured, 16).data;
-      clearBuffer();
-
-      for (let r = 0; r < 16; r++) {
-        for (let c = 0; c < 96; c++) {
-          const srcX = (c + textOffset) % (measured + 28);
-          if (srcX < measured) {
-            const idx = (r * measured + srcX) * 4;
-            const lum = (pixels[idx] + pixels[idx+1] + pixels[idx+2]) / 3;
-            if (lum > 85) {
-              matrixBuffer[r][c] = color;
-            }
-          }
-        }
-      }
-      renderMatrixDiodeView();
-    }
-
-    let devilTick = 0;
-    function renderDevilEyes() {
-      clearBuffer();
-      devilTick++;
-      const isWink = (Math.floor(devilTick / 45) % 6 === 0);
-      const pupilShift = Math.floor(Math.sin(devilTick * 0.14) * 4);
-
-      function paintEye(originX) {
-        for (let i = 0; i < 24; i++) {
-          let topY = Math.floor(3 + (i * 0.25));
-          let botY = Math.floor(13 - (i * 0.2));
-          if (topY < 16) matrixBuffer[topY][originX + i] = "#ef4444";
-          if (botY >= 0 && botY < 16) matrixBuffer[botY][originX + i] = "#ef4444";
-        }
-        if (!isWink) {
-          const cx = originX + 12 + pupilShift;
-          for (let r = 5; r <= 11; r++) {
-            if (cx >= 0 && cx < 96) matrixBuffer[r][cx] = "#fbbf24";
-            if (cx-1 >= 0 && cx-1 < 96) matrixBuffer[r][cx-1] = "#ef4444";
-            if (cx+1 >= 0 && cx+1 < 96) matrixBuffer[r][cx+1] = "#ef4444";
-          }
+    async function sendBleCommand(byteArray) {
+      if (!isBleConnected || !bleCharacteristic) return;
+      try {
+        const data = new Uint8Array(byteArray);
+        if (bleCharacteristic.properties.writeWithoutResponse) {
+          await bleCharacteristic.writeValueWithoutResponse(data);
         } else {
-          for (let i = 2; i < 22; i++) matrixBuffer[8][originX + i] = "#ef4444";
+          await bleCharacteristic.writeValue(data);
         }
+      } catch (e) {
+        console.warn("BLE write error:", e);
       }
-      paintEye(14);
-      paintEye(58);
-      renderMatrixDiodeView();
     }
 
-    let turnTick = 0;
-    function renderTurnArrows(dir) {
-      clearBuffer();
-      turnTick = (turnTick + 1) % 18;
-      const spacing = 18;
+    function navigateTab(tabId) {
+      playIosHapticSound("tick");
+      triggerVibration(20);
 
-      for (let k = -1; k < 6; k++) {
-        let baseCol = dir === 'LEFT' ? (k * spacing) - turnTick : (k * spacing) + turnTick;
-        for (let r = 0; r < 16; r++) {
-          let delta = 7 - Math.abs(r - 7.5);
-          let c = dir === 'LEFT' ? Math.floor(baseCol + delta) : Math.floor(baseCol - delta);
-          if (c >= 0 && c < 96) {
-            matrixBuffer[r][c] = "#10b981";
+      const views = {
+        driving: document.getElementById("viewDriving"),
+        meme: document.getElementById("viewTamilMeme"),
+        tamil: document.getElementById("viewTamilDrive"),
+        devil: document.getElementById("viewDevilEyes"),
+        custom: document.getElementById("viewCustom")
+      };
+
+      const navButtons = {
+        driving: document.getElementById("nav-driving"),
+        meme: document.getElementById("nav-meme"),
+        tamil: document.getElementById("nav-tamil"),
+        devil: document.getElementById("nav-devil"),
+        custom: document.getElementById("nav-custom")
+      };
+
+      Object.keys(views).forEach(key => {
+        if (key === tabId) {
+          views[key].classList.remove("hidden");
+          views[key].classList.add("flex");
+          navButtons[key].classList.add("text-blue-400", "bg-white/10");
+          navButtons[key].classList.remove("text-slate-400");
+        } else {
+          views[key].classList.add("hidden");
+          views[key].classList.remove("flex");
+          navButtons[key].classList.remove("text-blue-400", "bg-white/10");
+          navButtons[key].classList.add("text-slate-400");
+        }
+      });
+    }
+
+    // Screen Wake Lock API
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log("Screen Wake Lock active.");
+          wakeLock.addEventListener('release', () => {
+            console.log("Screen Wake Lock released.");
+          });
+        }
+      } catch (err) {
+        console.warn(`Screen Wake Lock note: ${err.name}, ${err.message}`);
+      }
+    }
+
+    // Silent Background Web Audio Keep-Alive Engine
+    let backgroundKeepAliveOsc = null;
+    function enableBackgroundKeepAliveAudio() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        if (!backgroundKeepAliveOsc) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(15, audioCtx.currentTime); // Inaudible sub-frequency
+          gain.gain.setValueAtTime(0.0001, audioCtx.currentTime); // Virtually silent (0.01%)
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          backgroundKeepAliveOsc = osc;
+          console.log("Background Web Audio keep-alive engaged.");
+        }
+      } catch (e) {
+        console.warn("Background audio engine note:", e);
+      }
+    }
+
+    // BLE Heartbeat Ping & Periodic Keep-Alive
+    let blePingInterval = null;
+    function startBleHeartbeat() {
+      stopBleHeartbeat();
+      blePingInterval = setInterval(async () => {
+        if (isBleConnected && bleCharacteristic) {
+          try {
+            // Low-frequency 15s keep-alive packet to prevent GATT timeout
+            await sendBleCommand([0x00]);
+          } catch (e) {
+            console.warn("Heartbeat ping error:", e);
+          }
+        }
+      }, 15000);
+    }
+
+    function stopBleHeartbeat() {
+      if (blePingInterval) {
+        clearInterval(blePingInterval);
+        blePingInterval = null;
+      }
+    }
+
+    // Page Visibility Listener for Background Re-connection & Wake Lock Refresh
+    document.addEventListener("visibilitychange", async () => {
+      if (document.visibilityState === "visible") {
+        requestWakeLock();
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        if (bleDevice && !isBleConnected && bleDevice.gatt) {
+          try {
+            console.log("Re-engaging BLE GATT connection on returning to foreground...");
+            showIosToast("Re-connecting Matrix...", "🔄");
+            await bleDevice.gatt.connect();
+          } catch (e) {
+            console.warn("Auto-reconnect note:", e);
           }
         }
       }
-      renderMatrixDiodeView();
-    }
+    });
 
-    let brakeBlink = false;
-    function renderBrakeFlash() {
-      clearBuffer();
-      brakeBlink = !brakeBlink;
-      renderTextDiode("⛔ BRAKE / நில்! ⛔", brakeBlink ? "#ef4444" : "#ffffff");
-    }
+    // Startup Initialization
+    window.addEventListener("DOMContentLoaded", () => {
+      initGpsTracking();
+      renderVirtualMatrix();
+      requestWakeLock();
 
-    let frameCount = 0;
-    function matrixLoop() {
-      frameCount++;
-      const speedDivider = Math.max(1, 11 - scrollSpeed);
+      // Arm background audio on first user touch / tap
+      const armBackgroundEngine = () => {
+        requestWakeLock();
+        enableBackgroundKeepAliveAudio();
+        window.removeEventListener("touchstart", armBackgroundEngine);
+        window.removeEventListener("click", armBackgroundEngine);
+      };
+      window.addEventListener("touchstart", armBackgroundEngine, { once: true });
+      window.addEventListener("click", armBackgroundEngine, { once: true });
 
-      if (frameCount % speedDivider === 0) {
-        if (activeMode === 'text') {
-          textOffset++;
-          renderTextDiode(currentText, "#22d3ee");
-        } else if (activeMode === 'devil') {
-          renderDevilEyes();
-        } else if (activeMode === 'turn_left') {
-          renderTurnArrows('LEFT');
-        } else if (activeMode === 'turn_right') {
-          renderTurnArrows('RIGHT');
-        } else if (activeMode === 'brake') {
-          renderBrakeFlash();
-        }
-      }
-      requestAnimationFrame(matrixLoop);
-    }
-    matrixLoop();
-
-    /* =========================================================================
-       3. CONTROLS, SENSORS & SIMULATOR
-       ========================================================================= */
-    function updateBrightness(val) {
-      document.getElementById('brightnessVal').innerText = val + "%";
-      brightness = val / 100;
-      canvas.style.opacity = brightness;
-    }
-
-    function updateSpeed(val) {
-      document.getElementById('speedVal').innerText = val + "x";
-      scrollSpeed = parseInt(val, 10);
-    }
-
-    function toggleAutoMirror(checked) {
-      autoMirror = checked;
-      canvas.style.transform = autoMirror ? 'scaleX(-1)' : 'scaleX(1)';
-    }
-
-    function toggleTurnSignal(dir) {
-      const podL = document.getElementById('turnPodLeft');
-      const podR = document.getElementById('turnPodRight');
-
-      if (dir === 'LEFT') {
-        activeMode = activeMode === 'turn_left' ? 'text' : 'turn_left';
-        podL.classList.toggle('active-pod', activeMode === 'turn_left');
-        podR.classList.remove('active-pod');
-      } else {
-        activeMode = activeMode === 'turn_right' ? 'text' : 'turn_right';
-        podR.classList.toggle('active-pod', activeMode === 'turn_right');
-        podL.classList.remove('active-pod');
-      }
-    }
-
-    function triggerBrakeAlert() {
-      const btn = document.getElementById('btnBrake');
-      btn.classList.add('active-brake');
-      activeMode = 'brake';
-      document.getElementById('motionStatusText').innerText = "BRAKE ACTIVE";
-
-      setTimeout(() => {
-        btn.classList.remove('active-brake');
-        activeMode = 'text';
-        document.getElementById('motionStatusText').innerText = "CRUISING";
-      }, 3500);
-    }
-
-    function updateSimSpeed(val) {
-      document.getElementById('simSpeedLabel').innerText = val + " km/h";
-      document.getElementById('speedDisplay').innerText = val;
-      const motionText = document.getElementById('motionStatusText');
-      if (parseInt(val, 10) === 0) {
-        motionText.innerText = "STOPPED";
-      } else {
-        motionText.innerText = "CRUISING";
-      }
-    }
-
-    function simulateTurn(type) {
-      document.querySelectorAll('.btn-sim').forEach(b => b.classList.remove('sim-active'));
-      const podL = document.getElementById('turnPodLeft');
-      const podR = document.getElementById('turnPodRight');
-
-      if (type === 'LEFT') {
-        document.getElementById('btnSimLeft').classList.add('sim-active');
-        document.getElementById('steerAngleVal').innerText = "-28° (LEFT)";
-        activeMode = 'turn_left';
-        podL.classList.add('active-pod');
-        podR.classList.remove('active-pod');
-      } else if (type === 'RIGHT') {
-        document.getElementById('btnSimRight').classList.add('sim-active');
-        document.getElementById('steerAngleVal').innerText = "+31° (RIGHT)";
-        activeMode = 'turn_right';
-        podR.classList.add('active-pod');
-        podL.classList.remove('active-pod');
-      } else {
-        document.getElementById('btnSimStraight').classList.add('sim-active');
-        document.getElementById('steerAngleVal').innerText = "0° (CENTER)";
-        activeMode = 'text';
-        podL.classList.remove('active-pod');
-        podR.classList.remove('active-pod');
-      }
-    }
-
-    function requestDeviceSensors() {
-      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-        DeviceMotionEvent.requestPermission()
-          .then(resp => {
-            if (resp === 'granted') {
-              window.addEventListener('devicemotion', handleMotion);
-              alert("iPhone Motion Sensors Active!");
-            }
-          })
-          .catch(console.error);
-      } else {
-        window.addEventListener('devicemotion', handleMotion);
-        alert("Sensors Active!");
-      }
-
-      if ('geolocation' in navigator) {
-        navigator.geolocation.watchPosition(pos => {
-          const kmh = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
-          document.getElementById('speedDisplay').innerText = kmh;
-          document.getElementById('gpsAccVal').innerText = `±${Math.round(pos.coords.accuracy || 10)}M`;
-        }, () => {}, { enableHighAccuracy: true });
-      }
-    }
-
-    function handleMotion(e) {
-      const acc = e.accelerationIncludingGravity;
-      if (!acc) return;
-      const g = (acc.z / 9.8).toFixed(2);
-      document.getElementById('gDecelVal').innerText = `${Math.abs(g)} G`;
-      if (acc.z < -8.5 && activeMode !== 'brake') {
-        triggerBrakeAlert();
-      }
-    }
-
-    /* =========================================================================
-       4. PRESETS DATA & TAB NAVIGATION
-       ========================================================================= */
-    const PRESETS = {
-      meme: [
-        { title: "பேசிட்டே போலாம் வா 😎", sub: "Iconic driving dialogue" },
-        { title: "ஆஹான்?! 🤨", sub: "Vadivelu classic reaction" },
-        { title: "என்ன கொடுமை சரவணா! 🤦", sub: "Traffic bumper-to-bumper" },
-        { title: "பயபுள்ள பயந்துட்டான்! 😂", sub: "Playful overtake poke" },
-        { title: "நீ புடுங்குறது பூராம் ஆணிதான் 🔨", sub: "Classic Vadivelu punch" },
-        { title: "நாங்கெல்லாம் யாருன்னு தெரியுமா?! 🔥", sub: "Mass punch dialogue" }
-      ],
-      tamil: [
-        { title: "வணக்கம் 🤝", sub: "Traditional greetings" },
-        { title: "நன்றி 🙏", sub: "Highway courtesy thank you" },
-        { title: "முந்திச் செல்க ➡️", sub: "Overtake clearance / Pass" },
-        { title: "மன்னிக்கவும் ✌️", sub: "Apology / Pardon" },
-        { title: "வழி விடுக 🚗", sub: "Please give way" },
-        { title: "பாதுகாப்பான இடைவெளி விடுக ⛔", sub: "Keep distance reminder" }
-      ]
-    };
-
-    function populateGrids() {
-      const memeGrid = document.getElementById('memeGrid');
-      PRESETS.meme.forEach(item => {
-        const d = document.createElement('div');
-        d.className = 'deck-item';
-        d.innerHTML = `<div class="deck-item-title">${item.title}</div><div class="deck-item-sub">${item.sub}</div>`;
-        d.onclick = () => { setTextPreset(item.title); };
-        memeGrid.appendChild(d);
-      });
-
-      const tamilGrid = document.getElementById('tamilGrid');
-      PRESETS.tamil.forEach(item => {
-        const d = document.createElement('div');
-        d.className = 'deck-item';
-        d.innerHTML = `<div class="deck-item-title">${item.title}</div><div class="deck-item-sub">${item.sub}</div>`;
-        d.onclick = () => { setTextPreset(item.title); };
-        tamilGrid.appendChild(d);
-      });
-    }
-    populateGrids();
-
-    function setTextPreset(text) {
-      activeMode = 'text';
-      currentText = text;
-      textOffset = 0;
-      document.getElementById('screenStatusHeader').innerText = text;
-      switchNavTab('hud');
-    }
-
-    function setMode(mode) {
-      activeMode = mode;
-      document.getElementById('screenStatusHeader').innerText = "Devil Eyes 😈";
-      switchNavTab('hud');
-    }
-
-    function sendStudioText() {
-      const val = document.getElementById('studioInput').value.trim();
-      if (val) setTextPreset(val);
-    }
-
-    function switchNavTab(tabName) {
-      document.querySelectorAll('.tab-content-zone').forEach(z => z.classList.remove('show'));
-      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active-tab'));
-
-      document.getElementById(`view-${tabName}`).classList.add('show');
-      event.currentTarget.classList.add('active-tab');
-    }
+      console.log("iPixel Pilot Pro with iOS Liquid Glass & Background Keep-Alive loaded.");
+    });
   </script>
 </body>
 </html>
+```
