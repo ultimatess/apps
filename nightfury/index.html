@@ -1429,36 +1429,43 @@
         document.getElementById("bleBtnText").textContent = "Searching...";
         logDebug("Requesting BLE peripheral...", "ble");
         
+        // Includes both canonical 128-bit strings AND short 16-bit hex strings for iOS CoreBluetooth compatibility
         const candidateServices = [
-          "0000fa02-0000-1000-8000-00805f9b34fb",
-          "0000fa00-0000-1000-8000-00805f9b34fb",
-          "0000fa01-0000-1000-8000-00805f9b34fb",
-          "0000fa03-0000-1000-8000-00805f9b34fb",
-          "0000ffe0-0000-1000-8000-00805f9b34fb",
-          "0000ffe1-0000-1000-8000-00805f9b34fb",
-          "0000ffe5-0000-1000-8000-00805f9b34fb",
-          "0000fff0-0000-1000-8000-00805f9b34fb",
-          "0000fff1-0000-1000-8000-00805f9b34fb",
-          "0000ffd0-0000-1000-8000-00805f9b34fb",
-          "0000ae01-0000-1000-8000-00805f9b34fb",
-          "0000af00-0000-1000-8000-00805f9b34fb",
-          "0000cc01-0000-1000-8000-00805f9b34fb",
-          "0000ee01-0000-1000-8000-00805f9b34fb",
-          "00001000-0000-1000-8000-00805f9b34fb",
-          "00001800-0000-1000-8000-00805f9b34fb",
-          "00001801-0000-1000-8000-00805f9b34fb",
-          "0000180a-0000-1000-8000-00805f9b34fb"
+          "0000fa02-0000-1000-8000-00805f9b34fb", "fa02", "0000fa02",
+          "0000fa00-0000-1000-8000-00805f9b34fb", "fa00", "0000fa00",
+          "0000fa01-0000-1000-8000-00805f9b34fb", "fa01", "0000fa01",
+          "0000fa03-0000-1000-8000-00805f9b34fb", "fa03", "0000fa03",
+          "0000ffe0-0000-1000-8000-00805f9b34fb", "ffe0", "0000ffe0",
+          "0000ffe1-0000-1000-8000-00805f9b34fb", "ffe1", "0000ffe1",
+          "0000ffe5-0000-1000-8000-00805f9b34fb", "ffe5", "0000ffe5",
+          "0000fff0-0000-1000-8000-00805f9b34fb", "fff0", "0000fff0",
+          "0000fff1-0000-1000-8000-00805f9b34fb", "fff1", "0000fff1",
+          "0000ffd0-0000-1000-8000-00805f9b34fb", "ffd0", "0000ffd0",
+          "0000ae01-0000-1000-8000-00805f9b34fb", "ae01", "0000ae01",
+          "0000ae02-0000-1000-8000-00805f9b34fb", "ae02", "0000ae02",
+          "0000af00-0000-1000-8000-00805f9b34fb", "af00", "0000af00",
+          "0000cc01-0000-1000-8000-00805f9b34fb", "cc01", "0000cc01",
+          "0000ee01-0000-1000-8000-00805f9b34fb", "ee01", "0000ee01",
+          "00001000-0000-1000-8000-00805f9b34fb", "1000", "00001000"
         ];
 
-        bleDevice = await navigator.bluetooth.requestDevice({
-          filters: [
-            { namePrefix: "LED_BLE" },
-            { namePrefix: "LED" },
-            { namePrefix: "iPixel" },
-            { namePrefix: "CoolLED" }
-          ],
-          optionalServices: candidateServices
-        });
+        try {
+          bleDevice = await navigator.bluetooth.requestDevice({
+            filters: [
+              { namePrefix: "LED_BLE" },
+              { namePrefix: "LED" },
+              { namePrefix: "iPixel" },
+              { namePrefix: "CoolLED" }
+            ],
+            optionalServices: candidateServices
+          });
+        } catch (e1) {
+          logDebug("Filter scan cancelled or failed, attempting acceptAllDevices...", "info");
+          bleDevice = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: candidateServices
+          });
+        }
 
         bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);
         logDebug(`Selected device: "${bleDevice.name || bleDevice.id}"`, "success");
@@ -1471,14 +1478,14 @@
         bleCharacteristic = null;
 
         const candidateCharacteristics = [
-          "0000fa02-0000-1000-8000-00805f9b34fb",
-          "0000fa03-0000-1000-8000-00805f9b34fb",
-          "0000fa01-0000-1000-8000-00805f9b34fb",
-          "0000ae01-0000-1000-8000-00805f9b34fb",
-          "0000ae02-0000-1000-8000-00805f9b34fb",
-          "0000ffe1-0000-1000-8000-00805f9b34fb",
-          "0000fff1-0000-1000-8000-00805f9b34fb",
-          "0000ffd1-0000-1000-8000-00805f9b34fb"
+          "0000fa02-0000-1000-8000-00805f9b34fb", "fa02",
+          "0000fa03-0000-1000-8000-00805f9b34fb", "fa03",
+          "0000fa01-0000-1000-8000-00805f9b34fb", "fa01",
+          "0000ae01-0000-1000-8000-00805f9b34fb", "ae01",
+          "0000ae02-0000-1000-8000-00805f9b34fb", "ae02",
+          "0000ffe1-0000-1000-8000-00805f9b34fb", "ffe1",
+          "0000fff1-0000-1000-8000-00805f9b34fb", "fff1",
+          "0000ffd1-0000-1000-8000-00805f9b34fb", "ffd1"
         ];
 
         // Step 1: Try getPrimaryServices()
@@ -1490,7 +1497,7 @@
           logDebug("getPrimaryServices error, attempting candidate service sweep...", "info");
         }
 
-        // If getPrimaryServices failed, sweep candidate services individually
+        // Sweep candidate services individually if needed
         if (!discoveredServices || discoveredServices.length === 0) {
           discoveredServices = [];
           for (const uuid of candidateServices) {
@@ -1501,8 +1508,9 @@
           }
         }
 
-        // Step 2: Inspect discovered services for writable characteristics
+        // Step 2: Inspect discovered services (filter out read-only 0x1800 system services)
         for (const service of discoveredServices) {
+          if (service.uuid.includes("1800") || service.uuid.includes("1801")) continue;
           try {
             const characteristics = await service.getCharacteristics();
             for (const char of characteristics) {
@@ -1515,7 +1523,7 @@
               }
             }
           } catch (e) {
-            logDebug(`getCharacteristics() error on ${service.uuid}: ${e.message}`, "info");
+            logDebug(`getCharacteristics() note on ${service.uuid}: ${e.message}`, "info");
           }
         }
 
@@ -1526,7 +1534,7 @@
             for (const charUuid of candidateCharacteristics) {
               try {
                 const char = await service.getCharacteristic(charUuid);
-                if (char) {
+                if (char && (char.properties.write || char.properties.writeWithoutResponse)) {
                   if (!bleWritableCharacteristics.some(c => c.uuid === char.uuid)) {
                     bleWritableCharacteristics.push(char);
                     logDebug(`Registered direct candidate char: ${char.uuid}`, "success");
