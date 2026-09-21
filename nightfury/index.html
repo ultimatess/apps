@@ -195,7 +195,7 @@
     <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
       <div class="flex items-center gap-2">
         <span class="text-[13px] font-bold tracking-tight text-white">iPixel Matrix</span>
-        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v1.8.0-ENDPOINT-FIX</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.0.0-GATT-SWEEP-FIX</span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -275,8 +275,9 @@
         <div class="flex items-center gap-1.5 py-1 flex-wrap">
           <span class="text-[9px] text-slate-400 font-bold block w-full">PROTOCOL MODE:</span>
           <button onclick="setBleProtocol('ae01_sinowealth')" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40">1. AE01 Sinowealth</button>
-          <button onclick="setBleProtocol('coolled_7728')" class="px-2 py-0.5 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40">2. CoolLED 7728</button>
-          <button onclick="setBleProtocol('bitmap_stream')" class="px-2 py-0.5 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/40">3. Bitmap Stream</button>
+          <button onclick="setBleProtocol('light1248_frame')" class="px-2 py-0.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold border border-cyan-500/40">2. Light1248 Frame</button>
+          <button onclick="setBleProtocol('coolled_7728')" class="px-2 py-0.5 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40">3. CoolLED 7728</button>
+          <button onclick="setBleProtocol('bitmap_stream')" class="px-2 py-0.5 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/40">4. Bitmap Stream</button>
 
           <span class="text-[9px] text-slate-400 font-bold block w-full pt-1">TEST ACTIONS:</span>
           <button onclick="testPowerOn()" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40">⚡ Power ON</button>
@@ -292,11 +293,12 @@
             <button onclick="sendCustomHexInput()" class="px-2.5 py-1 rounded bg-amber-500/30 hover:bg-amber-500/50 text-amber-200 font-bold border border-amber-500/40">Send HEX</button>
           </div>
           <div class="flex items-center gap-1 pt-0.5 flex-wrap">
-            <button onclick="sendHexPreset('01 01 06 FF 00 00 05 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">01 Text</button>
-            <button onclick="sendHexPreset('55 AA 01 01 05 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">55AA Tuya</button>
-            <button onclick="sendHexPreset('FA 02 01 06 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">FA02 Format</button>
-            <button onclick="sendHexPreset('0A 01 06 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">0A Format</button>
-            <button onclick="sendHexPreset('02 01 01')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">02 Mode</button>
+            <button onclick="sendHexPreset('02 01 01')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">AE01 Init</button>
+            <button onclick="sendHexPreset('01 01 06 FF 00 00 05 48 45 4C 4C 4F 4D')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">AE01 "HELLO"</button>
+            <button onclick="sendHexPreset('01 00 02 06 09 02 05 03')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">L1248 ON</button>
+            <button onclick="sendHexPreset('01 00 02 05 0A 03')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">L1248 Begin</button>
+            <button onclick="sendHexPreset('77 28 0C 01 06 FF 00 00 01 48 45 4C 4C 4F 12')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">7728 "HELLO"</button>
+            <button onclick="sendHexPreset('55 AA 01 01 05 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">Tuya</button>
           </div>
         </div>
 
@@ -609,7 +611,7 @@
 
     <!-- Explicit Build Identification Footer -->
     <div class="text-[10px] font-mono text-center text-slate-500 pt-1 pb-3">
-      Build: <span class="text-emerald-400 font-bold">v1.8.0-ENDPOINT-FIX</span> · GATT: 0000ae01-0000-1000-8000-00805f9b34fb
+      Build: <span class="text-emerald-400 font-bold">v2.0.0-GATT-SWEEP-FIX</span> · Auto GATT Multi-Sweep
     </div>
   </main>
 
@@ -665,6 +667,7 @@
     // Application state
     let bleDevice = null;
     let bleCharacteristic = null;
+    let bleWritableCharacteristics = [];
     let isBleConnected = false;
     let audioMuted = false;
 
@@ -1224,7 +1227,25 @@
       if (consoleEl) consoleEl.innerHTML = '<div class="text-slate-500">[CONSOLE CLEARED] Ready...</div>';
     }
 
-    // Active Protocol Mode: "ae01_sinowealth" (default for AE01 hardware), "coolled_7728", "bitmap_stream"
+    // Light1248 / CoolLED standard frame encoder:
+    // Frame: 0x01 + escape(len_2B_BE + payload) + 0x03
+    // Escape rule: bytes 0x01..0x03 -> [0x02, byte ^ 0x04]
+    function encodeLight1248Frame(payload) {
+      const len = payload.length;
+      const unescaped = [(len >> 8) & 0xFF, len & 0xFF, ...payload];
+      const escaped = [];
+      for (const b of unescaped) {
+        if (b >= 0x01 && b <= 0x03) {
+          escaped.push(0x02);
+          escaped.push(b ^ 0x04);
+        } else {
+          escaped.push(b);
+        }
+      }
+      return [0x01, ...escaped, 0x03];
+    }
+
+    // Active Protocol Mode: "ae01_sinowealth" (default for AE01 hardware), "light1248_frame", "coolled_7728", "bitmap_stream"
     let activeBleProtocol = "ae01_sinowealth";
 
     function setBleProtocol(mode) {
@@ -1267,6 +1288,43 @@
           logDebug(`AE01 Text Frame (${payload.length}B): ${text}`, "info");
           for (let i = 0; i < payload.length; i += 20) {
             await sendBleCommand(payload.slice(i, i + 20));
+            await new Promise(res => setTimeout(res, 20));
+          }
+
+        } else if (activeBleProtocol === "light1248_frame") {
+          // Protocol 2: Standard Light1248 / CoolLED Frame Protocol
+          // Step A: Switch ON
+          await sendBleCommand(encodeLight1248Frame([0x09, 0x01]));
+          await new Promise(res => setTimeout(res, 20));
+
+          // Step B: Set Mode & Speed
+          const modeByte = style === "static" ? 0x01 : style === "blink" ? 0x03 : 0x02;
+          await sendBleCommand(encodeLight1248Frame([0x06, modeByte]));
+          await new Promise(res => setTimeout(res, 20));
+          await sendBleCommand(encodeLight1248Frame([0x07, spd]));
+          await new Promise(res => setTimeout(res, 20));
+
+          // Step C: Begin Transfer
+          await sendBleCommand(encodeLight1248Frame([0x0A]));
+          await new Promise(res => setTimeout(res, 20));
+
+          // Step D: Draw Bitmap (16 rows)
+          const bitmapBytes = [];
+          for (let col = 0; col < COLS; col++) {
+            let byte1 = 0; // Rows 0..7
+            let byte2 = 0; // Rows 8..15
+            for (let row = 0; row < 8; row++) {
+              if (matrixBuffer[row][col]) byte1 |= (1 << row);
+            }
+            for (let row = 8; row < 16; row++) {
+              if (matrixBuffer[row][col]) byte2 |= (1 << (row - 8));
+            }
+            bitmapBytes.push(byte1, byte2);
+          }
+          const framedDraw = encodeLight1248Frame([0x03, ...bitmapBytes]);
+          logDebug(`Light1248 Framed Draw (${framedDraw.length}B)`, "info");
+          for (let i = 0; i < framedDraw.length; i += 20) {
+            await sendBleCommand(framedDraw.slice(i, i + 20));
             await new Promise(res => setTimeout(res, 20));
           }
 
@@ -1429,24 +1487,24 @@
         document.getElementById("bleBtnText").textContent = "Searching...";
         logDebug("Requesting BLE peripheral...", "ble");
         
-        // Includes both canonical 128-bit strings AND short 16-bit hex strings for iOS CoreBluetooth compatibility
+        // Candidate service UUIDs: canonical 128-bit strings and 16-bit hex strings
         const candidateServices = [
-          "0000fa02-0000-1000-8000-00805f9b34fb", "fa02", "0000fa02",
-          "0000fa00-0000-1000-8000-00805f9b34fb", "fa00", "0000fa00",
-          "0000fa01-0000-1000-8000-00805f9b34fb", "fa01", "0000fa01",
-          "0000fa03-0000-1000-8000-00805f9b34fb", "fa03", "0000fa03",
-          "0000ffe0-0000-1000-8000-00805f9b34fb", "ffe0", "0000ffe0",
-          "0000ffe1-0000-1000-8000-00805f9b34fb", "ffe1", "0000ffe1",
-          "0000ffe5-0000-1000-8000-00805f9b34fb", "ffe5", "0000ffe5",
-          "0000fff0-0000-1000-8000-00805f9b34fb", "fff0", "0000fff0",
-          "0000fff1-0000-1000-8000-00805f9b34fb", "fff1", "0000fff1",
-          "0000ffd0-0000-1000-8000-00805f9b34fb", "ffd0", "0000ffd0",
-          "0000ae01-0000-1000-8000-00805f9b34fb", "ae01", "0000ae01",
-          "0000ae02-0000-1000-8000-00805f9b34fb", "ae02", "0000ae02",
-          "0000af00-0000-1000-8000-00805f9b34fb", "af00", "0000af00",
-          "0000cc01-0000-1000-8000-00805f9b34fb", "cc01", "0000cc01",
-          "0000ee01-0000-1000-8000-00805f9b34fb", "ee01", "0000ee01",
-          "00001000-0000-1000-8000-00805f9b34fb", "1000", "00001000"
+          "0000fa02-0000-1000-8000-00805f9b34fb", "fa02",
+          "0000fa00-0000-1000-8000-00805f9b34fb", "fa00",
+          "0000fa01-0000-1000-8000-00805f9b34fb", "fa01",
+          "0000fa03-0000-1000-8000-00805f9b34fb", "fa03",
+          "0000ae01-0000-1000-8000-00805f9b34fb", "ae01",
+          "0000ae02-0000-1000-8000-00805f9b34fb", "ae02",
+          "0000af00-0000-1000-8000-00805f9b34fb", "af00",
+          "0000fff0-0000-1000-8000-00805f9b34fb", "fff0",
+          "0000fff1-0000-1000-8000-00805f9b34fb", "fff1",
+          "0000ffe0-0000-1000-8000-00805f9b34fb", "ffe0",
+          "0000ffe1-0000-1000-8000-00805f9b34fb", "ffe1",
+          "0000ffe5-0000-1000-8000-00805f9b34fb", "ffe5",
+          "0000ffd0-0000-1000-8000-00805f9b34fb", "ffd0",
+          "0000cc01-0000-1000-8000-00805f9b34fb", "cc01",
+          "0000ee01-0000-1000-8000-00805f9b34fb", "ee01",
+          "00001000-0000-1000-8000-00805f9b34fb", "1000"
         ];
 
         try {
@@ -1475,6 +1533,7 @@
         const server = await bleDevice.gatt.connect();
         logDebug("GATT server connected!", "success");
         
+        bleWritableCharacteristics = [];
         bleCharacteristic = null;
 
         const candidateCharacteristics = [
@@ -1483,65 +1542,99 @@
           "0000fa01-0000-1000-8000-00805f9b34fb", "fa01",
           "0000ae01-0000-1000-8000-00805f9b34fb", "ae01",
           "0000ae02-0000-1000-8000-00805f9b34fb", "ae02",
-          "0000ffe1-0000-1000-8000-00805f9b34fb", "ffe1",
           "0000fff1-0000-1000-8000-00805f9b34fb", "fff1",
+          "0000fff2-0000-1000-8000-00805f9b34fb", "fff2",
+          "0000ffe1-0000-1000-8000-00805f9b34fb", "ffe1",
           "0000ffd1-0000-1000-8000-00805f9b34fb", "ffd1"
         ];
 
-        // Step 1: Try getPrimaryServices()
+        // Step 1: Collect any services from getPrimaryServices()
         let discoveredServices = [];
         try {
-          discoveredServices = await server.getPrimaryServices();
-          logDebug(`Discovered ${discoveredServices.length} GATT services via getPrimaryServices()`, "info");
-        } catch (e) {
-          logDebug("getPrimaryServices error, attempting candidate service sweep...", "info");
-        }
-
-        // Sweep candidate services individually if needed
-        if (!discoveredServices || discoveredServices.length === 0) {
-          discoveredServices = [];
-          for (const uuid of candidateServices) {
-            try {
-              const service = await server.getPrimaryService(uuid);
-              if (service) discoveredServices.push(service);
-            } catch (err) {}
+          const svcs = await server.getPrimaryServices();
+          if (svcs && svcs.length > 0) {
+            for (const s of svcs) {
+              if (!discoveredServices.some(existing => existing.uuid.toLowerCase() === s.uuid.toLowerCase())) {
+                discoveredServices.push(s);
+              }
+            }
+            logDebug(`Discovered ${svcs.length} service(s) via getPrimaryServices()`, "info");
           }
+        } catch (e) {
+          logDebug(`getPrimaryServices notice: ${e.message}`, "info");
         }
 
-        // Step 2: Inspect discovered services (filter out read-only 0x1800 system services)
-        for (const service of discoveredServices) {
-          if (service.uuid.includes("1800") || service.uuid.includes("1801")) continue;
+        // Step 2: ALWAYS sweep candidate services directly on server.
+        // On iOS / Bluefy CoreBluetooth, proprietary GATT services (FA02, AE01, FFF0, etc.)
+        // are concealed unless queried explicitly via server.getPrimaryService(uuid)!
+        logDebug("Sweeping candidate GATT services...", "ble");
+        for (const uuid of candidateServices) {
           try {
-            const characteristics = await service.getCharacteristics();
-            for (const char of characteristics) {
-              logDebug(`Discovered char: ${char.uuid} (write:${char.properties.write}, writeNoResp:${char.properties.writeWithoutResponse})`, "ble");
-              if (char.properties.write || char.properties.writeWithoutResponse) {
-                if (!bleWritableCharacteristics.some(c => c.uuid === char.uuid)) {
+            const service = await server.getPrimaryService(uuid);
+            if (service && !discoveredServices.some(s => s.uuid.toLowerCase() === service.uuid.toLowerCase())) {
+              discoveredServices.push(service);
+              logDebug(`Latched candidate service: ${service.uuid}`, "success");
+            }
+          } catch (err) {}
+        }
+        logDebug(`Total services to inspect: ${discoveredServices.length}`, "info");
+
+        // Step 3: Inspect each discovered service (skip 1800/1801 system services)
+        for (const service of discoveredServices) {
+          if (service.uuid.includes("1800") || service.uuid.includes("1801") || service.uuid.includes("180a")) {
+            continue;
+          }
+
+          // A: Query getCharacteristics()
+          try {
+            const chars = await service.getCharacteristics();
+            for (const char of chars) {
+              const canWrite = char.properties.write || char.properties.writeWithoutResponse;
+              logDebug(`Char [${char.uuid.slice(0, 8)}]: write=${char.properties.write}, writeNoResp=${char.properties.writeWithoutResponse}`, "ble");
+              if (canWrite) {
+                if (!bleWritableCharacteristics.some(c => c.uuid.toLowerCase() === char.uuid.toLowerCase())) {
                   bleWritableCharacteristics.push(char);
-                  logDebug(`Registered writable endpoint: ${char.uuid}`, "success");
+                  logDebug(`Registered writable endpoint: ${char.uuid.slice(0, 8)}`, "success");
                 }
               }
             }
           } catch (e) {
-            logDebug(`getCharacteristics() note on ${service.uuid}: ${e.message}`, "info");
+            logDebug(`getCharacteristics notice on ${service.uuid.slice(0, 8)}: ${e.message}`, "info");
+          }
+
+          // B: Query candidate characteristics directly on this service
+          for (const charUuid of candidateCharacteristics) {
+            try {
+              const char = await service.getCharacteristic(charUuid);
+              const canWrite = char && (char.properties.write || char.properties.writeWithoutResponse);
+              if (canWrite) {
+                if (!bleWritableCharacteristics.some(c => c.uuid.toLowerCase() === char.uuid.toLowerCase())) {
+                  bleWritableCharacteristics.push(char);
+                  logDebug(`Direct char endpoint registered: ${char.uuid.slice(0, 8)}`, "success");
+                }
+              }
+            } catch (err) {}
           }
         }
 
-        // Step 3: Sweep candidate characteristic UUIDs directly if getCharacteristics() was blocked
+        // Step 4: Emergency Service + Characteristic matrix lookup if endpoints still 0
         if (bleWritableCharacteristics.length === 0) {
-          logDebug("Direct characteristic UUID sweep engaged...", "ble");
-          for (const service of discoveredServices) {
-            for (const charUuid of candidateCharacteristics) {
-              try {
-                const char = await service.getCharacteristic(charUuid);
-                if (char && (char.properties.write || char.properties.writeWithoutResponse)) {
-                  if (!bleWritableCharacteristics.some(c => c.uuid === char.uuid)) {
-                    bleWritableCharacteristics.push(char);
-                    logDebug(`Registered direct candidate char: ${char.uuid}`, "success");
+          logDebug("Emergency direct candidate matrix sweep...", "ble");
+          for (const sUuid of candidateServices) {
+            try {
+              const service = await server.getPrimaryService(sUuid);
+              for (const cUuid of candidateCharacteristics) {
+                try {
+                  const char = await service.getCharacteristic(cUuid);
+                  if (char && (char.properties.write || char.properties.writeWithoutResponse)) {
+                    if (!bleWritableCharacteristics.some(c => c.uuid.toLowerCase() === char.uuid.toLowerCase())) {
+                      bleWritableCharacteristics.push(char);
+                      logDebug(`Emergency direct char latched: ${char.uuid.slice(0, 8)}`, "success");
+                    }
                   }
-                }
-              } catch (err) {}
-            }
+                } catch (e) {}
+              }
+            } catch (e) {}
           }
         }
 
@@ -1550,7 +1643,7 @@
         }
 
         bleCharacteristic = bleWritableCharacteristics[0];
-        logDebug(`Primary endpoint latched: ${bleCharacteristic.uuid}. Total endpoints: ${bleWritableCharacteristics.length}`, "success");
+        logDebug(`Primary endpoint latched: ${bleCharacteristic.uuid.slice(0, 8)}. Total endpoints: ${bleWritableCharacteristics.length}`, "success");
 
         isBleConnected = true;
         document.getElementById("bleStatusDot").className = "w-2 h-2 rounded-full bg-emerald-500";
@@ -1566,7 +1659,7 @@
         enableBackgroundKeepAliveAudio();
         startBleHeartbeat();
 
-        // Step 4: Subscribe to GATT Notifications / Read responses
+        // Step 5: Subscribe to GATT Notifications / Read responses
         for (const service of discoveredServices) {
           try {
             const characteristics = await service.getCharacteristics();
@@ -1587,9 +1680,9 @@
         }
 
         // Send initialization & Mode Switch sequence
-        logDebug("Sending Power ON & Custom Mode switch sequence...", "ble");
+        logDebug("Sending Power ON sequence...", "ble");
         await sendBleCommand([0x02, 0x01, 0x01]);
-        await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x02, 0x01, 0x01, 0x0A]);
+        await sendBleCommand(encodeLight1248Frame([0x09, 0x01]));
 
       } catch (err) {
         logDebug(`BLE Error: ${err.message || err}`, "error");
@@ -1619,22 +1712,28 @@
     }
 
     async function testPowerOn() {
-      if (!isBleConnected) {
+      if (!isBleConnected || bleWritableCharacteristics.length === 0) {
         logDebug("Cannot test Power ON: BLE not connected", "error");
         return;
       }
-      logDebug("Executing Manual Power ON sequence...", "ble");
+      logDebug("Executing Multi-Protocol Power ON sequence...", "ble");
+      // 1. AE01 Sinowealth Mode / Power ON
+      await sendBleCommand([0x02, 0x01, 0x01]);
+      await new Promise(r => setTimeout(r, 20));
+      // 2. Light1248 Switch ON
+      await sendBleCommand(encodeLight1248Frame([0x09, 0x01]));
+      await new Promise(r => setTimeout(r, 20));
+      // 3. CoolLED 7728 Power ON
       await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x02, 0x01, 0x01, 0x0A]);
-      await sendBleCommand([0x05, 0x00, 0x07, 0x01, 0x01]);
     }
 
     async function testSendText(str) {
-      if (!isBleConnected) {
+      if (!isBleConnected || bleWritableCharacteristics.length === 0) {
         logDebug("Cannot test Text: BLE not connected", "error");
         return;
       }
-      logDebug(`Executing Manual Text Test for "${str}"...`, "ble");
-      sendPresetMessage(str, "#06b6d4", "scroll", 6);
+      logDebug(`Executing Manual Text Test for "${str}" using [${activeBleProtocol.toUpperCase()}]...`, "ble");
+      sendPresetMessage(str, currentColor || "#06b6d4", "scroll", scrollSpeed || 6);
     }
 
     // Alias for Bluefy iOS Browser scan trigger
@@ -1642,6 +1741,8 @@
 
     function onBleDisconnected() {
       isBleConnected = false;
+      bleWritableCharacteristics = [];
+      bleCharacteristic = null;
       stopBleHeartbeat();
       logDebug("GATT server disconnected", "error");
       document.getElementById("bleStatusDot").className = "w-2 h-2 rounded-full bg-amber-400";
@@ -1652,11 +1753,9 @@
     }
 
     function disconnectBle() {
-      if (bleDevice && bleDevice.gatt.connected) bleDevice.gatt.disconnect();
+      if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) bleDevice.gatt.disconnect();
       onBleDisconnected();
     }
-
-    let bleWritableCharacteristics = [];
 
     async function sendBleCommand(byteArray) {
       if (!isBleConnected || bleWritableCharacteristics.length === 0) {
