@@ -195,7 +195,7 @@
     <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
       <div class="flex items-center gap-2">
         <span class="text-[13px] font-bold tracking-tight text-white">iPixel Matrix</span>
-        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.2.2-ISOLATED-RENDER-MUTEX-FIX</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.2.3-CHAR-ORIENTATION-FIX</span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -280,6 +280,7 @@
           <button id="protoBtn-ipixel_diy" onclick="setBleProtocol('ipixel_diy')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 font-bold border border-white/20">🎨 4. DIY Mode</button>
           <button id="protoBtn-ae01_sinowealth" onclick="setBleProtocol('ae01_sinowealth')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 font-mono text-[9px] border border-white/10">Legacy AE01</button>
           <button id="protoBtn-coolled_7728" onclick="setBleProtocol('coolled_7728')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 font-mono text-[9px] border border-white/10">Legacy 7728</button>
+          <button id="mirrorToggleBtn" onclick="toggleTextMirror()" class="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40">🪞 Mirror: LSB (Normal)</button>
 
           <span class="text-[9px] text-slate-400 font-bold block w-full pt-1">FEATURE VALIDATION SUITE:</span>
           <button onclick="testClockMode()" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/40">⏰ Clock</button>
@@ -621,7 +622,7 @@
 
     <!-- Explicit Build Identification Footer -->
     <div class="text-[10px] font-mono text-center text-slate-500 pt-1 pb-3">
-      Build: <span class="text-emerald-400 font-bold">v2.2.2-ISOLATED-RENDER-MUTEX-FIX</span> · Isolated Hardware Rasterizer & BLE Mutex Queue
+      Build: <span class="text-emerald-400 font-bold">v2.2.3-CHAR-ORIENTATION-FIX</span> · Native LSB Bit-Order & Mirror Toggle
     </div>
   </main>
 
@@ -1366,6 +1367,21 @@
 
     // Native iPixel Text Protocol Builder (CMD 0x0100)
     // Slices 16-row font raster into width-8 bitmap chunks (16 bytes/chunk)
+    let textBitOrderInverted = false; // Default: false -> LSB first (bit 0 = leftmost column). Fixes flipped / inside-out chars!
+
+    function toggleTextMirror() {
+      textBitOrderInverted = !textBitOrderInverted;
+      const btn = document.getElementById("mirrorToggleBtn");
+      if (btn) {
+        btn.textContent = textBitOrderInverted ? "🪞 Mirror: MSB (Flipped)" : "🪞 Mirror: LSB (Normal)";
+      }
+      showIosToast(textBitOrderInverted ? "Mirroring Active" : "Normal Orientation", "🪞");
+      logDebug(`Text Bit Orientation toggled: ${textBitOrderInverted ? "MSB (Flipped)" : "LSB (Normal)"}`, "info");
+      if (currentText) {
+        pushTextToHardware(currentText, currentColor || "#06b6d4", animStyle || "scroll", scrollSpeed || 6);
+      }
+    }
+
     function chunkRasterTo16x8(raster) {
       const chunks = [];
       const width = raster.width;
@@ -1376,7 +1392,11 @@
           for (let bit = 0; bit < 8; bit++) {
             const col = x + bit;
             if (col < width && raster.map[r][col] === 1) {
-              byteVal |= (1 << (7 - bit)); // MSB first
+              if (textBitOrderInverted) {
+                byteVal |= (1 << (7 - bit)); // MSB first (mirrored)
+              } else {
+                byteVal |= (1 << bit); // LSB first (normal: col 0 = bit 0, col 7 = bit 7)
+              }
             }
           }
           rowBytes[r] = byteVal;
