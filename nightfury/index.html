@@ -195,7 +195,7 @@
     <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
       <div class="flex items-center gap-2">
         <span class="text-[13px] font-bold tracking-tight text-white">iPixel Matrix</span>
-        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.0.0-GATT-SWEEP-FIX</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.1.0-CANONICAL-UUID-FIX</span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -611,7 +611,7 @@
 
     <!-- Explicit Build Identification Footer -->
     <div class="text-[10px] font-mono text-center text-slate-500 pt-1 pb-3">
-      Build: <span class="text-emerald-400 font-bold">v2.0.0-GATT-SWEEP-FIX</span> · Auto GATT Multi-Sweep
+      Build: <span class="text-emerald-400 font-bold">v2.1.0-CANONICAL-UUID-FIX</span> · Canonical UUID Multi-Sweep
     </div>
   </main>
 
@@ -1487,24 +1487,25 @@
         document.getElementById("bleBtnText").textContent = "Searching...";
         logDebug("Requesting BLE peripheral...", "ble");
         
-        // Candidate service UUIDs: canonical 128-bit strings and 16-bit hex strings
+        // Candidate service UUIDs (standard 128-bit canonical lowercase UUIDs accepted by Chrome & Bluefy)
         const candidateServices = [
-          "0000fa02-0000-1000-8000-00805f9b34fb", "fa02",
-          "0000fa00-0000-1000-8000-00805f9b34fb", "fa00",
-          "0000fa01-0000-1000-8000-00805f9b34fb", "fa01",
-          "0000fa03-0000-1000-8000-00805f9b34fb", "fa03",
-          "0000ae01-0000-1000-8000-00805f9b34fb", "ae01",
-          "0000ae02-0000-1000-8000-00805f9b34fb", "ae02",
-          "0000af00-0000-1000-8000-00805f9b34fb", "af00",
-          "0000fff0-0000-1000-8000-00805f9b34fb", "fff0",
-          "0000fff1-0000-1000-8000-00805f9b34fb", "fff1",
-          "0000ffe0-0000-1000-8000-00805f9b34fb", "ffe0",
-          "0000ffe1-0000-1000-8000-00805f9b34fb", "ffe1",
-          "0000ffe5-0000-1000-8000-00805f9b34fb", "ffe5",
-          "0000ffd0-0000-1000-8000-00805f9b34fb", "ffd0",
-          "0000cc01-0000-1000-8000-00805f9b34fb", "cc01",
-          "0000ee01-0000-1000-8000-00805f9b34fb", "ee01",
-          "00001000-0000-1000-8000-00805f9b34fb", "1000"
+          "0000fa02-0000-1000-8000-00805f9b34fb",
+          "0000fa00-0000-1000-8000-00805f9b34fb",
+          "0000fa01-0000-1000-8000-00805f9b34fb",
+          "0000fa03-0000-1000-8000-00805f9b34fb",
+          "0000ae01-0000-1000-8000-00805f9b34fb",
+          "0000ae02-0000-1000-8000-00805f9b34fb",
+          "0000ae00-0000-1000-8000-00805f9b34fb",
+          "0000af00-0000-1000-8000-00805f9b34fb",
+          "0000fff0-0000-1000-8000-00805f9b34fb",
+          "0000fff1-0000-1000-8000-00805f9b34fb",
+          "0000ffe0-0000-1000-8000-00805f9b34fb",
+          "0000ffe1-0000-1000-8000-00805f9b34fb",
+          "0000ffe5-0000-1000-8000-00805f9b34fb",
+          "0000ffd0-0000-1000-8000-00805f9b34fb",
+          "0000cc01-0000-1000-8000-00805f9b34fb",
+          "0000ee01-0000-1000-8000-00805f9b34fb",
+          "00001000-0000-1000-8000-00805f9b34fb"
         ];
 
         try {
@@ -1537,15 +1538,15 @@
         bleCharacteristic = null;
 
         const candidateCharacteristics = [
-          "0000fa02-0000-1000-8000-00805f9b34fb", "fa02",
-          "0000fa03-0000-1000-8000-00805f9b34fb", "fa03",
-          "0000fa01-0000-1000-8000-00805f9b34fb", "fa01",
-          "0000ae01-0000-1000-8000-00805f9b34fb", "ae01",
-          "0000ae02-0000-1000-8000-00805f9b34fb", "ae02",
-          "0000fff1-0000-1000-8000-00805f9b34fb", "fff1",
-          "0000fff2-0000-1000-8000-00805f9b34fb", "fff2",
-          "0000ffe1-0000-1000-8000-00805f9b34fb", "ffe1",
-          "0000ffd1-0000-1000-8000-00805f9b34fb", "ffd1"
+          "0000fa02-0000-1000-8000-00805f9b34fb",
+          "0000fa03-0000-1000-8000-00805f9b34fb",
+          "0000fa01-0000-1000-8000-00805f9b34fb",
+          "0000ae01-0000-1000-8000-00805f9b34fb",
+          "0000ae02-0000-1000-8000-00805f9b34fb",
+          "0000fff1-0000-1000-8000-00805f9b34fb",
+          "0000fff2-0000-1000-8000-00805f9b34fb",
+          "0000ffe1-0000-1000-8000-00805f9b34fb",
+          "0000ffd1-0000-1000-8000-00805f9b34fb"
         ];
 
         // Step 1: Collect any services from getPrimaryServices()
