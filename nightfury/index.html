@@ -195,7 +195,7 @@
     <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
       <div class="flex items-center gap-2">
         <span class="text-[13px] font-bold tracking-tight text-white">iPixel Matrix</span>
-        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.2.3-CHAR-ORIENTATION-FIX</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.2.4-ALL-FEATURES-12CHUNK-FIX</span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -275,7 +275,7 @@
         <div class="flex items-center gap-1.5 py-1 flex-wrap">
           <span class="text-[9px] text-slate-400 font-bold block w-full">PROTOCOL MODE:</span>
           <button id="protoBtn-ipixel_text" onclick="setBleProtocol('ipixel_text')" class="px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/50 shadow-sm shadow-emerald-500/20">✨ 1. iPixel Text (Auto-Scroll)</button>
-          <button id="protoBtn-ipixel_png" onclick="setBleProtocol('ipixel_png')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 font-bold border border-white/20">🖼️ 2. iPixel PNG (Static 16x96)</button>
+          <button id="protoBtn-ipixel_png" onclick="setBleProtocol('ipixel_png')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 font-bold border border-white/20">🖼️ 2. Static 16x96 Frame</button>
           <button id="protoBtn-ipixel_clock" onclick="setBleProtocol('ipixel_clock')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 font-bold border border-white/20">⏰ 3. Clock Mode</button>
           <button id="protoBtn-ipixel_diy" onclick="setBleProtocol('ipixel_diy')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 font-bold border border-white/20">🎨 4. DIY Mode</button>
           <button id="protoBtn-ae01_sinowealth" onclick="setBleProtocol('ae01_sinowealth')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 font-mono text-[9px] border border-white/10">Legacy AE01</button>
@@ -290,9 +290,10 @@
           <button onclick="testDevilOptic('angry')" class="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-300 font-bold border border-red-500/40">😈 Devil Eyes</button>
           <button onclick="testSpeedHud(65)" class="px-2 py-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40">🏎️ 65 KM/H</button>
           <button onclick="testTurnSignal('left')" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40">⬅️ Turn Left</button>
+          <button onclick="testTurnSignal('right')" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40">Turn Right ➡️</button>
           <button onclick="testBrakeWarning()" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold border border-rose-500/40">⛔ Brake</button>
           <button onclick="testBrightnessCycle()" class="px-2 py-1 rounded bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 font-bold border border-yellow-500/40">💡 Brightness</button>
-          <button onclick="testPushPng()" class="px-2 py-1 rounded bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 font-bold border border-slate-500/40">🖼️ Static PNG</button>
+          <button onclick="testPushStaticFrame()" class="px-2 py-1 rounded bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 font-bold border border-slate-500/40">🖼️ Static 16x96</button>
         </div>
 
         <!-- Interactive Custom HEX Packet Sender -->
@@ -447,9 +448,9 @@
           </button>
 
           <!-- Meme 2 -->
-          <button onclick="sendPresetMessage('ஆஹான்?! 🤨', '#06b6d4', 'pulse', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-cyan-500/20 hover:border-cyan-400/50">
+          <button onclick="sendPresetMessage('ஆஹான்?! 🤨', '#06b6d4', 'scroll', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px] border border-cyan-500/20 hover:border-cyan-400/50">
             <span class="font-tamil font-bold text-xs text-white">ஆஹான்?! 🤨</span>
-            <span class="text-[10px] font-mono text-cyan-400">Reaction Meme • Pulse</span>
+            <span class="text-[10px] font-mono text-cyan-400">Reaction Meme • 5x</span>
           </button>
 
           <!-- Meme 3 -->
@@ -513,7 +514,7 @@
             <span class="text-[10px] font-mono text-cyan-400">Vanakkam Greeting</span>
           </button>
 
-          <button onclick="sendPresetMessage('மன்னிக்கவும் ✌️', '#f59e0b', 'static', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+          <button onclick="sendPresetMessage('மன்னிக்கவும் ✌️', '#f59e0b', 'scroll', 5)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
             <span class="font-tamil font-bold text-xs text-white">மன்னிக்கவும் ✌️</span>
             <span class="text-[10px] font-mono text-amber-400">Pardon / Apology</span>
           </button>
@@ -533,12 +534,12 @@
             <span class="text-[10px] font-mono text-amber-400">Drive Slow</span>
           </button>
 
-          <button onclick="sendPresetMessage('பாதுகாப்பான இடைவெளி விடுக ⛔', '#ef4444', 'blink', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+          <button onclick="sendPresetMessage('பாதுகாப்பான இடைவெளி விடுக ⛔', '#ef4444', 'scroll', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
             <span class="font-tamil font-bold text-xs text-white">இடைவெளி விடுக ⛔</span>
             <span class="text-[10px] font-mono text-red-400">Keep Distance</span>
           </button>
 
-          <button onclick="sendPresetMessage('எச்சரிக்கை! ⚠️', '#ef4444', 'blink', 6)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
+          <button onclick="sendPresetMessage('எச்சரிக்கை! ⚠️', '#ef4444', 'scroll', 7)" class="ios-glass-pill ios-spring-btn p-3 rounded-2xl text-left flex flex-col justify-between min-h-[70px]">
             <span class="font-tamil font-bold text-xs text-white">எச்சரிக்கை! ⚠️</span>
             <span class="text-[10px] font-mono text-rose-400">Caution Hazard</span>
           </button>
@@ -622,7 +623,7 @@
 
     <!-- Explicit Build Identification Footer -->
     <div class="text-[10px] font-mono text-center text-slate-500 pt-1 pb-3">
-      Build: <span class="text-emerald-400 font-bold">v2.2.3-CHAR-ORIENTATION-FIX</span> · Native LSB Bit-Order & Mirror Toggle
+      Build: <span class="text-emerald-400 font-bold">v2.2.4-ALL-FEATURES-12CHUNK-FIX</span> · 12-Chunk Native Diode Graphics & 100% Presets Active
     </div>
   </main>
 
@@ -1200,6 +1201,23 @@
       }
     }
 
+    let hudAutoSyncTimer = null;
+    function debouncedHudPush(delayMs = 250) {
+      if (!isBleConnected || !autoSyncMatrix) return;
+      if (hudAutoSyncTimer) clearTimeout(hudAutoSyncTimer);
+      hudAutoSyncTimer = setTimeout(async () => {
+        if (!isBleConnected || isEmergencyBraking) return;
+        if (currentTurnState === "left" || currentTurnState === "right") {
+          await pushMatrixToHardware(`TURN:${currentTurnState}`, currentColor || "#10b981", "static", 5);
+        } else {
+          const text = currentSpeedKmh === 0 ? "STOPPED 🛑" : `${currentSpeedKmh} KM/H 🏎️`;
+          const col = currentSpeedKmh === 0 ? "#ef4444" : "#06b6d4";
+          const buf = createIsolatedGraphicBuffer(b => drawTextToBufferCentered(b, text));
+          await pushGraphicBufferToHardware(buf, col, 0);
+        }
+      }, delayMs);
+    }
+
     function triggerEmergencyBrakeEvent() {
       if (isEmergencyBraking) return;
       isEmergencyBraking = true;
@@ -1216,6 +1234,10 @@
       document.getElementById("liveFrameLabel").textContent = "⛔ BRAKING DETECTED";
       showIosToast("EMERGENCY BRAKE DETECTED!", "🚨");
 
+      if (isBleConnected) {
+        pushMatrixToHardware("BRAKE", "#ef4444", "static", 5);
+      }
+
       setTimeout(() => {
         isEmergencyBraking = false;
         currentDisplayMode = priorMode;
@@ -1223,6 +1245,9 @@
         currentColor = priorColor;
         animStyle = priorStyle;
         document.getElementById("liveFrameLabel").textContent = currentText;
+        if (isBleConnected && autoSyncMatrix) {
+          debouncedHudPush(50);
+        }
       }, 3500);
     }
 
@@ -1231,17 +1256,30 @@
       const spd = parseInt(val);
       document.getElementById("simSpeedLabel").textContent = `Test Speed: ${spd} km/h`;
       updateTelemetrySpeed(spd);
+      if (isBleConnected && autoSyncMatrix && currentTurnState === "straight") {
+        debouncedHudPush(250);
+      }
     }
 
     function simulateTurn(dir) {
       playIosHapticSound("tick");
       setTurnState(dir);
       showIosToast(`Simulating: ${dir.toUpperCase()}`, "🧭");
+      if (isBleConnected && autoSyncMatrix) {
+        if (dir === "left" || dir === "right") {
+          pushMatrixToHardware(`TURN:${dir}`, "#10b981", "static", 5);
+        } else {
+          debouncedHudPush(50);
+        }
+      }
     }
 
     function toggleAutoSync(val) {
       autoSyncMatrix = val;
       showIosToast(val ? "Auto HUD Mirroring ON" : "Manual Mode", "🔄");
+      if (val && isBleConnected) {
+        debouncedHudPush(50);
+      }
     }
 
     // On-Screen Live Debug Logger
@@ -1492,47 +1530,51 @@
       return buffer;
     }
 
-    async function pushGraphicBufferToHardware(buffer, colorHex) {
+    function bufferTo12Chunks(buffer) {
+      const chunks = [];
+      for (let c = 0; c < 12; c++) {
+        const xBase = c * 8;
+        const rowBytes = new Uint8Array(16);
+        for (let r = 0; r < 16; r++) {
+          let byteVal = 0;
+          for (let bit = 0; bit < 8; bit++) {
+            const col = xBase + bit;
+            if (col < 96 && buffer[r] && buffer[r][col] === 1) {
+              if (textBitOrderInverted) {
+                byteVal |= (1 << (7 - bit));
+              } else {
+                byteVal |= (1 << bit);
+              }
+            }
+          }
+          rowBytes[r] = byteVal;
+        }
+        chunks.push(rowBytes);
+      }
+      return chunks;
+    }
+
+    async function pushGraphicBufferToHardware(buffer, colorHex, anim = 0, speed = 80) {
       if (!isBleConnected || bleWritableCharacteristics.length === 0) {
         logDebug("Cannot push graphic: BLE not connected", "error");
         return;
       }
 
-      const { canvas: hCanvas, ctx: hCtx } = getHardwareCanvas96x16();
-      hCtx.fillStyle = "#000000";
-      hCtx.fillRect(0, 0, 96, 16);
-
-      const imgData = hCtx.createImageData(96, 16);
-      const d = imgData.data;
-
       const r = parseInt(colorHex.slice(1, 3), 16) || 255;
       const g = parseInt(colorHex.slice(3, 5), 16) || 255;
       const b = parseInt(colorHex.slice(5, 7), 16) || 255;
 
-      for (let y = 0; y < 16; y++) {
-        for (let x = 0; x < 96; x++) {
-          const idx = (y * 96 + x) * 4;
-          if (buffer[y] && buffer[y][x]) {
-            d[idx] = r;
-            d[idx + 1] = g;
-            d[idx + 2] = b;
-            d[idx + 3] = 255;
-          } else {
-            d[idx] = 0;
-            d[idx + 1] = 0;
-            d[idx + 2] = 0;
-            d[idx + 3] = 255;
-          }
-        }
-      }
-      hCtx.putImageData(imgData, 0, 0);
-      const pngBytes = await getCanvasPngBytes(hCanvas);
-      const pkt = buildIpixelPngPacket(pngBytes, 0);
-      logDebug(`Pushing isolated graphic PNG frame (${pngBytes.length}B)...`, "ble");
+      const chunks = bufferTo12Chunks(buffer);
+      logDebug(`Pushing 16x96 graphic buffer via CMD 0x0100 (12 chunks, anim=${anim}, rgb=[${r},${g},${b}])...`, "ble");
+
+      const pkt = buildIpixelTextPacket(chunks, anim, speed, [r, g, b], 0);
+      logDebug(`Graphic Packet: ${pkt.length}B (CRC: 0x${computeIpixelCrc32(pkt.slice(15)).toString(16).toUpperCase()})`, "info");
       await sendIpixelStream(pkt, 20, 15);
+      logDebug("16x96 graphic buffer successfully displayed!", "success");
     }
 
     async function pushTextToHardware(text, colorHex, style = "scroll", speed = 6) {
+      if (!text || !text.trim()) return;
       if (!isBleConnected || bleWritableCharacteristics.length === 0) {
         logDebug("Cannot push text: BLE not connected", "error");
         return;
@@ -1542,20 +1584,29 @@
       const g = parseInt(colorHex.slice(3, 5), 16) || 255;
       const b = parseInt(colorHex.slice(5, 7), 16) || 255;
 
-      // Map animation opcode:
-      // 0: STATIC, 1: SCROLL_LEFT, 5: BLINK, 6: FADE
-      let animOpcode = 1;
-      if (style === "static") animOpcode = 0;
-      else if (style === "blink") animOpcode = 5;
-      else if (style === "pulse") animOpcode = 6;
-      else animOpcode = 1; // scroll
+      const raster = rasterize16RowText(text);
+
+      // If user requested static style AND text fits on 96 cols, center on 16x96 buffer
+      if (style === "static") {
+        if (raster.width <= 96) {
+          logDebug(`Static text "${text}" (${raster.width}px <= 96px): rendering centered 12-chunk frame`, "ble");
+          const buf = createIsolatedGraphicBuffer(b => drawTextToBufferCentered(b, text));
+          await pushGraphicBufferToHardware(buf, colorHex, 0);
+          return;
+        } else {
+          logDebug(`Static requested for "${text}" but width (${raster.width}px > 96px): auto-switching to smooth scroll`, "info");
+        }
+      }
 
       // Map speed (1..10 to 30..100)
       const mappedSpeed = Math.round((Math.max(1, Math.min(10, parseInt(speed) || 6)) / 10) * 70) + 30;
 
-      logDebug(`Pushing text "${text}" via CMD 0x0100 (anim=${animOpcode}, speed=${mappedSpeed})...`, "ble");
+      // Always use animOpcode = 1 (SCROLL_LEFT) for smooth scrolling
+      // (firmware does not reliably support opcodes 5/6, so scroll left ensures 100% reliability)
+      const animOpcode = 1;
 
-      const raster = rasterize16RowText(text);
+      logDebug(`Pushing text "${text}" via CMD 0x0100 (scroll, speed=${mappedSpeed})...`, "ble");
+
       const chunks = chunkRasterTo16x8(raster);
       logDebug(`Rasterized "${text}": width=${raster.width}px -> ${chunks.length} chunks (16x8)`, "info");
 
@@ -1661,20 +1712,20 @@
         if (text && text.startsWith("DEVIL:")) {
           const eyeType = text.replace("DEVIL:", "");
           const buf = createIsolatedGraphicBuffer(b => drawDevilEyesToBuffer(b, eyeType, 0));
-          await pushGraphicBufferToHardware(buf, colorHex);
+          await pushGraphicBufferToHardware(buf, colorHex, 0);
           return;
         }
 
         if (text && text.startsWith("TURN:")) {
           const dir = text.replace("TURN:", "");
           const buf = createIsolatedGraphicBuffer(b => drawTurningArrowsToBuffer(b, dir, 0));
-          await pushGraphicBufferToHardware(buf, colorHex);
+          await pushGraphicBufferToHardware(buf, colorHex, 0);
           return;
         }
 
         if (text === "BRAKE") {
-          const buf = createIsolatedGraphicBuffer(b => drawTextToBufferCentered(b, "⛔ BRAKE / நில்! ⛔"));
-          await pushGraphicBufferToHardware(buf, colorHex);
+          const buf = createIsolatedGraphicBuffer(b => drawTextToBufferCentered(b, "⛔ BRAKE ⛔"));
+          await pushGraphicBufferToHardware(buf, colorHex, 0);
           return;
         }
 
@@ -1683,9 +1734,9 @@
           await pushTextToHardware(text, colorHex, style, spd);
 
         } else if (activeBleProtocol === "ipixel_png") {
-          // Protocol 2: Native iPixel PNG Image Stream (Static Frame CMD 0x0002)
+          // Protocol 2: Native iPixel Static Frame CMD 0x0100 (12 Chunks)
           const buf = createIsolatedGraphicBuffer(b => drawTextToBufferCentered(b, text));
-          await pushGraphicBufferToHardware(buf, colorHex);
+          await pushGraphicBufferToHardware(buf, colorHex, 0);
 
         } else if (activeBleProtocol === "ipixel_clock") {
           // Protocol 3: Native iPixel Digital Clock Mode
@@ -2118,15 +2169,15 @@
       showIosToast("Display switched to Clock", "⏰");
     }
 
-    async function testPushPng() {
+    async function testPushStaticFrame() {
       if (!isBleConnected) {
-        logDebug("Cannot push PNG: BLE not connected", "error");
+        logDebug("Cannot push static frame: BLE not connected", "error");
         return;
       }
-      logDebug("Pushing centered current text as native PNG...", "ble");
+      logDebug("Pushing centered current text as 12-chunk static frame (CMD 0x0100)...", "ble");
       const buf = createIsolatedGraphicBuffer(b => drawTextToBufferCentered(b, currentText || "HELLO"));
-      await pushGraphicBufferToHardware(buf, currentColor || "#06b6d4");
-      showIosToast("PNG Pushed to Matrix", "🖼️");
+      await pushGraphicBufferToHardware(buf, currentColor || "#06b6d4", 0);
+      showIosToast("Static Frame Pushed", "🖼️");
     }
 
     async function testSendText(str) {
@@ -2154,7 +2205,7 @@
       document.getElementById("liveFrameLabel").textContent = `Devil: ${type.toUpperCase()}`;
       logDebug(`Pushing Devil Eyes: ${type.toUpperCase()} (Red Diode Graphic)...`, "ble");
       const buf = createIsolatedGraphicBuffer(b => drawDevilEyesToBuffer(b, type, 0));
-      await pushGraphicBufferToHardware(buf, currentColor);
+      await pushGraphicBufferToHardware(buf, currentColor, 0);
       showIosToast(`Devil Eyes: ${type.toUpperCase()}`, "😈");
     }
 
@@ -2169,7 +2220,7 @@
       document.getElementById("liveFrameLabel").textContent = currentText;
       logDebug(`Pushing Speed HUD: ${currentText}...`, "ble");
       const buf = createIsolatedGraphicBuffer(b => drawTextToBufferCentered(b, currentText));
-      await pushGraphicBufferToHardware(buf, currentColor);
+      await pushGraphicBufferToHardware(buf, currentColor, 0);
       showIosToast(`Speed HUD: ${speed} KM/H`, "🏎️");
     }
 
@@ -2184,8 +2235,8 @@
       document.getElementById("liveFrameLabel").textContent = dir === "left" ? "⬅️ TURNING LEFT" : "TURNING RIGHT ➡️";
       logDebug(`Pushing Turn Chevron: ${dir.toUpperCase()}...`, "ble");
       const buf = createIsolatedGraphicBuffer(b => drawTurningArrowsToBuffer(b, dir, 0));
-      await pushGraphicBufferToHardware(buf, currentColor);
-      showIosToast(`Turn Signal: ${dir.toUpperCase()}`, "⬅️");
+      await pushGraphicBufferToHardware(buf, currentColor, 0);
+      showIosToast(`Turn Signal: ${dir.toUpperCase()}`, dir === "left" ? "⬅️" : "➡️");
     }
 
     async function testBrakeWarning() {
@@ -2195,10 +2246,10 @@
       }
       currentDisplayMode = "hud_brake";
       currentColor = "#ef4444";
-      document.getElementById("liveFrameLabel").textContent = "⛔ BRAKE / நில்! ⛔";
+      document.getElementById("liveFrameLabel").textContent = "⛔ BRAKE ⛔";
       logDebug("Pushing Emergency Brake Warning...", "ble");
-      const buf = createIsolatedGraphicBuffer(b => drawTextToBufferCentered(b, "⛔ BRAKE / நில்! ⛔"));
-      await pushGraphicBufferToHardware(buf, currentColor);
+      const buf = createIsolatedGraphicBuffer(b => drawTextToBufferCentered(b, "⛔ BRAKE ⛔"));
+      await pushGraphicBufferToHardware(buf, currentColor, 0);
       showIosToast("Emergency Brake Pushed", "⛔");
     }
 
