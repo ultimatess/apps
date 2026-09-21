@@ -195,7 +195,7 @@
     <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
       <div class="flex items-center gap-2">
         <span class="text-[13px] font-bold tracking-tight text-white">iPixel Matrix</span>
-        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v1.7.0-HEX-LAB</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v1.8.0-ENDPOINT-FIX</span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -609,7 +609,7 @@
 
     <!-- Explicit Build Identification Footer -->
     <div class="text-[10px] font-mono text-center text-slate-500 pt-1 pb-3">
-      Build: <span class="text-emerald-400 font-bold">v1.7.0-HEX-LAB</span> · GATT: 0000ae01-0000-1000-8000-00805f9b34fb
+      Build: <span class="text-emerald-400 font-bold">v1.8.0-ENDPOINT-FIX</span> · GATT: 0000ae01-0000-1000-8000-00805f9b34fb
     </div>
   </main>
 
@@ -1470,8 +1470,16 @@
         
         bleCharacteristic = null;
 
-        // Collect all writable characteristics discovered across all services
-        bleWritableCharacteristics = [];
+        const candidateCharacteristics = [
+          "0000fa02-0000-1000-8000-00805f9b34fb",
+          "0000fa03-0000-1000-8000-00805f9b34fb",
+          "0000fa01-0000-1000-8000-00805f9b34fb",
+          "0000ae01-0000-1000-8000-00805f9b34fb",
+          "0000ae02-0000-1000-8000-00805f9b34fb",
+          "0000ffe1-0000-1000-8000-00805f9b34fb",
+          "0000fff1-0000-1000-8000-00805f9b34fb",
+          "0000ffd1-0000-1000-8000-00805f9b34fb"
+        ];
 
         // Step 1: Try getPrimaryServices()
         let discoveredServices = [];
@@ -1479,46 +1487,52 @@
           discoveredServices = await server.getPrimaryServices();
           logDebug(`Discovered ${discoveredServices.length} GATT services via getPrimaryServices()`, "info");
         } catch (e) {
-          logDebug("getPrimaryServices error, attempting candidate sweep...", "info");
+          logDebug("getPrimaryServices error, attempting candidate service sweep...", "info");
         }
 
-        // Step 2: Inspect discovered services if available
-        if (discoveredServices && discoveredServices.length > 0) {
-          for (const service of discoveredServices) {
+        // If getPrimaryServices failed, sweep candidate services individually
+        if (!discoveredServices || discoveredServices.length === 0) {
+          discoveredServices = [];
+          for (const uuid of candidateServices) {
             try {
-              const characteristics = await service.getCharacteristics();
-              for (const char of characteristics) {
-                logDebug(`Discovered char: ${char.uuid} (write:${char.properties.write}, writeNoResp:${char.properties.writeWithoutResponse})`, "ble");
-                if (char.properties.write || char.properties.writeWithoutResponse) {
+              const service = await server.getPrimaryService(uuid);
+              if (service) discoveredServices.push(service);
+            } catch (err) {}
+          }
+        }
+
+        // Step 2: Inspect discovered services for writable characteristics
+        for (const service of discoveredServices) {
+          try {
+            const characteristics = await service.getCharacteristics();
+            for (const char of characteristics) {
+              logDebug(`Discovered char: ${char.uuid} (write:${char.properties.write}, writeNoResp:${char.properties.writeWithoutResponse})`, "ble");
+              if (char.properties.write || char.properties.writeWithoutResponse) {
+                if (!bleWritableCharacteristics.some(c => c.uuid === char.uuid)) {
                   bleWritableCharacteristics.push(char);
                   logDebug(`Registered writable endpoint: ${char.uuid}`, "success");
                 }
               }
-            } catch (e) {
-              logDebug(`Char discovery error in service ${service.uuid}: ${e.message}`, "error");
             }
+          } catch (e) {
+            logDebug(`getCharacteristics() error on ${service.uuid}: ${e.message}`, "info");
           }
         }
 
-        // Step 3: Sweep candidate UUIDs individually if needed
+        // Step 3: Sweep candidate characteristic UUIDs directly if getCharacteristics() was blocked
         if (bleWritableCharacteristics.length === 0) {
-          logDebug("Sweeping candidate UUIDs individually...", "ble");
-          for (const uuid of candidateServices) {
-            try {
-              const service = await server.getPrimaryService(uuid);
-              if (service) {
-                logDebug(`Service match: ${uuid}`, "ble");
-                const characteristics = await service.getCharacteristics();
-                for (const char of characteristics) {
-                  logDebug(`Discovered char: ${char.uuid} (write:${char.properties.write}, writeNoResp:${char.properties.writeWithoutResponse})`, "ble");
-                  if (char.properties.write || char.properties.writeWithoutResponse) {
+          logDebug("Direct characteristic UUID sweep engaged...", "ble");
+          for (const service of discoveredServices) {
+            for (const charUuid of candidateCharacteristics) {
+              try {
+                const char = await service.getCharacteristic(charUuid);
+                if (char) {
+                  if (!bleWritableCharacteristics.some(c => c.uuid === char.uuid)) {
                     bleWritableCharacteristics.push(char);
-                    logDebug(`Registered writable endpoint: ${char.uuid}`, "success");
+                    logDebug(`Registered direct candidate char: ${char.uuid}`, "success");
                   }
                 }
-              }
-            } catch (err) {
-              // Ignore non-matching candidate UUIDs
+              } catch (err) {}
             }
           }
         }
@@ -1528,7 +1542,7 @@
         }
 
         bleCharacteristic = bleWritableCharacteristics[0];
-        logDebug(`Primary endpoint set. Total writable characteristics: ${bleWritableCharacteristics.length}`, "success");
+        logDebug(`Primary endpoint latched: ${bleCharacteristic.uuid}. Total endpoints: ${bleWritableCharacteristics.length}`, "success");
 
         isBleConnected = true;
         document.getElementById("bleStatusDot").className = "w-2 h-2 rounded-full bg-emerald-500";
