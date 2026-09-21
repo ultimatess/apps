@@ -195,7 +195,7 @@
     <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
       <div class="flex items-center gap-2">
         <span class="text-[13px] font-bold tracking-tight text-white">iPixel Matrix</span>
-        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.2.0-NATIVE-IPIXEL-PROTOCOL</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.2.1-FULL-CONTENT-FIX</span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -280,13 +280,17 @@
           <button id="protoBtn-ae01_sinowealth" onclick="setBleProtocol('ae01_sinowealth')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 font-mono text-[9px] border border-white/10">Legacy AE01</button>
           <button id="protoBtn-coolled_7728" onclick="setBleProtocol('coolled_7728')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 font-mono text-[9px] border border-white/10">Legacy 7728</button>
 
-          <span class="text-[9px] text-slate-400 font-bold block w-full pt-1">TEST ACTIONS:</span>
-          <button onclick="testPowerOn()" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40">⚡ Power ON</button>
-          <button onclick="testTimeSync()" class="px-2 py-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40">🕒 Sync Time</button>
-          <button onclick="testClockMode()" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/40">⏰ Clock Mode</button>
-          <button onclick="testPushPng()" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40">🖼️ Push PNG</button>
+          <span class="text-[9px] text-slate-400 font-bold block w-full pt-1">FEATURE VALIDATION SUITE:</span>
+          <button onclick="testClockMode()" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/40">⏰ Clock</button>
           <button onclick="testSendText('HELLO')" class="px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold border border-cyan-500/40">🔤 "HELLO"</button>
-          <button onclick="testSendText('வணக்கம்')" class="px-2 py-1 rounded bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 font-bold border border-pink-500/40">🇮🇳 Tamil</button>
+          <button onclick="testSendText('வணக்கம் 🤝')" class="px-2 py-1 rounded bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 font-bold border border-pink-500/40">🇮🇳 "வணக்கம்"</button>
+          <button onclick="testSendText('ஆஹான்... 🤣')" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40">🤣 "ஆஹான்"</button>
+          <button onclick="triggerDevilOptic('angry', '#ef4444')" class="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-300 font-bold border border-red-500/40">😈 Devil Eyes</button>
+          <button onclick="testSpeedHud(65)" class="px-2 py-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40">🏎️ 65 KM/H</button>
+          <button onclick="testTurnSignal('left')" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40">⬅️ Turn Left</button>
+          <button onclick="testBrakeWarning()" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold border border-rose-500/40">⛔ Brake</button>
+          <button onclick="testBrightnessCycle()" class="px-2 py-1 rounded bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 font-bold border border-yellow-500/40">💡 Brightness</button>
+          <button onclick="testPushPng()" class="px-2 py-1 rounded bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 font-bold border border-slate-500/40">🖼️ Re-push</button>
         </div>
 
         <!-- Interactive Custom HEX Packet Sender -->
@@ -616,7 +620,7 @@
 
     <!-- Explicit Build Identification Footer -->
     <div class="text-[10px] font-mono text-center text-slate-500 pt-1 pb-3">
-      Build: <span class="text-emerald-400 font-bold">v2.2.0-NATIVE-IPIXEL-PROTOCOL</span> · Native iPixel Color Protocol Engine
+      Build: <span class="text-emerald-400 font-bold">v2.2.1-FULL-CONTENT-FIX</span> · Full Centered Matrix Rasterizer
     </div>
   </main>
 
@@ -1470,6 +1474,28 @@
       });
     }
 
+    function populateMatrixBufferForPush(text, mode, style) {
+      for (let r = 0; r < ROWS; r++) matrixBuffer[r].fill(0);
+
+      if (text && text.startsWith("DEVIL:")) {
+        const eyeType = text.replace("DEVIL:", "");
+        renderDevilEyes(eyeType, 0);
+      } else if (text && text.startsWith("TURN:")) {
+        const dir = text.replace("TURN:", "");
+        renderTurningArrows(dir, 0);
+      } else if (text === "BRAKE") {
+        blitTextToBuffer("⛔ BRAKE / நில்! ⛔", 2);
+      } else if (text) {
+        // Text mode: Cleanly rasterize and center the text across the 96 columns
+        const raster = rasterize16RowText(text);
+        let startX = 2;
+        if (raster.width <= COLS) {
+          startX = Math.max(0, Math.floor((COLS - raster.width) / 2));
+        }
+        blitTextToBuffer(text, startX);
+      }
+    }
+
     async function pushMatrixToHardware(text, colorHex, style = "scroll", speed = 6) {
       if (!isBleConnected || bleWritableCharacteristics.length === 0) {
         logDebug("Cannot push matrix: BLE not connected", "error");
@@ -1486,6 +1512,10 @@
 
         if (activeBleProtocol === "ipixel_png") {
           // Protocol 1: Native iPixel PNG Image Stream (96x16 Hardware Decompressor)
+          // 1. Populate matrixBuffer so that 100% of the content is completely rendered and centered!
+          populateMatrixBufferForPush(text, currentDisplayMode, style);
+
+          // 2. Render 96x16 PNG Frame
           const pngBytes = await renderMatrixBufferToPng(colorHex);
           logDebug(`Rendered 96x16 PNG Frame (${pngBytes.length}B)`, "info");
           
@@ -1930,7 +1960,8 @@
         logDebug("Cannot push PNG: BLE not connected", "error");
         return;
       }
-      logDebug("Pushing current matrix buffer as native PNG...", "ble");
+      logDebug("Pushing centered current matrix buffer as native PNG...", "ble");
+      populateMatrixBufferForPush(currentText || "HELLO", currentDisplayMode, "static");
       const pngBytes = await renderMatrixBufferToPng(currentColor || "#06b6d4");
       const pkt = buildIpixelPngPacket(pngBytes, 0);
       await sendIpixelStream(pkt, 20, 15);
@@ -1943,7 +1974,61 @@
         return;
       }
       logDebug(`Pushing text "${str}" using [${activeBleProtocol.toUpperCase()}]...`, "ble");
-      sendPresetMessage(str, currentColor || "#06b6d4", "scroll", scrollSpeed || 6);
+      sendPresetMessage(str, currentColor || "#06b6d4", "static", scrollSpeed || 6);
+    }
+
+    function testSpeedHud(speed = 65) {
+      if (!isBleConnected) {
+        logDebug("Cannot test Speed: BLE not connected", "error");
+        return;
+      }
+      currentDisplayMode = "text";
+      currentText = `${speed} KM/H 🏎️`;
+      currentColor = "#06b6d4";
+      document.getElementById("liveFrameLabel").textContent = currentText;
+      pushMatrixToHardware(currentText, currentColor, "static", 5);
+      showIosToast(`Speed HUD: ${speed} KM/H`, "🏎️");
+    }
+
+    function testTurnSignal(dir = "left") {
+      if (!isBleConnected) {
+        logDebug("Cannot test Turn Signal: BLE not connected", "error");
+        return;
+      }
+      currentDisplayMode = "hud_turn";
+      currentTurnState = dir;
+      currentColor = "#10b981";
+      document.getElementById("liveFrameLabel").textContent = dir === "left" ? "⬅️ TURNING LEFT" : "TURNING RIGHT ➡️";
+      pushMatrixToHardware(`TURN:${dir}`, currentColor, "static", 5);
+      showIosToast(`Turn Signal: ${dir.toUpperCase()}`, "⬅️");
+    }
+
+    function testBrakeWarning() {
+      if (!isBleConnected) {
+        logDebug("Cannot test Brake Warning: BLE not connected", "error");
+        return;
+      }
+      currentDisplayMode = "hud_brake";
+      currentColor = "#ef4444";
+      document.getElementById("liveFrameLabel").textContent = "⛔ BRAKE / நில்! ⛔";
+      pushMatrixToHardware("BRAKE", currentColor, "static", 5);
+      showIosToast("Emergency Brake Pushed", "⛔");
+    }
+
+    async function testBrightnessCycle() {
+      if (!isBleConnected) {
+        showIosToast("Connect BLE first", "⚠️");
+        return;
+      }
+      logDebug("Testing Brightness Cycle: 25% -> 60% -> 100%...", "ble");
+      setBrightness(25);
+      showIosToast("Brightness: 25%", "💡");
+      await new Promise(r => setTimeout(r, 1200));
+      setBrightness(60);
+      showIosToast("Brightness: 60%", "💡");
+      await new Promise(r => setTimeout(r, 1200));
+      setBrightness(100);
+      showIosToast("Brightness: 100%", "💡");
     }
 
     // Alias for Bluefy iOS Browser scan trigger
