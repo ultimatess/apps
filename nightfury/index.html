@@ -195,7 +195,7 @@
     <div class="w-full flex items-center justify-between mt-2.5 px-1 text-xs">
       <div class="flex items-center gap-2">
         <span class="text-[13px] font-bold tracking-tight text-white">iPixel Matrix</span>
-        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.1.0-CANONICAL-UUID-FIX</span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">v2.2.0-NATIVE-IPIXEL-PROTOCOL</span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -274,31 +274,36 @@
         <!-- Protocol Test & Mode Selector Buttons -->
         <div class="flex items-center gap-1.5 py-1 flex-wrap">
           <span class="text-[9px] text-slate-400 font-bold block w-full">PROTOCOL MODE:</span>
-          <button onclick="setBleProtocol('ae01_sinowealth')" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40">1. AE01 Sinowealth</button>
-          <button onclick="setBleProtocol('light1248_frame')" class="px-2 py-0.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold border border-cyan-500/40">2. Light1248 Frame</button>
-          <button onclick="setBleProtocol('coolled_7728')" class="px-2 py-0.5 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40">3. CoolLED 7728</button>
-          <button onclick="setBleProtocol('bitmap_stream')" class="px-2 py-0.5 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/40">4. Bitmap Stream</button>
+          <button id="protoBtn-ipixel_png" onclick="setBleProtocol('ipixel_png')" class="px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/50 shadow-sm shadow-emerald-500/20">✨ 1. iPixel PNG (Native 16x96)</button>
+          <button id="protoBtn-ipixel_clock" onclick="setBleProtocol('ipixel_clock')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 font-bold border border-white/20">⏰ 2. Clock Mode</button>
+          <button id="protoBtn-ipixel_diy" onclick="setBleProtocol('ipixel_diy')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 font-bold border border-white/20">🎨 3. DIY Mode</button>
+          <button id="protoBtn-ae01_sinowealth" onclick="setBleProtocol('ae01_sinowealth')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 font-mono text-[9px] border border-white/10">Legacy AE01</button>
+          <button id="protoBtn-coolled_7728" onclick="setBleProtocol('coolled_7728')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-400 font-mono text-[9px] border border-white/10">Legacy 7728</button>
 
           <span class="text-[9px] text-slate-400 font-bold block w-full pt-1">TEST ACTIONS:</span>
           <button onclick="testPowerOn()" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40">⚡ Power ON</button>
-          <button onclick="testSendText('HELLO')" class="px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold border border-cyan-500/40">🔤 Test "HELLO"</button>
-          <button onclick="testSendText('வணக்கம்')" class="px-2 py-1 rounded bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 font-bold border border-pink-500/40">🇮🇳 Test Tamil</button>
+          <button onclick="testTimeSync()" class="px-2 py-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40">🕒 Sync Time</button>
+          <button onclick="testClockMode()" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold border border-purple-500/40">⏰ Clock Mode</button>
+          <button onclick="testPushPng()" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40">🖼️ Push PNG</button>
+          <button onclick="testSendText('HELLO')" class="px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold border border-cyan-500/40">🔤 "HELLO"</button>
+          <button onclick="testSendText('வணக்கம்')" class="px-2 py-1 rounded bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 font-bold border border-pink-500/40">🇮🇳 Tamil</button>
         </div>
 
         <!-- Interactive Custom HEX Packet Sender -->
         <div class="flex flex-col gap-1 pt-1.5 border-t border-white/10">
           <span class="text-[9px] text-amber-400 font-bold">CUSTOM HEX PACKET LAB:</span>
           <div class="flex items-center gap-1.5">
-            <input type="text" id="customHexInput" placeholder="e.g. 01 01 06 FF 00 00 05 48 45 4C 4C 4F" value="01 01 06 FF 00 00 05 48 45 4C 4C 4F" class="flex-1 bg-black/60 border border-white/20 rounded px-2 py-1 text-[10px] text-amber-300 font-mono outline-none">
+            <input type="text" id="customHexInput" placeholder="e.g. 05 00 07 01 01" value="05 00 07 01 01" class="flex-1 bg-black/60 border border-white/20 rounded px-2 py-1 text-[10px] text-amber-300 font-mono outline-none">
             <button onclick="sendCustomHexInput()" class="px-2.5 py-1 rounded bg-amber-500/30 hover:bg-amber-500/50 text-amber-200 font-bold border border-amber-500/40">Send HEX</button>
           </div>
           <div class="flex items-center gap-1 pt-0.5 flex-wrap">
-            <button onclick="sendHexPreset('02 01 01')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">AE01 Init</button>
-            <button onclick="sendHexPreset('01 01 06 FF 00 00 05 48 45 4C 4C 4F 4D')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">AE01 "HELLO"</button>
-            <button onclick="sendHexPreset('01 00 02 06 09 02 05 03')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">L1248 ON</button>
-            <button onclick="sendHexPreset('01 00 02 05 0A 03')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">L1248 Begin</button>
-            <button onclick="sendHexPreset('77 28 0C 01 06 FF 00 00 01 48 45 4C 4C 4F 12')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">7728 "HELLO"</button>
-            <button onclick="sendHexPreset('55 AA 01 01 05 48 45 4C 4C 4F')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">Tuya</button>
+            <button onclick="sendHexPreset('05 00 07 01 01')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">Power ON</button>
+            <button onclick="sendHexPreset('05 00 07 01 00')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">Power OFF</button>
+            <button onclick="sendHexPreset('08 00 01 80 0C 1E 00 00')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">Time 12:30</button>
+            <button onclick="sendHexPreset('05 00 04 80 64')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">Bright 100%</button>
+            <button onclick="sendHexPreset('0B 00 06 01 01 01 01 1A 09 15 01')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">Digital Clock</button>
+            <button onclick="sendHexPreset('05 00 04 01 01')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">DIY Mode</button>
+            <button onclick="sendHexPreset('04 00 03 80')" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[9px] text-slate-300">Reset</button>
           </div>
         </div>
 
@@ -611,7 +616,7 @@
 
     <!-- Explicit Build Identification Footer -->
     <div class="text-[10px] font-mono text-center text-slate-500 pt-1 pb-3">
-      Build: <span class="text-emerald-400 font-bold">v2.1.0-CANONICAL-UUID-FIX</span> · Canonical UUID Multi-Sweep
+      Build: <span class="text-emerald-400 font-bold">v2.2.0-NATIVE-IPIXEL-PROTOCOL</span> · Native iPixel Color Protocol Engine
     </div>
   </main>
 
@@ -1245,13 +1250,224 @@
       return [0x01, ...escaped, 0x03];
     }
 
-    // Active Protocol Mode: "ae01_sinowealth" (default for AE01 hardware), "light1248_frame", "coolled_7728", "bitmap_stream"
-    let activeBleProtocol = "ae01_sinowealth";
+    // ==========================================
+    // NATIVE iPixel Color BLE Protocol Engine
+    // Package: com.wifiled.ipixels (APK Verified)
+    // Little-Endian Framing: [LEN_LO, LEN_HI, CMD_LO, CMD_HI, DATA...]
+    // ==========================================
+    
+    // IEEE 802.3 CRC32 Implementation
+    let crcTable32 = null;
+    function getCrc32Table() {
+      if (crcTable32) return crcTable32;
+      let c;
+      const table = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        c = n;
+        for (let k = 0; k < 8; k++) {
+          c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        }
+        table[n] = c >>> 0;
+      }
+      crcTable32 = table;
+      return crcTable32;
+    }
+
+    function computeIpixelCrc32(uint8Arr) {
+      const table = getCrc32Table();
+      let crc = 0 ^ (-1);
+      for (let i = 0; i < uint8Arr.length; i++) {
+        crc = (crc >>> 8) ^ table[(crc ^ uint8Arr[i]) & 0xFF];
+      }
+      return (crc ^ (-1)) >>> 0;
+    }
+
+    // Standard 4-Byte LE Packet Builder
+    function buildIpixelPacket(cmdId, payload = []) {
+      const totalLen = payload.length + 4;
+      const pkt = new Uint8Array(totalLen);
+      pkt[0] = totalLen & 0xFF;
+      pkt[1] = (totalLen >> 8) & 0xFF;
+      pkt[2] = cmdId & 0xFF;
+      pkt[3] = (cmdId >> 8) & 0xFF;
+      if (payload.length > 0) {
+        pkt.set(payload, 4);
+      }
+      return pkt;
+    }
+
+    // PNG Image Stream Builder (CMD 0x0002)
+    function buildIpixelPngPacket(pngBytes, saveSlot = 0) {
+      const pngLen = pngBytes.length;
+      const crc = computeIpixelCrc32(pngBytes);
+      const totalLen = pngLen + 15; // 2 len + 2 cmd + 1 opt + 4 size + 4 crc + 2 tail + pngLen
+
+      const pkt = new Uint8Array(totalLen);
+      // [0..1] Total Length (Little Endian)
+      pkt[0] = totalLen & 0xFF;
+      pkt[1] = (totalLen >> 8) & 0xFF;
+      // [2..3] Command ID: 0x0002 (PNG Data)
+      pkt[2] = 0x02;
+      pkt[3] = 0x00;
+      // [4] Option: 0x00 (Single window)
+      pkt[4] = 0x00;
+      // [5..8] Image File Size (Little Endian, 4 bytes)
+      pkt[5] = pngLen & 0xFF;
+      pkt[6] = (pngLen >> 8) & 0xFF;
+      pkt[7] = (pngLen >> 16) & 0xFF;
+      pkt[8] = (pngLen >> 24) & 0xFF;
+      // [9..12] CRC32 (Little Endian, 4 bytes)
+      pkt[9] = crc & 0xFF;
+      pkt[10] = (crc >> 8) & 0xFF;
+      pkt[11] = (crc >> 16) & 0xFF;
+      pkt[12] = (crc >> 24) & 0xFF;
+      // [13..14] Tail: [0x00, saveSlot] (0 = direct display)
+      pkt[13] = 0x00;
+      pkt[14] = saveSlot & 0xFF;
+      // [15..] PNG bytes
+      pkt.set(pngBytes, 15);
+      return pkt;
+    }
+
+    // Dedicated 96x16 Hardware Canvas Rasterizer
+    let hardwareCanvas = null;
+    let hardwareCtx = null;
+
+    function getHardwareCanvas96x16() {
+      if (!hardwareCanvas) {
+        hardwareCanvas = document.createElement("canvas");
+        hardwareCanvas.width = 96;
+        hardwareCanvas.height = 16;
+        hardwareCtx = hardwareCanvas.getContext("2d", { willReadFrequently: true });
+      }
+      return { canvas: hardwareCanvas, ctx: hardwareCtx };
+    }
+
+    async function getCanvasPngBytes(srcCanvas) {
+      return new Promise((resolve, reject) => {
+        try {
+          srcCanvas.toBlob(async (blob) => {
+            if (!blob) {
+              reject(new Error("Canvas toBlob returned null"));
+              return;
+            }
+            const arrayBuf = await blob.arrayBuffer();
+            resolve(new Uint8Array(arrayBuf));
+          }, 'image/png');
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    async function renderMatrixBufferToPng(colorHex) {
+      const { canvas: hCanvas, ctx: hCtx } = getHardwareCanvas96x16();
+      hCtx.fillStyle = "#000000";
+      hCtx.fillRect(0, 0, 96, 16);
+
+      const imgData = hCtx.createImageData(96, 16);
+      const d = imgData.data;
+
+      const r = parseInt(colorHex.slice(1, 3), 16) || 255;
+      const g = parseInt(colorHex.slice(3, 5), 16) || 255;
+      const b = parseInt(colorHex.slice(5, 7), 16) || 255;
+
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 96; x++) {
+          const idx = (y * 96 + x) * 4;
+          if (matrixBuffer[y] && matrixBuffer[y][x]) {
+            d[idx] = r;
+            d[idx + 1] = g;
+            d[idx + 2] = b;
+            d[idx + 3] = 255;
+          } else {
+            d[idx] = 0;
+            d[idx + 1] = 0;
+            d[idx + 2] = 0;
+            d[idx + 3] = 255;
+          }
+        }
+      }
+      hCtx.putImageData(imgData, 0, 0);
+      return await getCanvasPngBytes(hCanvas);
+    }
+
+    // Core iPixel Hardware Commands
+    async function sendIpixelTimeSync() {
+      const now = new Date();
+      const payload = [now.getHours(), now.getMinutes(), now.getSeconds(), 0x00];
+      const pkt = buildIpixelPacket(0x8001, payload); // CMD 0x8001
+      logDebug(`TX iPixel Time Sync -> ${Array.from(pkt).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}`, "ble");
+      await sendBleCommand(pkt);
+    }
+
+    async function sendIpixelPower(on = true) {
+      const pkt = buildIpixelPacket(0x0107, [on ? 0x01 : 0x00]); // CMD 0x0107
+      logDebug(`TX iPixel Power ${on ? 'ON' : 'OFF'} -> ${Array.from(pkt).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}`, "ble");
+      await sendBleCommand(pkt);
+    }
+
+    async function sendIpixelBrightness(level) {
+      const val = Math.max(1, Math.min(100, parseInt(level) || 100));
+      const pkt = buildIpixelPacket(0x8004, [val]); // CMD 0x8004
+      logDebug(`TX iPixel Brightness (${val}%) -> ${Array.from(pkt).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}`, "ble");
+      await sendBleCommand(pkt);
+    }
+
+    async function sendIpixelClockMode(style = 1, format24 = true, showDate = true) {
+      const now = new Date();
+      const year = now.getFullYear() % 100;
+      const month = now.getMonth() + 1;
+      const day = now.getDate();
+      const dow = now.getDay() === 0 ? 7 : now.getDay();
+      const payload = [
+        Math.max(0, Math.min(8, style)),
+        format24 ? 1 : 0,
+        showDate ? 1 : 0,
+        year, month, day, dow
+      ];
+      const pkt = buildIpixelPacket(0x0106, payload); // CMD 0x0106
+      logDebug(`TX iPixel Digital Clock Mode -> ${Array.from(pkt).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}`, "ble");
+      await sendBleCommand(pkt);
+    }
+
+    async function sendIpixelDiyMode(enable = true) {
+      const pkt = buildIpixelPacket(0x0104, [enable ? 0x01 : 0x00]); // CMD 0x0104
+      logDebug(`TX iPixel DIY Mode -> ${Array.from(pkt).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}`, "ble");
+      await sendBleCommand(pkt);
+    }
+
+    async function sendIpixelSetPixel(x, y, r, g, b) {
+      const payload = [0, r & 0xFF, g & 0xFF, b & 0xFF, x & 0xFF, y & 0xFF];
+      const pkt = buildIpixelPacket(0x0105, payload); // CMD 0x0105
+      await sendBleCommand(pkt);
+    }
+
+    async function sendIpixelReset() {
+      const pkt = buildIpixelPacket(0x8003, []); // CMD 0x8003
+      logDebug(`TX iPixel Default/Reset Mode -> 04 00 03 80`, "ble");
+      await sendBleCommand(pkt);
+    }
+
+    // Active Protocol Mode: "ipixel_png" (Native Default), "ipixel_clock", "ipixel_diy", "ae01_sinowealth", "coolled_7728"
+    let activeBleProtocol = "ipixel_png";
 
     function setBleProtocol(mode) {
       activeBleProtocol = mode;
       logDebug(`Selected BLE Protocol: ${mode.toUpperCase()}`, "info");
       showIosToast(`Protocol: ${mode.toUpperCase()}`, "⚡");
+
+      // Update button highlights
+      ['ipixel_png', 'ipixel_clock', 'ipixel_diy', 'ae01_sinowealth', 'coolled_7728'].forEach(p => {
+        const btn = document.getElementById(`protoBtn-${p}`);
+        if (btn) {
+          if (p === mode) {
+            btn.className = "px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/50 shadow-sm shadow-emerald-500/20";
+          } else {
+            btn.className = "px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 font-bold border border-white/20";
+          }
+        }
+      });
     }
 
     async function pushMatrixToHardware(text, colorHex, style = "scroll", speed = 6) {
@@ -1268,104 +1484,54 @@
         const b = parseInt(colorHex.slice(5, 7), 16) || 255;
         const spd = Math.max(1, Math.min(10, parseInt(speed)));
 
-        const encoder = new TextEncoder();
-        const textBytes = Array.from(encoder.encode(text));
+        if (activeBleProtocol === "ipixel_png") {
+          // Protocol 1: Native iPixel PNG Image Stream (96x16 Hardware Decompressor)
+          const pngBytes = await renderMatrixBufferToPng(colorHex);
+          logDebug(`Rendered 96x16 PNG Frame (${pngBytes.length}B)`, "info");
+          
+          const packet = buildIpixelPngPacket(pngBytes, 0);
+          logDebug(`iPixel PNG Packet constructed (${packet.length}B, CRC: 0x${computeIpixelCrc32(pngBytes).toString(16).toUpperCase()})`, "success");
+          
+          await sendIpixelStream(packet, 20, 15);
 
-        if (activeBleProtocol === "ae01_sinowealth") {
-          // Protocol 1: Native AE01 Sinowealth / YX_LED Matrix Protocol
-          // Step A: Power ON / Switch to User Program
+        } else if (activeBleProtocol === "ipixel_clock") {
+          // Protocol 2: Native iPixel Digital Clock Mode
+          await sendIpixelClockMode(1, true, true);
+
+        } else if (activeBleProtocol === "ipixel_diy") {
+          // Protocol 3: Native iPixel DIY Drawing Mode
+          await sendIpixelDiyMode(true);
+
+        } else if (activeBleProtocol === "ae01_sinowealth") {
+          // Legacy Protocol Fallback: Sinowealth AE01
+          const encoder = new TextEncoder();
+          const textBytes = Array.from(encoder.encode(text));
           await sendBleCommand([0x02, 0x01, 0x01]);
           await new Promise(res => setTimeout(res, 20));
 
-          // Step B: Text Display Command Frame: [0x01, Mode(0x01), Speed, R, G, B, Len, Text..., Checksum]
           const modeByte = style === "static" ? 0x00 : style === "blink" ? 0x03 : 0x01;
           const payload = [0x01, modeByte, spd, r, g, b, textBytes.length, ...textBytes];
-          
           let checksum = 0;
           for (let i = 0; i < payload.length; i++) checksum = (checksum + payload[i]) & 0xFF;
           payload.push(checksum);
 
-          logDebug(`AE01 Text Frame (${payload.length}B): ${text}`, "info");
           for (let i = 0; i < payload.length; i += 20) {
             await sendBleCommand(payload.slice(i, i + 20));
             await new Promise(res => setTimeout(res, 20));
           }
 
-        } else if (activeBleProtocol === "light1248_frame") {
-          // Protocol 2: Standard Light1248 / CoolLED Frame Protocol
-          // Step A: Switch ON
-          await sendBleCommand(encodeLight1248Frame([0x09, 0x01]));
-          await new Promise(res => setTimeout(res, 20));
-
-          // Step B: Set Mode & Speed
-          const modeByte = style === "static" ? 0x01 : style === "blink" ? 0x03 : 0x02;
-          await sendBleCommand(encodeLight1248Frame([0x06, modeByte]));
-          await new Promise(res => setTimeout(res, 20));
-          await sendBleCommand(encodeLight1248Frame([0x07, spd]));
-          await new Promise(res => setTimeout(res, 20));
-
-          // Step C: Begin Transfer
-          await sendBleCommand(encodeLight1248Frame([0x0A]));
-          await new Promise(res => setTimeout(res, 20));
-
-          // Step D: Draw Bitmap (16 rows)
-          const bitmapBytes = [];
-          for (let col = 0; col < COLS; col++) {
-            let byte1 = 0; // Rows 0..7
-            let byte2 = 0; // Rows 8..15
-            for (let row = 0; row < 8; row++) {
-              if (matrixBuffer[row][col]) byte1 |= (1 << row);
-            }
-            for (let row = 8; row < 16; row++) {
-              if (matrixBuffer[row][col]) byte2 |= (1 << (row - 8));
-            }
-            bitmapBytes.push(byte1, byte2);
-          }
-          const framedDraw = encodeLight1248Frame([0x03, ...bitmapBytes]);
-          logDebug(`Light1248 Framed Draw (${framedDraw.length}B)`, "info");
-          for (let i = 0; i < framedDraw.length; i += 20) {
-            await sendBleCommand(framedDraw.slice(i, i + 20));
-            await new Promise(res => setTimeout(res, 20));
-          }
-
         } else if (activeBleProtocol === "coolled_7728") {
-          // Protocol 2: CoolLED1248 0x77 0x28 Format
+          // Legacy Protocol Fallback: CoolLED1248 0x77 0x28
+          const encoder = new TextEncoder();
+          const textBytes = Array.from(encoder.encode(text));
           const textHeader = [0x77, 0x28, textBytes.length + 7, 0x01, spd, r, g, b, 0x01];
           const textPacket = [...textHeader, ...textBytes];
           let checksum = 0;
           for (let i = 2; i < textPacket.length; i++) checksum = (checksum + textPacket[i]) & 0xFF;
           textPacket.push(checksum);
 
-          logDebug(`CoolLED 0x7728 Text Frame (${textPacket.length}B)`, "info");
           for (let i = 0; i < textPacket.length; i += 20) {
             await sendBleCommand(textPacket.slice(i, i + 20));
-            await new Promise(res => setTimeout(res, 20));
-          }
-
-        } else if (activeBleProtocol === "bitmap_stream") {
-          // Protocol 3: 16x96 Bitmap Diode Stream (Chunked for Tamil Unicode)
-          const bitmapBytes = [];
-          for (let col = 0; col < COLS; col++) {
-            let byte1 = 0; // Rows 0..7
-            let byte2 = 0; // Rows 8..15
-            for (let row = 0; row < 8; row++) {
-              if (matrixBuffer[row][col]) byte1 |= (1 << row);
-            }
-            for (let row = 8; row < 16; row++) {
-              if (matrixBuffer[row][col]) byte2 |= (1 << (row - 8));
-            }
-            bitmapBytes.push(byte1, byte2);
-          }
-
-          const bmpHeader = [0x77, 0x28, bitmapBytes.length + 8, 0x02, 0x60, 0x10, r, g, b];
-          const bmpPacket = [...bmpHeader, ...bitmapBytes];
-          let bmpChecksum = 0;
-          for (let i = 2; i < bmpPacket.length; i++) bmpChecksum = (bmpChecksum + bmpPacket[i]) & 0xFF;
-          bmpPacket.push(bmpChecksum);
-
-          logDebug(`Bitmap Diode Stream (${bmpPacket.length}B)`, "info");
-          for (let i = 0; i < bmpPacket.length; i += 20) {
-            await sendBleCommand(bmpPacket.slice(i, i + 20));
             await new Promise(res => setTimeout(res, 20));
           }
         }
@@ -1429,7 +1595,7 @@
       brightness = parseInt(val);
       document.getElementById("brightValLabel").textContent = `${brightness}%`;
       logDebug(`Brightness set to ${brightness}%`, "info");
-      sendBleCommand([0x06, 0x00, 0x02, 0x01, 0x00, brightness]);
+      sendIpixelBrightness(brightness);
     }
 
     function setScrollSpeed(val) {
@@ -1672,6 +1838,17 @@
                     const val = new Uint8Array(e.target.value.buffer);
                     const hex = Array.from(val).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
                     logDebug(`RX Notify [${char.uuid.slice(0, 8)}] <- ${hex}`, "success");
+                    
+                    // Check if response is screen size detection
+                    if (val.length >= 5 && val[0] === 0x0B && val[2] === 0x01 && val[3] === 0x80) {
+                      const screenType = val[4];
+                      if (screenType === 0x84 || screenType === 132) {
+                        logDebug(`Hardware Identified: 16x96 Matrix (Type 0x84 / 132)!`, "success");
+                        showIosToast("Display: 16x96 Matrix Identified!", "🎯");
+                      }
+                    } else if (val.length >= 5 && val[0] === 0x05 && val[4] === 0x01) {
+                      logDebug(`Device ACK Confirmed! (05 00 07 01 01)`, "success");
+                    }
                   });
                   logDebug(`Listening to Notifications on char: ${char.uuid.slice(0, 8)}`, "success");
                 } catch (err) {}
@@ -1680,10 +1857,18 @@
           } catch (e) {}
         }
 
-        // Send initialization & Mode Switch sequence
-        logDebug("Sending Power ON sequence...", "ble");
-        await sendBleCommand([0x02, 0x01, 0x01]);
-        await sendBleCommand(encodeLight1248Frame([0x09, 0x01]));
+        // Native iPixel Initialization & Handshake Sequence
+        logDebug("Executing Native iPixel Handshake Sequence...", "ble");
+        await sendIpixelTimeSync();
+        await new Promise(r => setTimeout(r, 60));
+        await sendIpixelPower(true);
+        await new Promise(r => setTimeout(r, 60));
+        await sendIpixelBrightness(brightness);
+        await new Promise(r => setTimeout(r, 60));
+        await sendIpixelDiyMode(true);
+        await new Promise(r => setTimeout(r, 60));
+        logDebug("Handshake complete! Sending initial frame...", "success");
+        await pushMatrixToHardware(currentText || "HELLO", currentColor || "#06b6d4", "static", 5);
 
       } catch (err) {
         logDebug(`BLE Error: ${err.message || err}`, "error");
@@ -1713,27 +1898,51 @@
     }
 
     async function testPowerOn() {
-      if (!isBleConnected || bleWritableCharacteristics.length === 0) {
+      if (!isBleConnected) {
         logDebug("Cannot test Power ON: BLE not connected", "error");
         return;
       }
-      logDebug("Executing Multi-Protocol Power ON sequence...", "ble");
-      // 1. AE01 Sinowealth Mode / Power ON
-      await sendBleCommand([0x02, 0x01, 0x01]);
-      await new Promise(r => setTimeout(r, 20));
-      // 2. Light1248 Switch ON
-      await sendBleCommand(encodeLight1248Frame([0x09, 0x01]));
-      await new Promise(r => setTimeout(r, 20));
-      // 3. CoolLED 7728 Power ON
-      await sendBleCommand([0x77, 0x28, 0x06, 0x00, 0x02, 0x01, 0x01, 0x0A]);
+      logDebug("Executing iPixel Power ON (05 00 07 01 01)...", "ble");
+      await sendIpixelPower(true);
+    }
+
+    async function testTimeSync() {
+      if (!isBleConnected) {
+        logDebug("Cannot sync time: BLE not connected", "error");
+        return;
+      }
+      logDebug("Executing iPixel Time Sync...", "ble");
+      await sendIpixelTimeSync();
+    }
+
+    async function testClockMode() {
+      if (!isBleConnected) {
+        logDebug("Cannot set clock: BLE not connected", "error");
+        return;
+      }
+      logDebug("Switching to iPixel Digital Clock Mode...", "ble");
+      await sendIpixelClockMode(1, true, true);
+      showIosToast("Display switched to Clock", "⏰");
+    }
+
+    async function testPushPng() {
+      if (!isBleConnected) {
+        logDebug("Cannot push PNG: BLE not connected", "error");
+        return;
+      }
+      logDebug("Pushing current matrix buffer as native PNG...", "ble");
+      const pngBytes = await renderMatrixBufferToPng(currentColor || "#06b6d4");
+      const pkt = buildIpixelPngPacket(pngBytes, 0);
+      await sendIpixelStream(pkt, 20, 15);
+      showIosToast("PNG Pushed to Matrix", "🖼️");
     }
 
     async function testSendText(str) {
-      if (!isBleConnected || bleWritableCharacteristics.length === 0) {
+      if (!isBleConnected) {
         logDebug("Cannot test Text: BLE not connected", "error");
         return;
       }
-      logDebug(`Executing Manual Text Test for "${str}" using [${activeBleProtocol.toUpperCase()}]...`, "ble");
+      logDebug(`Pushing text "${str}" using [${activeBleProtocol.toUpperCase()}]...`, "ble");
       sendPresetMessage(str, currentColor || "#06b6d4", "scroll", scrollSpeed || 6);
     }
 
@@ -1758,27 +1967,66 @@
       onBleDisconnected();
     }
 
+    async function sendIpixelStream(packetBytes, chunkSize = 20, delayMs = 15) {
+      if (!isBleConnected || bleWritableCharacteristics.length === 0) {
+        logDebug("Cannot stream: no active GATT endpoints", "error");
+        return false;
+      }
+      // Prefer FA02 characteristic
+      const char = bleWritableCharacteristics.find(c => c.uuid.toLowerCase().includes("fa02")) || bleWritableCharacteristics[0];
+      const data = new Uint8Array(packetBytes);
+      const total = data.length;
+      const totalChunks = Math.ceil(total / chunkSize);
+
+      logDebug(`Streaming [${char.uuid.slice(0, 8)}] ${total}B in ${totalChunks} chunks (${chunkSize}B/chunk)...`, "ble");
+
+      for (let i = 0; i < total; i += chunkSize) {
+        const chunk = data.subarray(i, Math.min(i + chunkSize, total));
+        try {
+          if (char.properties.writeWithoutResponse) {
+            await char.writeValueWithoutResponse(chunk);
+          } else {
+            await char.writeValue(chunk);
+          }
+        } catch (err) {
+          if (char.properties.write) {
+            await char.writeValue(chunk);
+          } else {
+            throw err;
+          }
+        }
+        if (delayMs > 0) {
+          await new Promise(r => setTimeout(r, delayMs));
+        }
+      }
+      logDebug(`Stream complete: ${total}B sent successfully`, "success");
+      return true;
+    }
+
     async function sendBleCommand(byteArray) {
       if (!isBleConnected || bleWritableCharacteristics.length === 0) {
         logDebug("sendBleCommand called without active GATT endpoints", "error");
         return;
       }
+      const data = new Uint8Array(byteArray);
+      if (data.length > 20) {
+        await sendIpixelStream(data, 20, 15);
+        return;
+      }
       try {
-        const data = new Uint8Array(byteArray);
         const hexStr = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-        
-        for (const char of bleWritableCharacteristics) {
-          try {
-            if (char.properties.writeWithoutResponse) {
-              logDebug(`TX [${char.uuid.slice(0, 8)}] (NoResp) -> ${hexStr}`, "hex");
-              await char.writeValueWithoutResponse(data);
-            } else if (char.properties.write) {
-              logDebug(`TX [${char.uuid.slice(0, 8)}] (WithResp) -> ${hexStr}`, "hex");
-              await char.writeValue(data);
-            }
-          } catch (err) {
-            console.warn(`Write error on endpoint ${char.uuid}:`, err);
+        // Prefer FA02 endpoint
+        const targetChar = bleWritableCharacteristics.find(c => c.uuid.toLowerCase().includes("fa02")) || bleWritableCharacteristics[0];
+        try {
+          if (targetChar.properties.writeWithoutResponse) {
+            logDebug(`TX [${targetChar.uuid.slice(0, 8)}] (NoResp) -> ${hexStr}`, "hex");
+            await targetChar.writeValueWithoutResponse(data);
+          } else if (targetChar.properties.write) {
+            logDebug(`TX [${targetChar.uuid.slice(0, 8)}] (WithResp) -> ${hexStr}`, "hex");
+            await targetChar.writeValue(data);
           }
+        } catch (err) {
+          console.warn(`Write error on endpoint ${targetChar.uuid}:`, err);
         }
       } catch (e) {
         logDebug(`BLE Write Exception: ${e.message || e}`, "error");
@@ -1867,8 +2115,8 @@
       blePingInterval = setInterval(async () => {
         if (isBleConnected && bleCharacteristic) {
           try {
-            // CoolLED framed keep-alive packet (prevents controller reset)
-            await sendBleCommand([0x77, 0x28, 0x00, 0x00, 0x00]);
+            // Native iPixel get-version / keep-alive ping packet
+            await sendBleCommand([0x04, 0x00, 0x05, 0x80]);
           } catch (e) {
             console.warn("Heartbeat ping error:", e);
           }
