@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#14171d"/>
+      <stop offset="40%" stop-color="#0c0e12"/>
+      <stop offset="100%" stop-color="#050608"/>
+    </linearGradient>
+    <radialGradient id="roomLight" cx="50%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="skinGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d4a373"/>
+      <stop offset="50%" stop-color="#b8835a"/>
+      <stop offset="100%" stop-color="#8f5d38"/>
+    </linearGradient>
+    <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1412"/>
+      <stop offset="100%" stop-color="#0d0a09"/>
+    </linearGradient>
+    <filter id="mirrorBlur" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="1.5"/>
+    </filter>
+  </defs>
+
+  <!-- Ambient Mirror Reflection Room Backdrop -->
+  <rect width="600" height="900" fill="url(#bgGrad)"/>
+  <rect width="600" height="900" fill="url(#roomLight)"/>
+
+  <!-- Subtle Architecture / Dressing Room Depth Lines -->
+  <line x1="80" y1="0" x2="80" y2="900" stroke="#ffffff" stroke-opacity="0.03" stroke-width="2"/>
+  <line x1="520" y1="0" x2="520" y2="900" stroke="#ffffff" stroke-opacity="0.03" stroke-width="2"/>
+  <line x1="0" y1="720" x2="600" y2="720" stroke="#ffffff" stroke-opacity="0.04" stroke-width="2"/>
+
+  <!-- Person Reflection Silhouette -->
+  <g transform="translate(300, 160)" text-anchor="middle">
+    <!-- Hair Base -->
+    <path d="M -46 -20 C -52 -55 52 -55 46 -20 C 44 10 32 30 28 35 C -28 35 -44 10 -46 -20 Z" fill="url(#hairGrad)"/>
+    
+    <!-- Face / Head -->
+    <ellipse cx="0" cy="10" rx="38" ry="48" fill="url(#skinGrad)"/>
+    
+    <!-- Hair Overhang & Style -->
+    <path d="M -40 -15 C -35 -40 35 -40 40 -15 C 38 -5 30 -10 20 -12 C 0 -15 -20 -10 -40 -15 Z" fill="#0d0a09"/>
+
+    <!-- Neck & Shoulders Base -->
+    <path d="M -18 50 L -18 75 C -55 82 -95 105 -115 135 L 115 135 C 95 105 55 82 18 75 L 18 50 Z" fill="url(#skinGrad)"/>
+
+    <!-- Left Arm -->
+    <path d="M -115 135 C -130 180 -140 270 -125 380 C -112 385 -95 380 -92 360 C -102 260 -95 190 -85 155 Z" fill="url(#skinGrad)"/>
+    
+    <!-- Right Arm -->
+    <path d="M 115 135 C 130 180 140 270 125 380 C 112 385 95 380 92 360 C 102 260 95 190 85 155 Z" fill="url(#skinGrad)"/>
+
+    <!-- Legs Silhouette -->
+    <g transform="translate(0, 360)">
+      <!-- Left Leg -->
+      <path d="M -60 0 L -68 280 C -68 310 -25 310 -25 280 L -15 0 Z" fill="#14171a"/>
+      <!-- Right Leg -->
+      <path d="M 15 0 L 25 280 C 25 310 68 310 68 280 L 60 0 Z" fill="#14171a"/>
+    </g>
+  </g>
+</svg>
