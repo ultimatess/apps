@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ehlil's Games | Web App Launcher</title>
+  <meta name="description" content="Ehlil's collection of fun browser games — play right in your browser!" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover-border: rgba(255, 255, 255, 0.22);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.05) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px 64px;
+      flex: 1;
+    }
+
+    /* Header Nav */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 44px;
+    }
+
+    .nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav a:hover {
+      color: var(--text-main);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    /* Hero Section */
+    .hero {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      margin-bottom: 44px;
+    }
+
+    .hero-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 24px;
+      object-fit: cover;
+      border: 3px solid rgba(16, 185, 129, 0.3);
+      box-shadow: 0 0 32px rgba(16, 185, 129, 0.15);
+      flex-shrink: 0;
+    }
+
+    .hero-text h1 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #10b981 0%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-text p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .hero-text .wave {
+      display: inline-block;
+      animation: wave 2s ease-in-out infinite;
+      transform-origin: 70% 70%;
+    }
+
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      10% { transform: rotate(14deg); }
+      20% { transform: rotate(-8deg); }
+      30% { transform: rotate(14deg); }
+      40% { transform: rotate(-4deg); }
+      50% { transform: rotate(10deg); }
+      60%, 100% { transform: rotate(0deg); }
+    }
+
+    /* Search Bar */
+    .search-bar {
+      margin-bottom: 32px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      max-width: 400px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    .search-bar input:focus {
+      border-color: var(--accent);
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-hover-border);
+      box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .arrow-icon {
+      color: var(--text-muted);
+      opacity: 0.6;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .card:hover .arrow-icon {
+      transform: translate(2px, -2px);
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    .card h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .skeleton-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      height: 160px;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      grid-column: 1 / -1;
+    }
+
+    .empty-state .emoji {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 32px 16px 48px;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .nav {
+        margin-bottom: 32px;
+      }
+      .hero {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+      }
+      .hero-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 20px;
+      }
+      .search-bar input {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="nav">
+      <a href="../index.html">← Back to Apps</a>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        <span id="game-counter">Scanning...</span>
+      </div>
+    </div>
+
+    <div class="hero">
+      <img src="./ehlil.jpg" alt="Ehlil" class="hero-avatar" />
+      <div class="hero-text">
+        <h1><span class="wave">👋</span> Ehlil's Games</h1>
+        <p>Welcome to Ehlil's gaming world! A collection of fun browser games built just for play. Pick a game and start having fun!</p>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search games..." autocomplete="off">
+    </div>
+
+    <div id="games-grid" class="grid">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Ehlil's Games • Part of <a href="../index.html">Apps & Tools</a> • Hosted via GitHub Pages</p>
+  </footer>
+
+  <script>
+    const GITHUB_USERNAME = 'ultimatess'; 
+    const REPO_NAME = 'apps';
+    const GAMES_PATH = 'ehlil';
+
+    const EXCLUDED = new Set(['CNAME', 'index.html', 'README.md', '.github', '.git', 'assets', 'ehlil.jpg']);
+
+    const GRADIENTS = [
+      'linear-gradient(135deg, #10b981, #06b6d4)',
+      'linear-gradient(135deg, #a855f7, #6366f1)',
+      'linear-gradient(135deg, #38bdf8, #2563eb)',
+      'linear-gradient(135deg, #f97316, #ec4899)',
+      'linear-gradient(135deg, #eab308, #ea580c)',
+      'linear-gradient(135deg, #ec4899, #8b5cf6)'
+    ];
+
+    // Game emoji icons for known game types
+    const GAME_ICONS = {
+      'snake': '🐍',
+      'tetris': '🧱',
+      'pong': '🏓',
+      'breakout': '🧱',
+      'memory': '🧠',
+      'tic-tac-toe': '❌',
+      'flappy': '🐦',
+      'maze': '🌀',
+      'puzzle': '🧩',
+      'quiz': '❓',
+      'math': '🔢',
+      'typing': '⌨️',
+      'space': '🚀',
+      'car': '🏎️',
+      'racing': '🏁',
+      'chess': '♟️',
+      'checkers': '🏁',
+      'word': '📝',
+      'color': '🎨',
+      'card': '🃏',
+      'dice': '🎲',
+      'catch': '🎯',
+      'jump': '🦘',
+      'run': '🏃',
+      'shoot': '🔫',
+      'tower': '🏗️',
+      'bubble': '🫧',
+      'match': '💎',
+      'platform': '🎮',
+      'dungeon': '⚔️',
+      'adventure': '🗺️'
+    };
+
+    let allGames = [];
+
+    function hashString(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) hash = (hash << 5) - hash + str.charCodeAt(i);
+      return Math.abs(hash);
+    }
+
+    function formatTitle(name) {
+      return name.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    function getGameIcon(name) {
+      const lower = name.toLowerCase();
+      for (const [key, icon] of Object.entries(GAME_ICONS)) {
+        if (lower.includes(key)) return icon;
+      }
+      return '🎮';
+    }
+
+    async function fetchGameMetadata(folderName) {
+      let title = formatTitle(folderName);
+      let desc = 'A fun browser game — click to play!';
+      let icon = getGameIcon(folderName);
+
+      try {
+        const res = await fetch(`./${folderName}/index.html`);
+        if (res.ok) {
+          const htmlText = await res.text();
+          const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+          const pageTitle = doc.querySelector('title')?.textContent;
+          const pageDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content');
+          if (pageTitle) title = pageTitle.split('|')[0].split('-')[0].trim();
+          if (pageDesc) desc = pageDesc;
+        }
+      } catch (e) {}
+
+      return { name: folderName, title, desc, icon };
+    }
+
+    async function loadGames() {
+      const counter = document.getElementById('game-counter');
+
+      try {
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${GAMES_PATH}`);
+        let folderItems = [];
+
+        if (response.ok) {
+          const items = await response.json();
+          folderItems = items.filter(item => item.type === 'dir' && !EXCLUDED.has(item.name));
+        }
+
+        if (folderItems.length === 0) {
+          renderEmpty();
+          return;
+        }
+
+        allGames = await Promise.all(folderItems.map(item => fetchGameMetadata(item.name)));
+        renderGrid(allGames);
+
+      } catch (err) {
+        console.error(err);
+        renderEmpty();
+      }
+    }
+
+    function renderEmpty() {
+      const grid = document.getElementById('games-grid');
+      const counter = document.getElementById('game-counter');
+      counter.textContent = '0 Games';
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="emoji">🎮</div>
+          <p>No games yet — exciting ones are coming soon!</p>
+        </div>
+      `;
+    }
+
+    function renderGrid(games) {
+      const grid = document.getElementById('games-grid');
+      const counter = document.getElementById('game-counter');
+      grid.innerHTML = '';
+
+      counter.textContent = `${games.length} Game${games.length === 1 ? '' : 's'}`;
+
+      if (games.length === 0) {
+        grid.innerHTML = `<p style="color: var(--text-muted); grid-column: 1 / -1;">No games found matching your search.</p>`;
+        return;
+      }
+
+      games.forEach(game => {
+        const gradient = GRADIENTS[hashString(game.name) % GRADIENTS.length];
+
+        const card = document.createElement('a');
+        card.className = 'card';
+        card.href = `./${game.name}/`;
+
+        card.innerHTML = `
+          <div>
+            <div class="card-top">
+              <div class="icon-box" style="background: ${gradient};">
+                ${game.icon}
+              </div>
+              <svg class="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7"></line>
+                <polyline points="7 7 17 7 17 17"></polyline>
+              </svg>
+            </div>
+            <h3>${game.title}</h3>
+            <p>${game.desc}</p>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = allGames.filter(g => g.title.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q));
+      renderGrid(filtered);
+    });
+
+    loadGames();
+  </script>
+</body>
+</html>

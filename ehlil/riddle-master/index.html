@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Riddle Master (Turbo Edition)</title>
+  <meta name="description" content="Crack 90 riddles across 3 difficulty levels — Easy, Normal, and Hard. How many can you solve?" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+      text-align: center;
+      contain: content;
+    }
+
+    h1 {
+      margin-bottom: 16px;
+      font-size: 1.6rem;
+      color: #38bdf8;
+    }
+
+    .level-select {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .level-btn {
+      padding: 8px 16px;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      background: #334155;
+      color: #cbd5e1;
+      touch-action: manipulation;
+    }
+
+    .level-btn.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+
+    .card {
+      background: #0b1120;
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 14px;
+      border: 1px solid #334155;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .riddle-text {
+      font-size: 1.05rem;
+      line-height: 1.45;
+    }
+
+    .clue-box {
+      font-size: 0.88rem;
+      color: #fbbf24;
+      background: rgba(251, 191, 36, 0.1);
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px dashed #fbbf24;
+      display: none;
+      width: 100%;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: #38bdf8;
+    }
+
+    .btn {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .btn-submit {
+      background: #10b981;
+      color: #fff;
+    }
+
+    .btn-submit:active {
+      background: #059669;
+    }
+
+    .btn-clue {
+      background: #f59e0b;
+      color: #0f172a;
+    }
+
+    .btn-clue:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .feedback {
+      height: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+
+    .feedback.correct { color: #4ade80; }
+    .feedback.wrong { color: #f87171; }
+
+    .score-board {
+      display: flex;
+      justify-content: space-between;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      border-top: 1px solid #334155;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Riddle Master (Turbo)</h1>
+
+    <div class="level-select">
+      <button class="level-btn active" onclick="setLevel('easy')">Easy (30)</button>
+      <button class="level-btn" onclick="setLevel('medium')">Normal (30)</button>
+      <button class="level-btn" onclick="setLevel('hard')">Hard (30)</button>
+    </div>
+
+    <div class="card">
+      <p class="riddle-text" id="riddle-display"></p>
+      <div class="clue-box" id="clue-box"></div>
+    </div>
+
+    <form class="input-group" id="riddle-form" onsubmit="return checkAnswer(event)">
+      <input type="text" id="answer-input" placeholder="Type answer..." autocomplete="off" spellcheck="false" />
+      <button type="button" class="btn btn-clue" id="clue-btn" onclick="showClue()">💡 Clue</button>
+      <button type="submit" class="btn btn-submit">Go</button>
+    </form>
+
+    <div class="feedback" id="feedback-msg"></div>
+
+    <div class="score-board">
+      <span id="progress-display">1/30</span>
+      <span id="score-display">Score: 0</span>
+    </div>
+  </div>
+
+  <script>
+    // Compact dataset: [Question, Clue, [Valid Answers]]
+    const DATA = {
+      easy: [
+        ["What has hands and a face, but cannot clap or smile?", "Ticks on walls or wrists.", ["clock", "watch"]],
+        ["What must be cracked before you can use it?", "Laid by hens.", ["egg"]],
+        ["What gets wetter the more it dries?", "Shower companion.", ["towel"]],
+        ["What has a thumb and four fingers, but is not alive?", "Winter hand wear.", ["glove", "mitten"]],
+        ["What goes up when rain starts coming down?", "Canopy and handle.", ["umbrella"]],
+        ["What has many teeth, but cannot bite?", "Untangles hair.", ["comb"]],
+        ["What has a neck, but no head?", "Beverage container.", ["bottle"]],
+        ["What has a head and a foot, but no body?", "You sleep on it.", ["bed"]],
+        ["What has four legs, but cannot walk?", "You place laptops on it.", ["table", "chair", "desk"]],
+        ["What kind of room has no doors or windows?", "Grows in damp soil.", ["mushroom"]],
+        ["What has one eye, but cannot see?", "Thread passes through its rear.", ["needle"]],
+        ["What gets taller when young and shorter as it gets old?", "Melted wax.", ["candle"]],
+        ["What can you catch, but never throw?", "Makes you sneeze.", ["cold", "flu"]],
+        ["What has many words, but never speaks?", "Library resident.", ["book"]],
+        ["What has keys that open no doors?", "You type on it.", ["keyboard", "piano"]],
+        ["What belongs to you, yet others use it more than you do?", "Your identity.", ["name"]],
+        ["Where does Friday come before Thursday?", "Alphabetical reference.", ["dictionary"]],
+        ["What travels the world staying in one corner?", "Licked and stuck on mail.", ["stamp"]],
+        ["What has holes all over, but still holds water?", "Found by the kitchen sink.", ["sponge"]],
+        ["What has branches, but neither trunk nor fruit?", "Stores cash.", ["bank"]],
+        ["What runs around a yard without ever moving?", "Pickets or chain links.", ["fence"]],
+        ["What goes up and down without moving an inch?", "Between floors.", ["stairs", "steps"]],
+        ["What can you break without touching it?", "A vow.", ["promise", "trust"]],
+        ["What has an eye in the center, but cannot see?", "A tropical system.", ["hurricane", "storm", "cyclone"]],
+        ["What building has the most stories?", "Shelves of literature.", ["library"]],
+        ["What has a spine, but no bones inside?", "Bound pages.", ["book"]],
+        ["What gets cleaner the more you wash with it?", "Lathers into bubbles.", ["soap"]],
+        ["What fills a room without taking up space?", "Flip a switch.", ["light", "darkness"]],
+        ["What has ring after ring, but no fingers?", "Handset receiver.", ["phone", "telephone"]],
+        ["What starts with 'T', ends with 'T', and is full of 'T'?", "Brewing leaves.", ["teapot"]]
+      ],
+      medium: [
+        ["I speak without a voice and hear without ears. What am I?", "Shout near a cliff.", ["echo"]],
+        ["The more you take out of me, the larger I become. What am I?", "Dug in earth.", ["hole"]],
+        ["What runs day and night without leaving its bed?", "Flowing stream.", ["river", "stream"]],
+        ["I have no flesh or bone, but two pairs of delicate wings. What am I?", "Pond insect.", ["dragonfly", "butterfly"]],
+        ["What can lead you anywhere, but never moves?", "Asphalt lanes.", ["road", "path", "street"]],
+        ["Forward I am heavy, but backward I am not. What word am I?", "Reverse 'ton'.", ["ton"]],
+        ["I have lakes without water, and mountains with no stone. What am I?", "Foldable navigation.", ["map", "globe"]],
+        ["What loses its head in the morning, but gains it at night?", "Rest your head here.", ["pillow"]],
+        ["A barrel weighs 60 lbs. What makes it weigh 40 lbs?", "Liquid drain.", ["hole"]],
+        ["What starts with 'E', ends with 'E', but contains one letter?", "Postal casing.", ["envelope"]],
+        ["Light as a feather, but no human can hold me 5 minutes. What am I?", "Inhale and exhale.", ["breath"]],
+        ["The maker doesn't want it; the buyer doesn't use it. What is it?", "Burial box.", ["coffin", "casket"]],
+        ["What tastes sweeter than it smells, and smells better than it tastes?", "Inside your mouth.", ["tongue"]],
+        ["Roots nobody sees, taller than trees, yet never grows. What is it?", "Giant rock summit.", ["mountain"]],
+        ["Flies without wings, and cries without eyes. What is it?", "Sky vapor.", ["cloud", "clouds"]],
+        ["Mimics every move, but vanishes in darkness. What am I?", "Silhouette.", ["shadow"]],
+        ["You break me without touching, and solve me when spoken. What am I?", "You are playing it.", ["riddle"]],
+        ["Sharper with use, dull when idle. What is it?", "Cognitive engine.", ["mind", "brain"]],
+        ["Crack if dropped, smile if smiled upon. What am I?", "Reflective surface.", ["mirror"]],
+        ["What fills a pocket while leaving it empty?", "Torn stitch.", ["hole"]],
+        ["Belongs to the past, guides the present, written for future. What is it?", "Chronology.", ["history", "calendar"]],
+        ["Two fathers & two sons share three fish equally. How?", "3 generations.", ["grandfather"]],
+        ["Once in a minute, twice in a moment, never in a thousand years. What is it?", "Letter.", ["m", "letter m"]],
+        ["Has bark, but no bite. What is it?", "Trunk and leaves.", ["tree"]],
+        ["Feed me I flourish; water me I perish. What am I?", "Flickering flames.", ["fire", "flame"]],
+        ["Rings without fingers when visitors arrive. What is it?", "Entry bell.", ["doorbell"]],
+        ["Cities without houses, forests without trees. What am I?", "Cartography.", ["map"]],
+        ["Flies when turned on, rests when switched off. What is it?", "Spinning blades.", ["fan"]],
+        ["Disappears the moment you say its name. What is it?", "Total quiet.", ["silence", "quiet"]],
+        ["Goes up, but never returns down. What is it?", "Birthday metric.", ["age"]]
+      ],
+      hard: [
+        ["A woman shoots her husband, submerges him, hangs him, then dines with him. How?", "Darkroom work.", ["photo", "photograph", "picture"]],
+        ["Not alive, but grows; no lungs, but needs air; water kills it. What is it?", "Campfire.", ["fire"]],
+        ["Taken from a mine and shut in wood, yet every student uses me. What am I?", "Pencil core.", ["pencil lead", "graphite", "lead"]],
+        ["Until measured, I am not known. Missed when flown. What am I?", "Tick tock.", ["time"]],
+        ["Box without hinges, key, or lid, yet golden treasure inside is hid. What is it?", "Breakfast shell.", ["egg"]],
+        ["Brings back the dead, makes you cry or laugh in an instant. What is it?", "Recollection.", ["memory", "memories"]],
+        ["The more of this there is, the less you will observe. What is it?", "Lack of photons.", ["darkness", "dark"]],
+        ["Builds bridges of silver and crowns of gold, feared by young and old. Who is it?", "Tooth expert.", ["dentist"]],
+        ["Pronounced like one letter, written with three; reads both ways. What am I?", "Visual organ.", ["eye"]],
+        ["No voice but tells tales; turns to ashes when inside out. What am I?", "Written sheets.", ["letter", "book", "scroll"]],
+        ["Word retaining pronunciation after 4 of 5 letters are removed. What is it?", "Line of people.", ["queue"]],
+        ["Weightless, but makes an overflowing barrel lighter. What is it?", "Opening.", ["hole"]],
+        ["Seven-letter word containing thousands of letters. What is it?", "Postal terminal.", ["mailbox", "post office"]],
+        ["Dances on water without getting wet; rests on leaves without bending. What am I?", "Optics.", ["reflection", "shadow", "sunlight"]],
+        ["Never was, always to be, never seen yet trusted. What is it?", "The day after.", ["tomorrow", "future"]],
+        ["Word with three consecutive double letters: _ _ _ _ _ _ _ _ _ _?", "Book record.", ["bookkeeper", "bookkeeping"]],
+        ["Five-letter word that becomes shorter by adding two letters. What is it?", "Short + er.", ["short"]],
+        ["Flipped, cracked, told, and made. What am I?", "Makes you laugh.", ["joke"]],
+        ["Held without touching, left behind wherever you walk. What am I?", "Ground marks.", ["footprints", "footprint"]],
+        ["Passes before the sun without casting a shadow. What is it?", "Moving breeze.", ["wind", "air"]],
+        ["Maker hides it; consumer ignores it; knower refuses it. What is it?", "Tainted drink.", ["poison", "counterfeit"]],
+        ["Thread binding two worlds, visible only after showers. What am I?", "Spectrum arch.", ["rainbow"]],
+        ["Rich crave it, wise lack it, if you eat it you die. What is it?", "Void.", ["nothing"]],
+        ["Melts ice, crumbles stone, consumes iron to dust. What is it?", "Marches on.", ["time"]],
+        ["Runs without legs, roars without a throat. What is it?", "Gale.", ["wind", "storm"]],
+        ["No lungs but breathes air; lives only when heat is near. What am I?", "Flames.", ["fire", "flame"]],
+        ["Starts with 'P', ends with 'E', holds thousands of letters. What is it?", "Postal branch.", ["post office"]],
+        ["Connects two souls yet touches neither. What is it?", "Gaze / emotion.", ["love", "eye contact", "glance"]],
+        ["Weightless, transparent, but makes a barrel heavier. What is it?", "Combustion residue.", ["ash", "coal", "fuel"]],
+        ["Five-letter word turning into 'one' when two are removed. What is it?", "Mineral / lonely.", ["stone", "alone"]]
+      ]
+    };
+
+    let curLevel = 'easy';
+    let curIdx = 0;
+    let score = 0;
+    let clueUsed = false;
+
+    // Cache DOM nodes once
+    const dRiddle = document.getElementById('riddle-display');
+    const dClue = document.getElementById('clue-box');
+    const bClue = document.getElementById('clue-btn');
+    const iAns = document.getElementById('answer-input');
+    const dFeed = document.getElementById('feedback-msg');
+    const dProg = document.getElementById('progress-display');
+    const dScore = document.getElementById('score-display');
+    const fForm = document.getElementById('riddle-form');
+    const bLevels = document.querySelectorAll('.level-btn');
+
+    function render() {
+      const q = DATA[curLevel][curIdx];
+      dRiddle.textContent = q[0];
+      dProg.textContent = `${curIdx + 1}/30`;
+      dScore.textContent = `Score: ${score}`;
+      
+      iAns.value = '';
+      dFeed.textContent = '';
+      dFeed.className = 'feedback';
+      
+      clueUsed = false;
+      dClue.style.display = 'none';
+      bClue.disabled = false;
+    }
+
+    function showClue() {
+      dClue.textContent = `💡 ${DATA[curLevel][curIdx][1]}`;
+      dClue.style.display = 'block';
+      bClue.disabled = true;
+      clueUsed = true;
+      iAns.focus();
+    }
+
+    function checkAnswer(e) {
+      if (e) e.preventDefault();
+      const val = iAns.value.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+      if (!val) return false;
+
+      const answers = DATA[curLevel][curIdx][2];
+      const match = answers.some(a => val === a || val.includes(a));
+
+      if (match) {
+        score += clueUsed ? 5 : 10;
+        curIdx++;
+        
+        if (curIdx < 30) {
+          // Instant next-question rendering
+          requestAnimationFrame(render);
+          dFeed.className = 'feedback correct';
+          dFeed.textContent = '⚡ Correct!';
+        } else {
+          dRiddle.textContent = `🎉 Level Cleared! Outstanding!`;
+          fForm.style.display = 'none';
+          dClue.style.display = 'none';
+          dFeed.textContent = '';
+          dScore.textContent = `Final Score: ${score}`;
+        }
+      } else {
+        dFeed.className = 'feedback wrong';
+        dFeed.textContent = '✖ Incorrect! Try again.';
+        iAns.select();
+      }
+      return false;
+    }
+
+    function setLevel(lvl) {
+      curLevel = lvl;
+      curIdx = 0;
+      bLevels.forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().startsWith(lvl)));
+      fForm.style.display = 'flex';
+      render();
+      iAns.focus();
+    }
+
+    render();
+  </script>
+</body>
+</html>
