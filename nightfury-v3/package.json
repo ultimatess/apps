@@ -1,0 +1,13 @@
+{
+  "name": "nightfury-v3",
+  "private": true,
+  "type": "module",
+  "description": "NightFury v3 - iPixel 96x16 LED driving HUD (static site, zero runtime dependencies)",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/unit/*.test.mjs",
+    "e2e": "node tests/e2e/run.mjs",
+    "verify": "sh scripts/verify.sh",
+    "serve": "node scripts/serve.mjs"
+  }
+}
