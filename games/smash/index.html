@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#090d16" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💥</text></svg>" />
   <title>Rage Room Smash | Stress Relief & Cathartic Destruction</title>
   <meta name="description" content="Satisfying virtual rage room: smash laptops, bills, alarms, bad vibes, and customized annoyances into a million pieces with realistic physics and sound FX!" />
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -31,6 +33,7 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     html, body {
@@ -46,7 +49,7 @@
     body {
       display: flex;
       flex-direction: column;
-      background-image: 
+      background-image:
         radial-gradient(circle at 15% 15%, rgba(239, 68, 68, 0.1) 0%, transparent 45%),
         radial-gradient(circle at 85% 85%, rgba(249, 115, 22, 0.08) 0%, transparent 45%),
         radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
@@ -150,6 +153,17 @@
       100% { transform: scale(1); filter: brightness(1); }
     }
 
+    @keyframes popIn {
+      0% { transform: scale(0.6); opacity: 0; }
+      70% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes goldShine {
+      0%, 100% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.35); }
+      50% { box-shadow: 0 0 28px rgba(245, 158, 11, 0.75); }
+    }
+
     .streak-active-badge {
       animation: pulseStreak 0.5s infinite ease-in-out;
     }
@@ -163,6 +177,7 @@
       font-size: 28px;
       background: linear-gradient(135deg, #fff, #fca5a5);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 6px;
     }
@@ -171,7 +186,169 @@
       color: var(--text-muted);
       font-size: 13.5px;
       line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    /* Player progression card */
+    .player-card {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(168, 85, 247, 0.08));
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 18px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .level-ring {
+      --pct: 0%;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: conic-gradient(#38bdf8 var(--pct), rgba(255, 255, 255, 0.08) 0);
+      position: relative;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .level-ring::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: #0f1626;
+    }
+
+    .level-ring span {
+      position: relative;
+      line-height: 1;
+    }
+
+    .lv-label {
+      font-size: 8.5px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .lv-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .player-rank {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .xp-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .xp-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #a855f7);
+      border-radius: 9999px;
+      transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* Daily missions */
+    .missions-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 12px 14px;
       margin-bottom: 18px;
+    }
+
+    .mission-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .mission-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .mission-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .mission-row.done .mission-check {
+      background: #10b981;
+      border-color: #10b981;
+      color: #fff;
+    }
+
+    .mission-row.done .mission-text {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .mission-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mission-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .mission-bar > div {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      border-radius: 9999px;
+    }
+
+    .mission-xp {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #a78bfa;
+      white-space: nowrap;
     }
 
     /* Vibe Cards Grid */
@@ -267,12 +444,19 @@
       margin-top: 1px;
     }
 
+    .mode-best {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #fbbf24;
+      margin-top: 4px;
+    }
+
     /* Weapon selector */
     .weapon-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
-      margin-bottom: 18px;
+      margin-bottom: 8px;
     }
 
     .weapon-card {
@@ -283,12 +467,22 @@
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
+      position: relative;
     }
 
     .weapon-card.active {
       border-color: #f59e0b;
       background: rgba(245, 158, 11, 0.15);
       box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+    }
+
+    .weapon-card.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .weapon-card.locked .weapon-emoji {
+      filter: grayscale(1);
     }
 
     .weapon-emoji {
@@ -300,6 +494,21 @@
       font-size: 11px;
       font-weight: 700;
       color: #fff;
+    }
+
+    .weapon-lock {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #fbbf24;
+      margin-top: 1px;
+    }
+
+    .weapon-desc {
+      font-size: 11.5px;
+      line-height: 1.4;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      min-height: 16px;
     }
 
     /* Custom input field */
@@ -324,9 +533,11 @@
       border-radius: 12px;
       padding: 12px 14px;
       color: #fff;
-      font-size: 14px;
+      font-size: 16px;
       outline: none;
       transition: border-color 0.2s;
+      user-select: text;
+      -webkit-user-select: text;
     }
 
     .input-field:focus {
@@ -358,6 +569,12 @@
       box-shadow: 0 12px 30px rgba(239, 68, 68, 0.5);
     }
 
+    #btnStartSmash {
+      position: sticky;
+      bottom: 12px;
+      z-index: 5;
+    }
+
     .btn-secondary {
       width: 100%;
       padding: 12px;
@@ -380,11 +597,19 @@
       background: rgba(255, 255, 255, 0.1);
     }
 
+    .kbd-hint {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 8px;
+    }
+
     /* Arena & Gameplay */
     #arenaScreen {
       display: none;
       flex-direction: column;
       gap: 12px;
+      padding: 14px 12px;
     }
 
     .hud-bar {
@@ -400,6 +625,7 @@
     .hud-stat {
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
 
     .hud-label {
@@ -415,12 +641,17 @@
       font-size: 20px;
       font-weight: 800;
       color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hud-val.danger {
+      animation: pulseStreak 0.5s infinite ease-in-out;
     }
 
     .canvas-container {
       position: relative;
       width: 100%;
-      height: 440px;
+      height: clamp(360px, 60vh, 500px);
       border-radius: 20px;
       border: 2px dashed rgba(239, 68, 68, 0.4);
       background: radial-gradient(circle at center, #172133 0%, #080c14 100%);
@@ -434,6 +665,7 @@
       width: 100%;
       height: 100%;
       cursor: crosshair;
+      touch-action: none;
     }
 
     .rage-progress-wrap {
@@ -454,6 +686,21 @@
       transition: width 0.15s ease-out;
     }
 
+    .rage-progress-fill.raging {
+      background: linear-gradient(90deg, #ef4444, #f97316, #ef4444);
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.9);
+      animation: pulseStreak 0.4s infinite ease-in-out;
+    }
+
+    .arena-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .arena-actions .btn-secondary {
+      margin-top: 0;
+    }
+
     /* Result Screen */
     #resultScreen {
       display: none;
@@ -468,6 +715,126 @@
       line-height: 1;
       margin: 12px 0 4px;
       text-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-best {
+      margin: 12px auto 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .result-best.new {
+      display: inline-block;
+      color: #000;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), goldShine 1.6s 0.5s infinite;
+    }
+
+    .xp-card {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin: 16px 0 10px;
+      text-align: left;
+    }
+
+    .xp-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-weight: 800;
+    }
+
+    .xp-row .lvl {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .xp-row .rank {
+      font-size: 12px;
+      color: var(--text-muted);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .xp-gain {
+      font-size: 13px;
+      color: #a78bfa;
+    }
+
+    .xp-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    .unlock-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .unlock-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .unlock-item.levelup {
+      background: rgba(168, 85, 247, 0.14);
+      border-color: rgba(168, 85, 247, 0.4);
+    }
+
+    .unlock-item.ach {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .ach-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 5px;
+    }
+
+    .ach-chip {
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 9999px;
+      padding: 2px 8px;
+    }
+
+    .unlock-item .ico {
+      font-size: 20px;
+    }
+
+    .unlock-item small {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
     }
 
     /* Character Charter Card */
@@ -551,6 +918,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
 
     .breakdown-list {
@@ -571,6 +939,7 @@
       align-items: center;
       font-size: 13px;
       font-weight: 600;
+      gap: 8px;
     }
 
     .breakdown-label {
@@ -578,6 +947,7 @@
       align-items: center;
       gap: 6px;
       color: #f1f5f9;
+      min-width: 0;
     }
 
     .nemesis-tag {
@@ -587,11 +957,13 @@
       padding: 1px 6px;
       border-radius: 6px;
       font-weight: 800;
+      white-space: nowrap;
     }
 
     .breakdown-count {
       color: #94a3b8;
       font-size: 12px;
+      white-space: nowrap;
     }
 
     .breakdown-bar-bg {
@@ -622,6 +994,7 @@
       border-radius: 14px;
       padding: 12px;
       text-align: left;
+      min-width: 0;
     }
 
     .stat-card-label {
@@ -638,6 +1011,50 @@
       font-weight: 800;
       color: #fff;
       margin-top: 3px;
+      overflow-wrap: anywhere;
+    }
+
+    /* Achievements */
+    .ach-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .ach {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 12px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .ach.locked {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: var(--card-border);
+      opacity: 0.5;
+    }
+
+    .ach.locked .ach-ico {
+      filter: grayscale(1);
+    }
+
+    .ach-ico {
+      font-size: 22px;
+    }
+
+    .ach-name {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .ach-desc {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.3;
     }
 
     /* Modal / Dossier */
@@ -698,9 +1115,9 @@
 
     .toast {
       position: fixed;
-      bottom: 24px;
+      top: 18px;
       left: 50%;
-      transform: translateX(-50%) translateY(50px);
+      transform: translateX(-50%) translateY(-70px);
       background: #10b981;
       color: #fff;
       font-weight: 700;
@@ -712,6 +1129,8 @@
       pointer-events: none;
       transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
       z-index: 2000;
+      max-width: calc(100vw - 32px);
+      text-align: center;
     }
 
     .toast.show {
@@ -726,12 +1145,8 @@
     <div class="header-nav">
       <a href="../index.html" class="nav-link">← Games Collection</a>
       <div class="header-actions">
-        <button id="btnOpenDossier" class="btn-icon-pill">
-          📊 Smash Dossier
-        </button>
-        <button id="btnSoundToggle" class="btn-icon-pill">
-          🔊 Sound ON
-        </button>
+        <button id="btnOpenDossier" class="btn-icon-pill">📊 Dossier</button>
+        <button id="btnSoundToggle" class="btn-icon-pill">🔊 Sound ON</button>
       </div>
     </div>
 
@@ -742,63 +1157,72 @@
         <span id="lobbyCareerCount" style="font-size:12px; font-weight:700; color:var(--text-muted);">Career: 0 Smashed</span>
       </div>
       <h1 class="title">Rage Room Smash</h1>
-      <p class="subtitle">Pick what's testing your nerves today. Advance through escalating speed waves to demolish everything!</p>
+      <p class="subtitle">Smash everything that's testing your nerves. Chain combos, fill the rage meter, and don't hit the cat.</p>
+
+      <div class="player-card">
+        <div class="level-ring" id="lobbyLevelRing">
+          <span class="lv-label">LVL</span>
+          <span class="lv-num" id="lobbyLevel">1</span>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div class="player-rank" id="lobbyRank">Stressed Intern</div>
+          <div class="xp-bar"><div class="xp-fill" id="lobbyXpFill"></div></div>
+          <div class="player-meta">
+            <span id="lobbyXpText">0 / 250 XP</span>
+            <span id="lobbyDayStreak">🔥 Day 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="missions-card">
+        <div class="section-title" style="margin-bottom:10px;">
+          <span>🎯 Daily Missions</span>
+          <span id="missionsResetIn" style="font-size:10.5px; text-transform:none; letter-spacing:0; text-align:right;">Resets in --</span>
+        </div>
+        <div class="mission-list" id="missionList"></div>
+      </div>
 
       <span class="input-label">1. Choose Your Therapy Vibe:</span>
       <div class="grid-vibes" id="vibeContainer"></div>
 
-      <span class="input-label">2. Select Game Mode & Speed Escalation:</span>
+      <span class="input-label">2. Select Game Mode:</span>
       <div class="mode-grid" id="modeContainer">
         <div class="mode-card active" data-mode="waves">
           <div class="mode-icon">🌊</div>
           <div class="mode-title">Rage Waves</div>
-          <div class="mode-desc">Advance speed tiers, +5s per wave</div>
+          <div class="mode-desc">Level up speed, earn bonus time</div>
+          <div class="mode-best" data-best="waves"></div>
         </div>
         <div class="mode-card" data-mode="blitz">
           <div class="mode-icon">⏱️</div>
           <div class="mode-title">30s Blitz</div>
-          <div class="mode-desc">Classic 30s timer, fast speed ramp</div>
+          <div class="mode-desc">Fixed 30s, fast speed ramp</div>
+          <div class="mode-best" data-best="blitz"></div>
         </div>
         <div class="mode-card" data-mode="turbo">
           <div class="mode-icon">🚀</div>
           <div class="mode-title">Turbo Rush</div>
-          <div class="mode-desc">Starts at 1.5x hyper speed immediately</div>
+          <div class="mode-desc">Starts at 1.5x hyper speed</div>
+          <div class="mode-best" data-best="turbo"></div>
         </div>
         <div class="mode-card" data-mode="zen">
           <div class="mode-icon">🧘</div>
           <div class="mode-title">Endless Zen</div>
-          <div class="mode-desc">No timer, infinite speed progression</div>
+          <div class="mode-desc">No timer, no hazards, just vibes</div>
+          <div class="mode-best" data-best="zen"></div>
         </div>
       </div>
 
       <span class="input-label">3. Select Your Demolition Weapon:</span>
-      <div class="weapon-grid" id="weaponContainer">
-        <div class="weapon-card active" data-weapon="hammer">
-          <div class="weapon-emoji">🔨</div>
-          <div class="weapon-name">Sledge</div>
-        </div>
-        <div class="weapon-card" data-weapon="bat">
-          <div class="weapon-emoji">🏏</div>
-          <div class="weapon-name">Bat</div>
-        </div>
-        <div class="weapon-card" data-weapon="crowbar">
-          <div class="weapon-emoji">🪓</div>
-          <div class="weapon-name">Crowbar</div>
-        </div>
-        <div class="weapon-card" data-weapon="knuckles">
-          <div class="weapon-emoji">🥊</div>
-          <div class="weapon-name">Knuckles</div>
-        </div>
-      </div>
+      <div class="weapon-grid" id="weaponContainer"></div>
+      <div class="weapon-desc" id="weaponDesc"></div>
 
       <div class="input-group">
-        <label class="input-label">4. Personal Annoyances (Optional):</label>
-        <input type="text" id="customTargetInput" class="input-field" placeholder="e.g. Traffic, Todd, JavaScript Bugs, Rent (comma separated)" />
+        <label class="input-label" for="customTargetInput">4. Personal Annoyances (Optional):</label>
+        <input type="text" id="customTargetInput" class="input-field" maxlength="120" placeholder="e.g. Traffic, Todd, JavaScript Bugs (comma separated)" />
       </div>
 
-      <button class="btn-smash" id="btnStartSmash">
-        ENTER RAGE ROOM 💥
-      </button>
+      <button class="btn-smash" id="btnStartSmash">ENTER RAGE ROOM 💥</button>
     </div>
 
     <!-- ARENA SCREEN -->
@@ -811,12 +1235,12 @@
         <div class="hud-stat" style="align-items:center;">
           <span class="hud-label" id="hudTimeLabel">Time</span>
           <span class="hud-val" id="hudTimer" style="color:#ef4444;">25s</span>
-          <span id="hudSpeedBadge" style="font-size:10px; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.18); border:1px solid rgba(56,189,248,0.35); padding:1px 6px; border-radius:6px; margin-top:2px;">WAVE 1 • 1.0x</span>
+          <span id="hudSpeedBadge" style="font-size:10px; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.18); border:1px solid rgba(56,189,248,0.35); padding:1px 6px; border-radius:6px; margin-top:2px; white-space:nowrap;">WAVE 1 • 1x</span>
         </div>
         <div class="hud-stat" style="align-items:flex-end;">
-          <span class="hud-label">Multiplier</span>
-          <span class="hud-val" id="hudCombo" style="color:#f59e0b;">x1 COMBO</span>
-          <div id="hudStreakBadge" class="streak-active-badge" style="display:none; font-size:10px; font-weight:800; color:#ef4444; background:rgba(239,68,68,0.25); border:1px solid rgba(239,68,68,0.4); padding:2px 7px; border-radius:9999px; margin-top:3px; white-space:nowrap;"></div>
+          <span class="hud-label" id="hudComboLabel">Multiplier</span>
+          <span class="hud-val" id="hudCombo" style="color:#f59e0b;">x1</span>
+          <div id="hudStreakBadge" class="streak-active-badge" style="display:none; font-size:10px; font-weight:800; color:#ef4444; background:rgba(239,68,68,0.25); border:1px solid rgba(239,68,68,0.4); padding:2px 7px; border-radius:9999px; margin-top:3px; white-space:nowrap; max-width:150px; overflow:hidden; text-overflow:ellipsis;"></div>
         </div>
       </div>
 
@@ -826,7 +1250,7 @@
 
       <div>
         <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px; font-weight:700;">
-          <span style="color:var(--text-muted);" id="rageMeterLabel">CATHARSIS & SPEED RAMP:</span>
+          <span style="color:var(--text-muted);" id="rageMeterLabel">RAGE METER — fill it for 2x points</span>
           <span id="ragePercent" style="color:#10b981;">0%</span>
         </div>
         <div class="rage-progress-wrap">
@@ -834,14 +1258,33 @@
         </div>
       </div>
 
-      <button class="btn-secondary" id="btnAbortSmash">Exit Rage Room</button>
+      <div class="arena-actions">
+        <button class="btn-secondary" id="btnPause" style="flex:0 0 96px;">⏸ Pause</button>
+        <button class="btn-secondary" id="btnAbortSmash">Exit Rage Room</button>
+      </div>
     </div>
 
     <!-- RESULTS SCREEN -->
     <div id="resultScreen" class="screen">
-      <div class="badge" id="resultBadge" style="margin-bottom:8px;">CATHARTIC MASTER</div>
+      <div><span class="badge" id="resultBadge" style="margin-bottom:8px;">CATHARTIC MASTER</span></div>
       <div class="score-big" id="finalScore">0</div>
       <p style="color:var(--text-muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Demolition Points Scored</p>
+      <div><div class="result-best" id="resultBest"></div></div>
+
+      <div class="xp-card">
+        <div class="xp-row">
+          <span class="lvl" id="resLevel">LEVEL 1</span>
+          <span class="rank" id="resRank">Stressed Intern</span>
+          <span class="xp-gain" id="resXpGain">+0 XP</span>
+        </div>
+        <div class="xp-bar"><div class="xp-fill" id="resXpFill"></div></div>
+        <div class="xp-sub" id="resXpSub"></div>
+      </div>
+
+      <button class="btn-smash" id="btnPlayAgain">SMASH AGAIN 💥</button>
+      <div class="kbd-hint" style="margin-bottom:12px;">Press Space / Enter to smash again</div>
+
+      <div class="unlock-list" id="resUnlocks"></div>
 
       <!-- Character Charter Diagnosis -->
       <div class="charter-card" id="charterCard">
@@ -852,9 +1295,7 @@
             <div class="charter-name" id="charterName">The Corporate Demolitionist</div>
           </div>
         </div>
-        <div class="charter-quote" id="charterQuote">
-          "Turned 48 meetings that could have been emails straight into shrapnel."
-        </div>
+        <div class="charter-quote" id="charterQuote"></div>
       </div>
 
       <!-- Fun Stats Grid -->
@@ -868,12 +1309,20 @@
           <div class="stat-card-val" id="statSpeedWave" style="color:#38bdf8;">Wave 1</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-label">🔥 Best Item Streak</div>
-          <div class="stat-card-val" id="statItemStreak" style="color:#f59e0b;">None</div>
+          <div class="stat-card-label">🔗 Max Combo</div>
+          <div class="stat-card-val" id="statMaxCombo" style="color:#f59e0b;">x1</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-label">🎯 Zen Status</div>
-          <div class="stat-card-val" id="statZen" style="color:#34d399;">100%</div>
+          <div class="stat-card-label">🎯 Accuracy</div>
+          <div class="stat-card-val" id="statAccuracy" style="color:#34d399;">100%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">🔥 Best Item Streak</div>
+          <div class="stat-card-val" id="statItemStreak" style="color:#f59e0b; font-size:15px;">None</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">😿 Hazards Hit</div>
+          <div class="stat-card-val" id="statHazards">0</div>
         </div>
       </div>
 
@@ -883,14 +1332,11 @@
           <span>💥 Demolition Breakdown</span>
           <span id="breakdownTotalBadge">0 Items</span>
         </div>
-        <div class="breakdown-list" id="breakdownList">
-          <!-- Populated by JS -->
-        </div>
+        <div class="breakdown-list" id="breakdownList"></div>
       </div>
 
-      <button class="btn-smash" id="btnPlayAgain">SMASH AGAIN 💥</button>
       <button class="btn-secondary" id="btnShareReport">📋 Share Demolition Report</button>
-      <button class="btn-secondary" id="btnBackLobby">Change Vibe / Mode</button>
+      <button class="btn-secondary" id="btnBackLobby">Change Vibe / Mode / Weapon</button>
     </div>
   </div>
 
@@ -899,7 +1345,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3 style="font-size:20px; color:#fff;">📊 Demolition Dossier</h3>
-        <button class="btn-close" id="btnCloseDossier">&times;</button>
+        <button class="btn-close" id="btnCloseDossier" aria-label="Close">&times;</button>
       </div>
       <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
         Lifetime record of your virtual stress relief, nemesis streaks, and speed wave advancements.
@@ -907,12 +1353,28 @@
 
       <div class="stat-grid">
         <div class="stat-card">
+          <div class="stat-card-label">Rank</div>
+          <div class="stat-card-val" id="careerLevel" style="font-size:14px;">Lvl 1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Rounds Played</div>
+          <div class="stat-card-val" id="careerRounds">0</div>
+        </div>
+        <div class="stat-card">
           <div class="stat-card-label">Total Smashed</div>
           <div class="stat-card-val" id="careerTotalSmashed">0</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">All-Time Score</div>
           <div class="stat-card-val" id="careerTotalScore">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Property Damage</div>
+          <div class="stat-card-val" id="careerDamages" style="color:#34d399;">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Highest Combo</div>
+          <div class="stat-card-val" id="careerHighestCombo" style="color:#f59e0b;">x1</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Max Speed Tier</div>
@@ -924,186 +1386,225 @@
         </div>
       </div>
 
-      <div class="breakdown-section" style="margin-top:14px;">
-        <div class="section-title">
-          <span>🏆 All-Time Most Smashed</span>
-          <span style="color:#f59e0b; font-size:11px;">Top Nemeses</span>
-        </div>
-        <div class="breakdown-list" id="careerBreakdownList">
-          <!-- Populated by JS -->
-        </div>
+      <div class="breakdown-section">
+        <div class="section-title"><span>🏆 Personal Bests</span></div>
+        <div class="breakdown-list" id="dossierBests"></div>
       </div>
 
-      <button class="btn-secondary" id="btnClearHistory" style="color:#f87171; border-color:rgba(239,68,68,0.3); margin-top:14px;">
+      <div class="breakdown-section">
+        <div class="section-title">
+          <span>🎖️ Achievements</span>
+          <span id="achCount" style="color:#f59e0b; font-size:11px;">0 / 0</span>
+        </div>
+        <div class="ach-grid" id="achGrid"></div>
+      </div>
+
+      <div class="breakdown-section">
+        <div class="section-title">
+          <span>👑 All-Time Most Smashed</span>
+          <span style="color:#f59e0b; font-size:11px;">Top Nemeses</span>
+        </div>
+        <div class="breakdown-list" id="careerBreakdownList"></div>
+      </div>
+
+      <button class="btn-secondary" id="btnClearHistory" style="color:#f87171; border-color:rgba(239,68,68,0.3); margin-top:4px;">
         🗑️ Reset Demolition History
       </button>
     </div>
   </div>
 
-  <div class="toast" id="toastMessage">Copied to clipboard! 📋</div>
+  <div class="toast" id="toastMessage"></div>
 
   <script>
-    // Audio FX using Web Audio API
+    'use strict';
+
+    // ---------- Utilities ----------
+    const $ = (id) => document.getElementById(id);
+    const TAU = Math.PI * 2;
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const fmt = (n) => Math.round(n).toLocaleString();
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const dateKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const buzz = (pattern) => { try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { /* unsupported */ } };
+
+    // ---------- Audio FX using Web Audio API ----------
     class ProceduralAudio {
       constructor() {
         this.ctx = null;
+        this.master = null;
+        this.noise = null;
         this.enabled = true;
+        this.lastShatter = 0;
       }
 
       init() {
         if (!this.ctx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (AudioContext) this.ctx = new AudioContext();
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          try {
+            this.ctx = new AC();
+          } catch (e) {
+            return;
+          }
+          const comp = this.ctx.createDynamicsCompressor();
+          this.master = this.ctx.createGain();
+          this.master.gain.value = 0.8;
+          this.master.connect(comp);
+          comp.connect(this.ctx.destination);
+
+          // One shared noise buffer instead of allocating per hit
+          const len = Math.floor(this.ctx.sampleRate * 0.8);
+          this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+          const data = this.noise.getChannelData(0);
+          for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
         }
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
-        }
+        if (this.ctx.state === 'suspended') this.ctx.resume();
       }
 
-      playShatter() {
-        if (!this.enabled || !this.ctx) return;
-        this.init();
-        const now = this.ctx.currentTime;
-
-        // Noise burst (glass crash)
-        const bufferSize = Math.floor(this.ctx.sampleRate * 0.14);
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const output = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          output[i] = Math.random() * 2 - 1;
-        }
-
-        const whiteNoise = this.ctx.createBufferSource();
-        whiteNoise.buffer = buffer;
-
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.setValueAtTime(1600, now);
-
-        const gainNode = this.ctx.createGain();
-        gainNode.gain.setValueAtTime(0.7, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
-
-        whiteNoise.connect(filter);
-        filter.connect(gainNode);
-        gainNode.connect(this.ctx.destination);
-        whiteNoise.start(now);
-
-        // Low thud impact
-        const osc = this.ctx.createOscillator();
-        const oscGain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(140, now);
-        osc.frequency.exponentialRampToValueAtTime(32, now + 0.12);
-        oscGain.gain.setValueAtTime(0.75, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-        osc.connect(oscGain);
-        oscGain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.12);
+      ready() {
+        return this.enabled && this.ctx && this.ctx.state === 'running';
       }
 
-      playStreakChime(streakCount) {
-        if (!this.enabled || !this.ctx) return;
-        this.init();
+      tone(freq, dur, { type = 'sine', vol = 0.3, at = 0, slideTo = null } = {}) {
+        const t = this.ctx.currentTime + at;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(freq, t);
+        if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+        g.gain.setValueAtTime(vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.connect(g);
+        g.connect(this.master);
+        o.start(t);
+        o.stop(t + dur + 0.02);
+      }
+
+      burst(dur, { vol = 0.5, type = 'highpass', freq = 1600, q = 0.7, at = 0, sweepTo = null } = {}) {
+        const t = this.ctx.currentTime + at;
+        const src = this.ctx.createBufferSource();
+        src.buffer = this.noise;
+        const f = this.ctx.createBiquadFilter();
+        f.type = type;
+        f.frequency.setValueAtTime(freq, t);
+        if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+        f.Q.value = q;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        src.connect(f);
+        f.connect(g);
+        g.connect(this.master);
+        src.start(t, Math.random() * 0.4, dur + 0.05);
+      }
+
+      // Pentatonic note that climbs with the combo, so a hot streak literally sounds like it's rising
+      comboNote(combo) {
+        const scale = [0, 2, 4, 7, 9];
+        const i = Math.min(combo, 17);
+        const semis = Math.floor(i / 5) * 12 + scale[i % 5];
+        return 392 * Math.pow(2, semis / 12);
+      }
+
+      shatter(combo) {
+        if (!this.ready()) return;
+        const now = performance.now();
+        if (now - this.lastShatter < 22) return;
+        this.lastShatter = now;
+        const p = 1 + Math.min(combo, 30) * 0.02;
+        this.burst(0.16, { vol: 0.5, freq: 1500 * p });
+        this.burst(0.09, { vol: 0.25, type: 'bandpass', freq: 4200 * p, q: 2 });
+        this.tone(150 * p, 0.13, { type: 'triangle', vol: 0.6, slideTo: 35 });
+        if (combo >= 2) this.tone(this.comboNote(combo), 0.14, { type: 'triangle', vol: 0.14 });
+      }
+
+      clank() {
+        if (!this.ready()) return;
+        [620, 931, 1290].forEach((f) => this.tone(f, 0.18, { type: 'square', vol: 0.06 }));
+        this.burst(0.06, { vol: 0.3, type: 'bandpass', freq: 3000, q: 4 });
+      }
+
+      boom() {
+        if (!this.ready()) return;
+        this.tone(95, 0.55, { type: 'sine', vol: 0.9, slideTo: 28 });
+        this.burst(0.6, { vol: 0.7, type: 'lowpass', freq: 1800, sweepTo: 120 });
+      }
+
+      streakChime(streakCount) {
+        if (!this.ready()) return;
         const baseFreq = 520 + Math.min(6, streakCount) * 110;
-        const now = this.ctx.currentTime;
-
-        // Ascending crystalline arpeggio chords
         [baseFreq, baseFreq * 1.25, baseFreq * 1.5].forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          const t = now + idx * 0.045;
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, t);
-          gain.gain.setValueAtTime(0.3, t);
-          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(t);
-          osc.stop(t + 0.2);
+          this.tone(freq, 0.2, { type: 'triangle', vol: 0.25, at: idx * 0.045 });
         });
-
-        // Add a satisfying low sub-bass punch
-        const sub = this.ctx.createOscillator();
-        const subGain = this.ctx.createGain();
-        sub.type = 'sine';
-        sub.frequency.setValueAtTime(120, now);
-        sub.frequency.exponentialRampToValueAtTime(40, now + 0.15);
-        subGain.gain.setValueAtTime(0.5, now);
-        subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-        sub.connect(subGain);
-        subGain.connect(this.ctx.destination);
-        sub.start(now);
-        sub.stop(now + 0.15);
+        this.tone(120, 0.15, { type: 'sine', vol: 0.5, slideTo: 40 });
+        this.burst(0.1, { vol: 0.3, freq: 2000 });
       }
 
-      playLevelUp() {
-        if (!this.enabled || !this.ctx) return;
-        this.init();
-        const notes = [440, 554.37, 659.25, 880, 1108.73];
-        notes.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          const now = this.ctx.currentTime + idx * 0.055;
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now);
-          gain.gain.setValueAtTime(0.32, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.22);
-        });
+      golden() {
+        if (!this.ready()) return;
+        [880, 1108.73, 1318.51, 1760].forEach((f, i) => this.tone(f, 0.25, { type: 'triangle', vol: 0.2, at: i * 0.04 }));
+        this.burst(0.15, { vol: 0.35, freq: 2500 });
       }
 
-      playMiss() {
-        if (!this.enabled || !this.ctx) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(350, now);
-        osc.frequency.exponentialRampToValueAtTime(180, now + 0.08);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.08);
+      levelUp() {
+        if (!this.ready()) return;
+        [440, 554.37, 659.25, 880, 1108.73].forEach((f, i) => this.tone(f, 0.22, { type: 'triangle', vol: 0.28, at: i * 0.055 }));
       }
 
-      playSuccess() {
-        if (!this.enabled || !this.ctx) return;
-        this.init();
-        const notes = [440, 554.37, 659.25, 880];
-        notes.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          const now = this.ctx.currentTime + idx * 0.09;
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now);
-          gain.gain.setValueAtTime(0.25, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.25);
-        });
+      hazard() {
+        if (!this.ready()) return;
+        this.tone(220, 0.3, { type: 'sawtooth', vol: 0.22, slideTo: 90 });
+        this.tone(233, 0.3, { type: 'sawtooth', vol: 0.18, slideTo: 95, at: 0.02 });
+      }
+
+      freeze() {
+        if (!this.ready()) return;
+        this.burst(0.6, { vol: 0.25, freq: 6000, sweepTo: 900 });
+        this.tone(1200, 0.5, { type: 'sine', vol: 0.12, slideTo: 2400 });
+      }
+
+      rage() {
+        if (!this.ready()) return;
+        this.tone(110, 0.6, { type: 'sawtooth', vol: 0.2, slideTo: 440 });
+        this.boom();
+      }
+
+      miss() {
+        if (!this.ready()) return;
+        this.burst(0.07, { vol: 0.12, type: 'bandpass', freq: 900, q: 1.5 });
+      }
+
+      comboLost() {
+        if (!this.ready()) return;
+        this.tone(330, 0.22, { type: 'triangle', vol: 0.12, slideTo: 140 });
+      }
+
+      tick(sec) {
+        if (!this.ready()) return;
+        this.tone(sec <= 3 ? 1200 : 900, 0.06, { type: 'square', vol: 0.06 });
+      }
+
+      count(final) {
+        if (!this.ready()) return;
+        this.tone(final ? 880 : 520, final ? 0.3 : 0.12, { type: 'triangle', vol: 0.25 });
+      }
+
+      mission() {
+        if (!this.ready()) return;
+        [659.25, 987.77].forEach((f, i) => this.tone(f, 0.2, { type: 'sine', vol: 0.2, at: i * 0.08 }));
+      }
+
+      success() {
+        if (!this.ready()) return;
+        [440, 554.37, 659.25, 880].forEach((f, i) => this.tone(f, 0.25, { type: 'sine', vol: 0.22, at: i * 0.09 }));
       }
     }
 
     const sfx = new ProceduralAudio();
 
-    // Sound toggle
-    const btnSound = document.getElementById('btnSoundToggle');
-    btnSound.addEventListener('click', () => {
-      sfx.enabled = !sfx.enabled;
-      btnSound.innerText = sfx.enabled ? "🔊 Sound ON" : "🔇 Sound MUTED";
-    });
-
-    // Stress Vibe Packs
+    // ---------- Content ----------
     const VIBES = [
       { id: "work", name: "Work & Boss", icon: "💼", color: "#f97316", items: ["Laptop", "Unread Email", "Printer Jam", "Alarm Clock", "Meeting Invite", "Cold Coffee", "Broken Stapler", "Overdue Report"] },
       { id: "ex", name: "Ex & Heartbreak", icon: "💔", color: "#ec4899", items: ["Love Letter", "Old Teddy", "Regretful Text", "Photo Frame", "Perfume", "Anniversary Gift", "Mixtape"] },
@@ -1117,7 +1618,7 @@
       "Laptop": "💻", "Unread Email": "📨", "Printer Jam": "🖨️", "Alarm Clock": "⏰", "Meeting Invite": "📅", "Cold Coffee": "☕", "Broken Stapler": "📎", "Overdue Report": "📊",
       "Love Letter": "💌", "Old Teddy": "🧸", "Regretful Text": "📱", "Photo Frame": "🖼️", "Perfume": "🍾", "Anniversary Gift": "🎁", "Mixtape": "📼",
       "Rent Bill": "🧾", "Empty Wallet": "👛", "Tax Notice": "📑", "Broken ATM": "🏧", "Calculator": "🧮", "Credit Card Debt": "💳", "Electricity Bill": "⚡",
-      "Group Chat": "💬", "Fake Friend": "🎭", "Spilled Tea": "☕", "Secret Tape": "📼", "Left On Read": "👁️", "Mic Drop": "🎤", "Passive Note": "📝",
+      "Group Chat": "💬", "Fake Friend": "🎭", "Spilled Tea": "🍵", "Secret Tape": "📼", "Left On Read": "👁️", "Mic Drop": "🎤", "Passive Note": "📝",
       "Final Exam": "📝", "Heavy Textbook": "📚", "F-Grade Sheet": "📄", "Energy Drink": "🥫", "Pop Quiz": "❓", "Overdue Thesis": "📁",
       "3 AM Thoughts": "💭", "Regret Mirror": "🪞", "Anxiety Bubble": "🫧", "Loud Noise": "📢", "What-If Cloud": "☁️", "Dying Battery": "🪫"
     };
@@ -1131,92 +1632,175 @@
       "3 AM Thoughts": 4000, "Regret Mirror": 150, "Anxiety Bubble": 2200, "Loud Noise": 300, "What-If Cloud": 1800, "Dying Battery": 90
     };
 
-    // FUN CHARACTER ARCHETYPES ("Charters")
-    const CHARACTER_CHARTERS = [
-      {
-        id: "hyper_speed",
-        name: "The Hyper-Velocity Demolisher",
-        avatar: "⚡",
-        vibeMatch: "speed",
-        quote: "Achieved supersonic destruction reflexes. Smashed targets before they could even blink.",
-        criteria: (s) => s.maxWave >= 4
-      },
-      {
-        id: "streak_sniper",
-        name: "The Laser-Focused Nemesis Slayer",
-        avatar: "🎯",
-        vibeMatch: "streak",
-        quote: "Ignored the entire chaos of the room to obliterate one single nemesis over and over.",
-        criteria: (s) => s.maxSameItemStreak >= 3
-      },
-      {
-        id: "corporate",
-        name: "The Corporate Demolitionist",
-        avatar: "👔",
-        vibeMatch: "work",
-        quote: "Turned 'per my last email' and 14 Zoom invites into absolute dust.",
-        criteria: (s) => s.vibeCounts["work"] >= 6
-      },
-      {
-        id: "debt",
-        name: "The Debt Decimator",
-        avatar: "💸",
-        vibeMatch: "bills",
-        quote: "You can't pay overdue invoices if the paper has been vaporized by a bat.",
-        criteria: (s) => s.vibeCounts["bills"] >= 6
-      },
-      {
-        id: "heartbreak",
-        name: "The Heartbreak Titan",
-        avatar: "💔",
-        vibeMatch: "ex",
-        quote: "Closure is completely overrated. Crushing photo frames is clinically proven.",
-        criteria: (s) => s.vibeCounts["ex"] >= 6
-      },
-      {
-        id: "semester",
-        name: "The Semester Slayer",
-        avatar: "🎓",
-        vibeMatch: "study",
-        quote: "Passed the exam of pure destruction with a 4.0 GPA in sledgehammer mechanics.",
-        criteria: (s) => s.vibeCounts["study"] >= 6
-      },
-      {
-        id: "zen",
-        name: "The Zen Berserker",
-        avatar: "🧘",
-        vibeMatch: "overthinking",
-        quote: "Silence internal existential dread by hitting 3 AM thoughts with a 20lb hammer.",
-        criteria: (s) => s.vibeCounts["overthinking"] >= 6
-      },
-      {
-        id: "vendetta",
-        name: "The Vendetta Specialist",
-        avatar: "⭐",
-        vibeMatch: "custom",
-        quote: "You came in with a deeply specific grudge, and you executed it flawlessly.",
-        criteria: (s) => s.customCount >= 4
-      },
-      {
-        id: "sonic",
-        name: "The Sonic Annihilator",
-        avatar: "⚡",
-        vibeMatch: "speed",
-        quote: "Mach-speed finger fury. Targets barely spawned before being dismantled.",
-        criteria: (s) => s.maxCombo >= 8
-      },
-      {
-        id: "chaos",
-        name: "The Chaos Sovereign",
-        avatar: "💥",
-        vibeMatch: "all",
-        quote: "Equal-opportunity destroyer. Everything in this room met catastrophic end.",
-        criteria: () => true
-      }
+    // Things you must NOT smash
+    const HAZARDS = [
+      { label: "The Cat", emoji: "🐈", oops: "😿 NOT THE CAT!" },
+      { label: "Grandma's Vase", emoji: "🏺", oops: "👵 GRANDMA'S VASE!" },
+      { label: "Good Doggo", emoji: "🐶", oops: "🐶 HE WAS A GOOD BOY!" },
+      { label: "Your Phone", emoji: "📲", oops: "📲 THAT WAS YOUR PHONE!" }
     ];
 
-    // Career Ledger Tracker
-    const STORAGE_KEY = "smash_room_ledger_v2";
+    const PUNCH_WORDS = ["💥 BOOM!", "⚡ CRUNCH!", "🔥 SHREDDED!", "💣 VAPORIZED!", "🔨 SMASHED!", "✨ PULVERIZED!", "🧨 OBLITERATED!", "🌪️ WRECKED!"];
+
+    const comboMult = (combo) => Math.min(10, 1 + Math.floor(combo / 5));
+    const COMBO_MILESTONES = { 5: "NICE!", 10: "ON FIRE!", 15: "SAVAGE!", 20: "UNSTOPPABLE!", 30: "GODLIKE!", 40: "BEYOND RAGE!", 50: "TRANSCENDENT!" };
+
+    const WEAPONS = {
+      hammer: { name: "Sledge", emoji: "🔨", unlock: 1, dmg: 2, splash: 62, comboGain: 1, comboWindow: 1.6, desc: "Heavy splash: one blow smashes everything clustered nearby." },
+      bat: { name: "Bat", emoji: "🏏", unlock: 2, dmg: 1, swipe: true, comboGain: 1, comboWindow: 1.6, desc: "Drag to swing: slash through everything in your path." },
+      crowbar: { name: "Crowbar", emoji: "🪓", unlock: 4, dmg: 3, crit: 0.25, comboGain: 1, comboWindow: 1.6, desc: "Cracks armor in one hit. 25% chance to CRIT for 2x points." },
+      knuckles: { name: "Knuckles", emoji: "🥊", unlock: 6, dmg: 1, comboGain: 2, comboWindow: 2.6, desc: "Combo builds 2x faster and stays alive way longer." }
+    };
+
+    const RANKS = ["Stressed Intern", "Desk Thumper", "Plate Breaker", "Drywall Puncher", "Rage Apprentice", "Certified Smasher", "Demolition Expert", "Chaos Engineer", "Wrecking Ball", "Rage Room Legend", "Zen Destroyer"];
+
+    // SPEED ADVANCEMENT TIERS (spawnInterval is in 60fps frames)
+    const BASE_TIERS = [
+      { wave: 1, name: "Warm-Up", speed: 1.0, minSmashed: 0, bonusMultiplier: 1.0, spawnInterval: 32, maxTargets: 7 },
+      { wave: 2, name: "Fast Fury", speed: 1.25, minSmashed: 8, bonusMultiplier: 1.2, spawnInterval: 26, maxTargets: 8 },
+      { wave: 3, name: "Overdrive", speed: 1.5, minSmashed: 18, bonusMultiplier: 1.45, spawnInterval: 21, maxTargets: 9 },
+      { wave: 4, name: "Hyper Rage", speed: 1.85, minSmashed: 30, bonusMultiplier: 1.75, spawnInterval: 17, maxTargets: 10 },
+      { wave: 5, name: "Godspeed", speed: 2.25, minSmashed: 45, bonusMultiplier: 2.1, spawnInterval: 13, maxTargets: 12 }
+    ];
+    const BEYOND_NAMES = ["Ludicrous", "Plaid", "Singularity", "Big Bang", "Infinity"];
+
+    function getTier(i) {
+      if (i < BASE_TIERS.length) return BASE_TIERS[i];
+      const n = i - BASE_TIERS.length + 1;
+      return {
+        wave: i + 1,
+        name: BEYOND_NAMES[Math.min(n - 1, BEYOND_NAMES.length - 1)] + (n > BEYOND_NAMES.length ? ` ${n}` : ''),
+        speed: Math.round(Math.min(3.2, 2.25 + 0.18 * n) * 100) / 100,
+        // Escalating thresholds so bonus time can't make Rage Waves infinite
+        minSmashed: 45 + n * 28 + n * n * 5,
+        bonusMultiplier: Math.round((2.1 + 0.35 * n) * 100) / 100,
+        spawnInterval: Math.max(9, 13 - n),
+        maxTargets: Math.min(15, 12 + n)
+      };
+    }
+
+    // FUN CHARACTER ARCHETYPES ("Charters")
+    const CHARACTER_CHARTERS = [
+      { id: "hyper_speed", name: "The Hyper-Velocity Demolisher", avatar: "⚡", quote: "Achieved supersonic destruction reflexes. Smashed targets before they could even blink.", criteria: (s) => s.maxWave >= 5 },
+      { id: "bomber", name: "The Chain Reaction Artist", avatar: "💣", quote: "Why smash one thing when you can detonate the whole room at once?", criteria: (s) => s.maxBombChain >= 5 },
+      { id: "streak_sniper", name: "The Laser-Focused Nemesis Slayer", avatar: "🎯", quote: "Ignored the entire chaos of the room to obliterate one single nemesis over and over.", criteria: (s) => s.maxSameItemStreak >= 3 },
+      { id: "sonic", name: "The Sonic Annihilator", avatar: "🌪️", quote: "Mach-speed finger fury. Targets barely spawned before being dismantled.", criteria: (s) => s.maxCombo >= 15 },
+      { id: "vendetta", name: "The Vendetta Specialist", avatar: "⭐", quote: "You came in with a deeply specific grudge, and you executed it flawlessly.", criteria: (s) => s.customCount >= 4 },
+      { id: "corporate", name: "The Corporate Demolitionist", avatar: "👔", quote: "Turned 'per my last email' and 14 Zoom invites into absolute dust.", criteria: (s) => s.vibeCounts.work >= 6 },
+      { id: "debt", name: "The Debt Decimator", avatar: "💸", quote: "You can't pay overdue invoices if the paper has been vaporized by a bat.", criteria: (s) => s.vibeCounts.bills >= 6 },
+      { id: "heartbreak", name: "The Heartbreak Titan", avatar: "💔", quote: "Closure is completely overrated. Crushing photo frames is clinically proven.", criteria: (s) => s.vibeCounts.ex >= 6 },
+      { id: "drama", name: "The Group Chat Guillotine", avatar: "🍿", quote: "Left the drama on read. Permanently. With a sledgehammer.", criteria: (s) => s.vibeCounts.drama >= 6 },
+      { id: "semester", name: "The Semester Slayer", avatar: "🎓", quote: "Passed the exam of pure destruction with a 4.0 GPA in sledgehammer mechanics.", criteria: (s) => s.vibeCounts.study >= 6 },
+      { id: "zen", name: "The Zen Berserker", avatar: "🧘", quote: "Silenced internal existential dread by hitting 3 AM thoughts with a 20lb hammer.", criteria: (s) => s.vibeCounts.overthinking >= 6 },
+      { id: "clumsy", name: "The Clumsy Wrecking Ball", avatar: "🙈", quote: "Enthusiasm: 10/10. Aim: the cat would like a word.", criteria: (s) => s.hazardsHit >= 3 },
+      { id: "chaos", name: "The Chaos Sovereign", avatar: "💥", quote: "Equal-opportunity destroyer. Everything in this room met a catastrophic end.", criteria: () => true }
+    ];
+
+    // Daily missions; `best` = single-round best, otherwise cumulative over the day
+    const MISSION_POOL = [
+      { id: "smash80", text: "Smash 80 items", goal: 80, stat: "smashed", xp: 150 },
+      { id: "smash150", text: "Smash 150 items", goal: 150, stat: "smashed", xp: 250 },
+      { id: "combo15", text: "Hit a 15-hit combo", goal: 15, stat: "maxCombo", xp: 150, best: true },
+      { id: "combo25", text: "Hit a 25-hit combo", goal: 25, stat: "maxCombo", xp: 250, best: true },
+      { id: "wave4", text: "Reach Wave 4 in one round", goal: 4, stat: "maxWave", xp: 150, best: true },
+      { id: "rage2", text: "Trigger Rage Mode 2 times", goal: 2, stat: "rages", xp: 150 },
+      { id: "bomb2", text: "Detonate 2 Chain Bombs", goal: 2, stat: "bombs", xp: 150 },
+      { id: "armor8", text: "Destroy 8 armored items", goal: 8, stat: "armored", xp: 150 },
+      { id: "golden3", text: "Smash 3 golden targets", goal: 3, stat: "golden", xp: 200 },
+      { id: "score250k", text: "Score 250,000 in one round", goal: 250000, stat: "score", xp: 200, best: true },
+      { id: "streak3", text: "Get a 3x same-item streak", goal: 3, stat: "maxSameItemStreak", xp: 150, best: true },
+      { id: "multi3", text: "Smash 3 items in one blow", goal: 3, stat: "maxMulti", xp: 150, best: true },
+      { id: "clean", text: "Finish a round (25+ smashes) hitting no hazards", goal: 1, stat: "cleanRound", xp: 200, best: true, endOnly: true },
+      { id: "rounds3", text: "Play 3 rounds", goal: 3, stat: "rounds", xp: 120, endOnly: true }
+    ];
+    const DAILY_SWEEP_XP = 300;
+
+    // `live` achievements can pop mid-round; the rest are checked at round end
+    const ACHIEVEMENTS = [
+      { id: "first", icon: "🔨", name: "First Blood", desc: "Smash your first item", live: true, test: (r) => r.totalSmashed >= 1 },
+      { id: "combo10", icon: "⚡", name: "Combo Breaker", desc: "Reach a 10-hit combo", live: true, test: (r) => r.maxCombo >= 10 },
+      { id: "combo30", icon: "🌪️", name: "Unstoppable", desc: "Reach a 30-hit combo", live: true, test: (r) => r.maxCombo >= 30 },
+      { id: "wave5", icon: "🚀", name: "Godspeed", desc: "Reach Wave 5", live: true, test: (r) => r.maxWave >= 5 },
+      { id: "wave8", icon: "☄️", name: "Singularity", desc: "Reach Wave 8", live: true, test: (r) => r.maxWave >= 8 },
+      { id: "rage", icon: "😡", name: "Seeing Red", desc: "Trigger Rage Mode", live: true, test: (r) => r.rages >= 1 },
+      { id: "chain", icon: "💣", name: "Chain Reaction", desc: "Destroy 5+ items with one bomb", live: true, test: (r) => r.maxBombChain >= 5 },
+      { id: "strike", icon: "🎳", name: "Strike!", desc: "Smash 3 items with one blow", live: true, test: (r) => r.maxMulti >= 3 },
+      { id: "vendetta", icon: "🎯", name: "Personal Vendetta", desc: "5x same-item streak", live: true, test: (r) => r.maxSameItemStreak >= 5 },
+      { id: "score100k", icon: "💯", name: "Six Figures", desc: "Score 100,000 in one round", live: true, test: (r) => r.score >= 100000 },
+      { id: "score1m", icon: "🤑", name: "Millionaire", desc: "Score 1,000,000 in one round", live: true, test: (r) => r.score >= 1000000 },
+      { id: "angel", icon: "😇", name: "Animal Lover", desc: "40+ smashes, zero hazards hit", test: (r) => r.totalSmashed >= 40 && r.hazardsHit === 0 },
+      { id: "k1", icon: "🏭", name: "Industrial Scale", desc: "Smash 1,000 items lifetime", test: (r, d) => d.careerTotalSmashed >= 1000 },
+      { id: "million", icon: "🏦", name: "Insurance Nightmare", desc: "$1M lifetime damage", test: (r, d) => d.careerDamages >= 1000000 },
+      { id: "toolkit", icon: "🧰", name: "Full Toolkit", desc: "Unlock every weapon", test: (r, d, lvl) => lvl.level >= 6 },
+      { id: "regular", icon: "📆", name: "Regular Client", desc: "Play 3 days in a row", test: (r, d) => d.dayStreak.count >= 3 }
+    ];
+
+    // ---------- Progression math ----------
+    const xpNeed = (level) => Math.round(250 + 150 * Math.pow(level - 1, 1.3));
+
+    function levelInfo(xp) {
+      let level = 1;
+      let rem = Math.max(0, xp || 0);
+      while (rem >= xpNeed(level)) {
+        rem -= xpNeed(level);
+        level++;
+      }
+      const title = level <= RANKS.length ? RANKS[level - 1] : `${RANKS[RANKS.length - 1]} ${level - RANKS.length + 1}`;
+      return { level, into: rem, need: xpNeed(level), title };
+    }
+
+    function seededRandom(seedStr) {
+      let h = 2166136261;
+      for (let i = 0; i < seedStr.length; i++) {
+        h ^= seedStr.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return () => {
+        h += 0x6D2B79F5;
+        let t = h;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function todaysMissions() {
+      const r = seededRandom(`smash-${dateKey()}`);
+      const pool = [...MISSION_POOL];
+      const out = [];
+      while (out.length < 3) out.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
+      return out;
+    }
+
+    function missionValue(m, daily, round) {
+      const stored = daily.progress[m.id] || 0;
+      const cur = round ? (round[m.stat] || 0) : 0;
+      return m.best ? Math.max(stored, cur) : stored + cur;
+    }
+
+    // ---------- Career Ledger ----------
+    const STORAGE_KEY = "smash_room_ledger_v3";
+    const LEGACY_KEY = "smash_room_ledger_v2";
+
+    function defaultLedger() {
+      return {
+        version: 3,
+        careerTotalSmashed: 0,
+        careerTotalScore: 0,
+        careerDamages: 0,
+        careerRounds: 0,
+        highestCombo: 0,
+        maxWaveReached: 1,
+        bestItemStreak: { count: 0, item: "None", emoji: "" },
+        itemStats: {},
+        xp: 0,
+        bestScores: { waves: 0, blitz: 0, turbo: 0, zen: 0 },
+        achievements: {},
+        daily: { date: "", progress: {}, done: {}, sweep: false },
+        dayStreak: { last: "", count: 0 },
+        settings: { sound: true, vibe: "work", mode: "waves", weapon: "hammer", custom: "" }
+      };
+    }
 
     class SmashLedger {
       constructor() {
@@ -1224,214 +1808,308 @@
       }
 
       load() {
+        const base = defaultLedger();
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) return JSON.parse(raw);
-        } catch(e) {
-          console.error(e);
+          const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') return this.merge(base, parsed);
+          }
+        } catch (e) {
+          console.warn('Smash ledger unreadable, starting fresh', e);
         }
-        return {
-          careerTotalSmashed: 0,
-          careerTotalScore: 0,
-          careerDamages: 0,
-          careerRounds: 0,
-          highestCombo: 0,
-          maxWaveReached: 1,
-          bestItemStreak: { count: 0, item: "None", emoji: "" },
-          itemStats: {}
-        };
+        return base;
+      }
+
+      // Tolerates older (v2) or partially corrupted saves
+      merge(base, p) {
+        const out = { ...base, ...p };
+        for (const k of ['bestItemStreak', 'bestScores', 'daily', 'dayStreak', 'settings']) {
+          out[k] = { ...base[k], ...(p[k] && typeof p[k] === 'object' ? p[k] : {}) };
+        }
+        for (const k of ['itemStats', 'achievements']) {
+          if (!out[k] || typeof out[k] !== 'object') out[k] = {};
+        }
+        if (!out.daily.progress || typeof out.daily.progress !== 'object') out.daily.progress = {};
+        if (!out.daily.done || typeof out.daily.done !== 'object') out.daily.done = {};
+        for (const k of ['careerTotalSmashed', 'careerTotalScore', 'careerDamages', 'careerRounds', 'highestCombo', 'maxWaveReached', 'xp']) {
+          if (!Number.isFinite(out[k])) out[k] = base[k];
+        }
+        out.version = 3;
+        return out;
       }
 
       save() {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-        } catch(e) {
-          console.error(e);
+        } catch (e) {
+          console.warn(e);
         }
       }
 
-      recordRound(roundData) {
-        this.data.careerRounds += 1;
-        this.data.careerTotalSmashed += roundData.totalSmashed;
-        this.data.careerTotalScore += roundData.score;
-        this.data.careerDamages += roundData.propertyDamage;
-        if (roundData.maxCombo > this.data.highestCombo) {
-          this.data.highestCombo = roundData.maxCombo;
+      daily() {
+        const today = dateKey();
+        if (this.data.daily.date !== today) {
+          this.data.daily = { date: today, progress: {}, done: {}, sweep: false };
         }
-
-        if (roundData.maxWave > (this.data.maxWaveReached || 1)) {
-          this.data.maxWaveReached = roundData.maxWave;
-        }
-
-        if (!this.data.bestItemStreak) {
-          this.data.bestItemStreak = { count: 0, item: "None", emoji: "" };
-        }
-        if (roundData.maxSameItemStreak > (this.data.bestItemStreak.count || 0)) {
-          this.data.bestItemStreak = {
-            count: roundData.maxSameItemStreak,
-            item: roundData.maxSameItemName,
-            emoji: roundData.maxSameItemEmoji
-          };
-        }
-
-        for (const [name, info] of Object.entries(roundData.itemCounts)) {
-          if (!this.data.itemStats[name]) {
-            this.data.itemStats[name] = { count: 0, emoji: info.emoji, vibe: info.vibe };
-          }
-          this.data.itemStats[name].count += info.count;
-        }
-
-        this.save();
+        return this.data.daily;
       }
 
       reset() {
-        this.data = {
-          careerTotalSmashed: 0,
-          careerTotalScore: 0,
-          careerDamages: 0,
-          careerRounds: 0,
-          highestCombo: 0,
-          maxWaveReached: 1,
-          bestItemStreak: { count: 0, item: "None", emoji: "" },
-          itemStats: {}
-        };
+        const settings = this.data.settings;
+        this.data = defaultLedger();
+        this.data.settings = settings;
         this.save();
       }
     }
 
     const ledger = new SmashLedger();
+    sfx.enabled = ledger.data.settings.sound !== false;
 
-    function updateLobbyCareerCount() {
-      const el = document.getElementById('lobbyCareerCount');
-      if (el) {
-        el.innerText = `Career: ${ledger.data.careerTotalSmashed.toLocaleString()} Smashed`;
-      }
+    // ---------- Toasts (queued so they never overwrite each other) ----------
+    const toastQueue = [];
+    let toastBusy = false;
+
+    function showToast(msg, color) {
+      toastQueue.push({ msg, color });
+      if (!toastBusy) nextToast();
     }
-    updateLobbyCareerCount();
 
-    let selectedVibe = VIBES[0];
-    let selectedMode = "waves";
-    let selectedWeapon = "hammer";
+    function nextToast() {
+      const t = toastQueue.shift();
+      const el = $('toastMessage');
+      if (!t) {
+        toastBusy = false;
+        return;
+      }
+      toastBusy = true;
+      el.textContent = t.msg;
+      el.style.background = t.color || '#10b981';
+      el.classList.add('show');
+      setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(nextToast, 260);
+      }, 1900);
+    }
 
-    // Populate Vibes
-    const vibeContainer = document.getElementById('vibeContainer');
-    VIBES.forEach((v, idx) => {
+    // ---------- Lobby ----------
+    let selectedVibe = VIBES.find((v) => v.id === ledger.data.settings.vibe) || VIBES[0];
+    let selectedMode = ['waves', 'blitz', 'turbo', 'zen'].includes(ledger.data.settings.mode) ? ledger.data.settings.mode : 'waves';
+    let selectedWeapon = WEAPONS[ledger.data.settings.weapon] ? ledger.data.settings.weapon : 'hammer';
+    $('customTargetInput').value = ledger.data.settings.custom || '';
+
+    function saveSettings() {
+      Object.assign(ledger.data.settings, {
+        sound: sfx.enabled,
+        vibe: selectedVibe.id,
+        mode: selectedMode,
+        weapon: selectedWeapon,
+        custom: $('customTargetInput').value.slice(0, 120)
+      });
+      ledger.save();
+    }
+
+    const btnSound = $('btnSoundToggle');
+    function renderSoundBtn() {
+      btnSound.textContent = sfx.enabled ? "🔊 Sound ON" : "🔇 Muted";
+    }
+    renderSoundBtn();
+    btnSound.addEventListener('click', () => {
+      sfx.enabled = !sfx.enabled;
+      if (sfx.enabled) sfx.init();
+      renderSoundBtn();
+      saveSettings();
+    });
+
+    const vibeContainer = $('vibeContainer');
+    VIBES.forEach((v) => {
       const card = document.createElement('div');
-      card.className = `vibe-card ${idx === 0 ? 'active' : ''}`;
+      card.className = `vibe-card ${v === selectedVibe ? 'active' : ''}`;
+      card.dataset.vibe = v.id;
       card.innerHTML = `
         <div class="vibe-icon">${v.icon}</div>
         <div class="vibe-title">${v.name}</div>
         <div class="vibe-desc">${v.items.length} targets</div>
       `;
       card.addEventListener('click', () => {
-        document.querySelectorAll('.vibe-card').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.vibe-card').forEach((c) => c.classList.remove('active'));
         card.classList.add('active');
         selectedVibe = v;
+        saveSettings();
       });
       vibeContainer.appendChild(card);
     });
 
-    // Mode Selector
-    document.querySelectorAll('.mode-card').forEach(card => {
+    document.querySelectorAll('.mode-card').forEach((card) => {
+      card.classList.toggle('active', card.dataset.mode === selectedMode);
       card.addEventListener('click', () => {
-        document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.mode-card').forEach((c) => c.classList.remove('active'));
         card.classList.add('active');
         selectedMode = card.dataset.mode;
+        saveSettings();
       });
     });
 
-    // Weapon selector
-    document.querySelectorAll('.weapon-card').forEach(card => {
-      card.addEventListener('click', () => {
-        document.querySelectorAll('.weapon-card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        selectedWeapon = card.dataset.weapon;
-      });
-    });
-
-    // Screens
-    const configScreen = document.getElementById('configScreen');
-    const arenaScreen = document.getElementById('arenaScreen');
-    const resultScreen = document.getElementById('resultScreen');
-
-    const showScreen = (s) => {
-      configScreen.style.display = 'none';
-      arenaScreen.style.display = 'none';
-      resultScreen.style.display = 'none';
-      s.style.display = 'flex';
-      s.style.flexDirection = 'column';
-    };
-
-    document.getElementById('btnStartSmash').addEventListener('click', () => {
-      sfx.init();
-      startSmashArena();
-    });
-
-    document.getElementById('btnPlayAgain').addEventListener('click', () => {
-      startSmashArena();
-    });
-
-    document.getElementById('btnBackLobby').addEventListener('click', () => {
-      updateLobbyCareerCount();
-      showScreen(configScreen);
-    });
-
-    // Dossier Modal
-    const dossierModal = document.getElementById('dossierModal');
-    document.getElementById('btnOpenDossier').onclick = () => {
-      renderCareerDossier();
-      dossierModal.style.display = 'flex';
-    };
-
-    document.getElementById('btnCloseDossier').onclick = () => {
-      dossierModal.style.display = 'none';
-    };
-
-    dossierModal.onclick = (e) => {
-      if (e.target === dossierModal) dossierModal.style.display = 'none';
-    };
-
-    document.getElementById('btnClearHistory').onclick = () => {
-      if (confirm("Reset all smashed item history and demolition records?")) {
-        ledger.reset();
-        renderCareerDossier();
-        updateLobbyCareerCount();
-        showToast("Records reset 🗑️");
+    function renderWeapons() {
+      const lvl = levelInfo(ledger.data.xp).level;
+      if (WEAPONS[selectedWeapon].unlock > lvl) selectedWeapon = 'hammer';
+      const box = $('weaponContainer');
+      box.innerHTML = '';
+      for (const [id, w] of Object.entries(WEAPONS)) {
+        const locked = w.unlock > lvl;
+        const card = document.createElement('div');
+        card.className = `weapon-card${id === selectedWeapon ? ' active' : ''}${locked ? ' locked' : ''}`;
+        card.dataset.weapon = id;
+        card.innerHTML = `
+          <div class="weapon-emoji">${w.emoji}</div>
+          <div class="weapon-name">${w.name}</div>
+          ${locked ? `<div class="weapon-lock">🔒 Lvl ${w.unlock}</div>` : ''}
+        `;
+        card.addEventListener('click', () => {
+          if (locked) {
+            showToast(`🔒 ${w.name} unlocks at Level ${w.unlock}`, '#7c3aed');
+            return;
+          }
+          selectedWeapon = id;
+          saveSettings();
+          renderWeapons();
+        });
+        box.appendChild(card);
       }
-    };
-
-    function showToast(msg) {
-      const toast = document.getElementById('toastMessage');
-      toast.innerText = msg;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2200);
+      const w = WEAPONS[selectedWeapon];
+      $('weaponDesc').textContent = `${w.emoji} ${w.name}: ${w.desc}`;
     }
 
-    function renderCareerDossier() {
-      document.getElementById('careerTotalSmashed').innerText = ledger.data.careerTotalSmashed.toLocaleString();
-      document.getElementById('careerTotalScore').innerText = ledger.data.careerTotalScore.toLocaleString();
-      document.getElementById('careerDamages').innerText = `$${ledger.data.careerDamages.toLocaleString()}`;
-      
-      const maxWave = ledger.data.maxWaveReached || 1;
-      document.getElementById('careerMaxWave').innerText = `Wave ${maxWave}`;
-
-      const bestStreakEl = document.getElementById('careerBestStreak');
-      const bStreak = ledger.data.bestItemStreak;
-      if (bStreak && bStreak.count >= 2) {
-        bestStreakEl.innerText = `${bStreak.count}x ${bStreak.emoji} ${bStreak.item}`;
-      } else {
-        bestStreakEl.innerText = "None yet";
+    function renderMissions() {
+      const daily = ledger.daily();
+      const list = $('missionList');
+      list.innerHTML = '';
+      for (const m of todaysMissions()) {
+        const done = !!daily.done[m.id];
+        const val = Math.min(m.goal, daily.progress[m.id] || 0);
+        const row = document.createElement('div');
+        row.className = `mission-row${done ? ' done' : ''}`;
+        row.innerHTML = `
+          <div class="mission-check">${done ? '✓' : ''}</div>
+          <div class="mission-body">
+            <div class="mission-text">${esc(m.text)}</div>
+            ${!done && m.goal > 1 ? `<div class="mission-bar"><div style="width:${Math.round((val / m.goal) * 100)}%"></div></div>` : ''}
+          </div>
+          <div class="mission-xp">${done ? 'DONE' : `+${m.xp} XP`}</div>
+        `;
+        list.appendChild(row);
       }
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const hrs = Math.max(0, Math.floor((midnight - Date.now()) / 3600000));
+      const mins = Math.max(0, Math.floor(((midnight - Date.now()) % 3600000) / 60000));
+      $('missionsResetIn').textContent = daily.sweep ? `All done! +${DAILY_SWEEP_XP} XP claimed` : `All 3 = +${DAILY_SWEEP_XP} XP · ${hrs}h ${mins}m left`;
+    }
 
-      const list = document.getElementById('careerBreakdownList');
+    function renderLobby() {
+      const d = ledger.data;
+      const lvl = levelInfo(d.xp);
+      $('lobbyCareerCount').textContent = `Career: ${fmt(d.careerTotalSmashed)} Smashed`;
+      $('lobbyLevel').textContent = lvl.level;
+      $('lobbyRank').textContent = lvl.title;
+      $('lobbyLevelRing').style.setProperty('--pct', `${Math.round((lvl.into / lvl.need) * 100)}%`);
+      $('lobbyXpFill').style.width = `${(lvl.into / lvl.need) * 100}%`;
+      $('lobbyXpText').textContent = `${fmt(lvl.into)} / ${fmt(lvl.need)} XP`;
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const alive = d.dayStreak.last === dateKey() || d.dayStreak.last === dateKey(yesterday);
+      const streak = alive ? d.dayStreak.count : 0;
+      $('lobbyDayStreak').textContent = streak > 0 ? `🔥 ${streak}-day streak` : '🔥 Start a streak today';
+      document.querySelectorAll('.mode-best').forEach((el) => {
+        const best = d.bestScores[el.dataset.best] || 0;
+        el.textContent = best > 0 ? `🏆 Best: ${fmt(best)}` : '';
+      });
+      renderWeapons();
+      renderMissions();
+    }
+
+    // ---------- Screens ----------
+    const configScreen = $('configScreen');
+    const arenaScreen = $('arenaScreen');
+    const resultScreen = $('resultScreen');
+
+    function showScreen(s) {
+      [configScreen, arenaScreen, resultScreen].forEach((el) => { el.style.display = 'none'; });
+      s.style.display = 'flex';
+      s.style.flexDirection = 'column';
+      window.scrollTo({ top: 0 });
+    }
+
+    $('btnStartSmash').addEventListener('click', () => startSmashArena());
+    $('btnPlayAgain').addEventListener('click', () => startSmashArena());
+    $('btnBackLobby').addEventListener('click', () => {
+      renderLobby();
+      showScreen(configScreen);
+    });
+    $('customTargetInput').addEventListener('change', saveSettings);
+    $('customTargetInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        startSmashArena();
+      }
+    });
+
+    // ---------- Dossier Modal ----------
+    const dossierModal = $('dossierModal');
+    $('btnOpenDossier').addEventListener('click', () => {
+      renderCareerDossier();
+      dossierModal.style.display = 'flex';
+      if (G && G.phase !== 'over') setPaused(true);
+    });
+    $('btnCloseDossier').addEventListener('click', () => { dossierModal.style.display = 'none'; });
+    dossierModal.addEventListener('click', (e) => {
+      if (e.target === dossierModal) dossierModal.style.display = 'none';
+    });
+    $('btnClearHistory').addEventListener('click', () => {
+      if (confirm("Reset all smashed item history, levels, achievements and records?")) {
+        ledger.reset();
+        renderCareerDossier();
+        renderLobby();
+        showToast("Records reset 🗑️");
+      }
+    });
+
+    function renderCareerDossier() {
+      const d = ledger.data;
+      const lvl = levelInfo(d.xp);
+      $('careerLevel').textContent = `Lvl ${lvl.level} · ${lvl.title}`;
+      $('careerRounds').textContent = fmt(d.careerRounds);
+      $('careerTotalSmashed').textContent = fmt(d.careerTotalSmashed);
+      $('careerTotalScore').textContent = fmt(d.careerTotalScore);
+      $('careerDamages').textContent = `$${fmt(d.careerDamages)}`;
+      $('careerHighestCombo').textContent = `${d.highestCombo || 1} hits`;
+      $('careerMaxWave').textContent = `Wave ${d.maxWaveReached || 1}`;
+
+      const bStreak = d.bestItemStreak;
+      $('careerBestStreak').textContent = bStreak && bStreak.count >= 2 ? `${bStreak.count}x ${bStreak.emoji} ${bStreak.item}` : "None yet";
+
+      const modeNames = { waves: '🌊 Rage Waves', blitz: '⏱️ 30s Blitz', turbo: '🚀 Turbo Rush', zen: '🧘 Endless Zen' };
+      $('dossierBests').innerHTML = Object.entries(modeNames).map(([id, name]) => `
+        <div class="breakdown-info"><span class="breakdown-label">${name}</span><span class="breakdown-count" style="color:#fbbf24;font-weight:800;">${d.bestScores[id] ? fmt(d.bestScores[id]) : '—'}</span></div>
+      `).join('');
+
+      const got = ACHIEVEMENTS.filter((a) => d.achievements[a.id]).length;
+      $('achCount').textContent = `${got} / ${ACHIEVEMENTS.length}`;
+      $('achGrid').innerHTML = ACHIEVEMENTS.map((a) => `
+        <div class="ach${d.achievements[a.id] ? '' : ' locked'}">
+          <div class="ach-ico">${a.icon}</div>
+          <div class="ach-name">${esc(a.name)}</div>
+          <div class="ach-desc">${esc(a.desc)}</div>
+        </div>
+      `).join('');
+
+      const list = $('careerBreakdownList');
       list.innerHTML = "";
-
-      const items = Object.entries(ledger.data.itemStats).sort((a, b) => b[1].count - a[1].count);
+      const items = Object.entries(d.itemStats).sort((a, b) => b[1].count - a[1].count);
       if (items.length === 0) {
         list.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:12px;">No objects smashed yet. Enter the rage room to begin!</div>`;
         return;
       }
-
       const maxCount = items[0][1].count || 1;
       items.slice(0, 8).forEach(([name, info], idx) => {
         const pct = Math.round((info.count / maxCount) * 100);
@@ -1440,11 +2118,11 @@
         row.innerHTML = `
           <div class="breakdown-info">
             <span class="breakdown-label">
-              <span>${info.emoji || '💥'}</span>
-              <span>${name}</span>
+              <span>${esc(info.emoji || '💥')}</span>
+              <span>${esc(name)}</span>
               ${idx === 0 ? '<span class="nemesis-tag">👑 ARCH-NEMESIS</span>' : ''}
             </span>
-            <span class="breakdown-count">${info.count} smashed</span>
+            <span class="breakdown-count">${fmt(info.count)} smashed</span>
           </div>
           <div class="breakdown-bar-bg">
             <div class="breakdown-bar-fill" style="width:${pct}%;"></div>
@@ -1454,665 +2132,1598 @@
       });
     }
 
-    // Helper: Round Rectangle Pill for Canvas
-    function drawRoundedRect(ctx, x, y, width, height, radius) {
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.arcTo(x + width, y, x + width, y + radius, radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-      ctx.lineTo(x + radius, y + height);
-      ctx.arcTo(x, y + height, x, y + height - radius, radius);
-      ctx.lineTo(x, y + radius);
-      ctx.arcTo(x, y, x + radius, y, radius);
-      ctx.closePath();
+    // ---------- Canvas + sprite caching ----------
+    const canvas = $('smashCanvas');
+    const ctx = canvas.getContext('2d');
+    const arenaWrapper = $('arenaWrapper');
+    const floorCanvas = document.createElement('canvas');
+    const fctx = floorCanvas.getContext('2d');
+    let W = 320;
+    let H = 440;
+    let DPR = 1;
+    const spriteCache = new Map();
+    const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+    function resizeCanvas() {
+      const r = arenaWrapper.getBoundingClientRect();
+      if (r.width < 10 || r.height < 10) return;
+      const newDpr = Math.min(2, window.devicePixelRatio || 1);
+      if (newDpr !== DPR) spriteCache.clear();
+      DPR = newDpr;
+      W = r.width;
+      H = r.height;
+      canvas.width = Math.round(W * DPR);
+      canvas.height = Math.round(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      floorCanvas.width = canvas.width;
+      floorCanvas.height = canvas.height;
+      fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     }
 
-    // SPEED ADVANCEMENT TIERS
-    const SPEED_TIERS = [
-      { wave: 1, name: "Warm-Up", speed: 1.0, minSmashed: 0, bonusMultiplier: 1.0, spawnInterval: 32, maxTargets: 7 },
-      { wave: 2, name: "Fast Fury", speed: 1.25, minSmashed: 8, bonusMultiplier: 1.2, spawnInterval: 26, maxTargets: 8 },
-      { wave: 3, name: "Overdrive", speed: 1.5, minSmashed: 18, bonusMultiplier: 1.45, spawnInterval: 21, maxTargets: 9 },
-      { wave: 4, name: "Hyper Rage", speed: 1.85, minSmashed: 30, bonusMultiplier: 1.75, spawnInterval: 17, maxTargets: 10 },
-      { wave: 5, name: "Godspeed", speed: 2.25, minSmashed: 45, bonusMultiplier: 2.1, spawnInterval: 13, maxTargets: 12 }
-    ];
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => {
+        if (G && G.phase !== 'over') resizeCanvas();
+      }).observe(arenaWrapper);
+    }
 
-    // Smash Arena Canvas Loop
-    let active = false;
-    let animId = null;
+    function cached(key, w, h, draw) {
+      let s = spriteCache.get(key);
+      if (!s) {
+        const c = document.createElement('canvas');
+        c.width = Math.ceil(w * DPR);
+        c.height = Math.ceil(h * DPR);
+        const x = c.getContext('2d');
+        x.scale(DPR, DPR);
+        draw(x, w, h);
+        s = { c, w, h };
+        spriteCache.set(key, s);
+      }
+      return s;
+    }
+
+    function emojiSprite(emoji, size) {
+      return cached(`e|${emoji}|${size}`, size * 1.3, size * 1.3, (x, w, h) => {
+        x.font = `${size}px ${EMOJI_FONT}`;
+        x.textAlign = 'center';
+        x.textBaseline = 'middle';
+        x.fillText(emoji, w / 2, h / 2 + size * 0.06);
+      });
+    }
+
+    function bubbleSprite(kind, color, r) {
+      const pad = 20;
+      return cached(`b|${kind}|${color}|${r}`, r * 2 + pad * 2, r * 2 + pad * 2, (x, w, h) => {
+        const cx = w / 2;
+        const cy = h / 2;
+        x.shadowColor = color;
+        x.shadowBlur = kind === 'golden' ? 26 : 14;
+        x.beginPath();
+        x.arc(cx, cy, r, 0, TAU);
+        const g = x.createRadialGradient(cx - r * 0.3, cy - r * 0.35, 2, cx, cy, r);
+        if (kind === 'golden') {
+          g.addColorStop(0, '#fff7cc');
+          g.addColorStop(0.45, '#fbbf24');
+          g.addColorStop(1, '#b45309');
+        } else if (kind === 'armored') {
+          g.addColorStop(0, '#cbd5e1');
+          g.addColorStop(0.5, '#475569');
+          g.addColorStop(1, '#1e293b');
+        } else if (kind === 'hazard') {
+          g.addColorStop(0, 'rgba(34, 80, 60, 0.96)');
+          g.addColorStop(1, 'rgba(10, 30, 22, 0.98)');
+        } else {
+          g.addColorStop(0, 'rgba(35, 45, 68, 0.95)');
+          g.addColorStop(0.7, 'rgba(16, 22, 34, 0.92)');
+          g.addColorStop(1, 'rgba(8, 12, 20, 0.98)');
+        }
+        x.fillStyle = g;
+        x.fill();
+        x.shadowBlur = 0;
+        x.lineWidth = kind === 'armored' ? 6 : (kind === 'custom' || kind === 'golden') ? 3.5 : 2.5;
+        x.strokeStyle = color;
+        x.stroke();
+
+        if (kind === 'armored') {
+          x.fillStyle = '#e2e8f0';
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * TAU;
+            x.beginPath();
+            x.arc(cx + Math.cos(a) * (r - 1), cy + Math.sin(a) * (r - 1), 2.2, 0, TAU);
+            x.fill();
+          }
+        }
+        if (kind === 'hazard') {
+          x.setLineDash([7, 5]);
+          x.lineWidth = 2.5;
+          x.strokeStyle = '#ef4444';
+          x.beginPath();
+          x.arc(cx, cy, r + 6, 0, TAU);
+          x.stroke();
+          x.setLineDash([]);
+        }
+
+        // Glass highlight
+        x.beginPath();
+        x.arc(cx - r * 0.35, cy - r * 0.35, r * 0.38, Math.PI, Math.PI * 1.55);
+        x.lineWidth = 3;
+        x.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        x.stroke();
+      });
+    }
+
+    const LABEL_FONT = "800 12px 'Plus Jakarta Sans', system-ui, sans-serif";
+    function labelSprite(text, color, kind) {
+      ctx.font = LABEL_FONT;
+      const tw = ctx.measureText(text).width;
+      const w = Math.max(68, Math.ceil(tw) + 18);
+      const h = 21;
+      return cached(`l|${text}|${color}|${kind}`, w + 4, h + 4, (x) => {
+        drawRoundedRect(x, 2, 2, w, h, 10.5);
+        x.fillStyle = kind === 'hazard' ? 'rgba(127, 29, 29, 0.96)' : kind === 'golden' ? 'rgba(120, 53, 15, 0.96)' : 'rgba(9, 13, 24, 0.94)';
+        x.fill();
+        x.lineWidth = 1.5;
+        x.strokeStyle = kind === 'hazard' ? '#f87171' : color;
+        x.stroke();
+        x.font = LABEL_FONT;
+        x.fillStyle = '#ffffff';
+        x.textAlign = 'center';
+        x.textBaseline = 'middle';
+        x.fillText(text, 2 + w / 2, 2 + h / 2 + 0.5);
+      });
+    }
+
+    // Helper: Round Rectangle Pill for Canvas
+    function drawRoundedRect(c, x, y, width, height, radius) {
+      c.beginPath();
+      c.moveTo(x + radius, y);
+      c.lineTo(x + width - radius, y);
+      c.arcTo(x + width, y, x + width, y + radius, radius);
+      c.lineTo(x + width, y + height - radius);
+      c.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+      c.lineTo(x + radius, y + height);
+      c.arcTo(x, y + height, x, y + height - radius, radius);
+      c.lineTo(x, y + radius);
+      c.arcTo(x, y, x + radius, y, radius);
+      c.closePath();
+    }
+
+    // ---------- Game entities ----------
+    let uid = 0;
+
+    class SmashTarget {
+      constructor(spec) {
+        Object.assign(this, spec);
+        this.id = ++uid;
+        this.hp = this.maxHp;
+        this.dead = false;
+        this.flash = 0;
+        this.cracks = [];
+      }
+
+      update(k) {
+        this.x += this.vx * k;
+        this.y += this.vy * k;
+        this.vy += this.g * k;
+        this.rot += this.vRot * k;
+        if (this.x < this.r) {
+          this.x = this.r;
+          this.vx = Math.abs(this.vx) * 0.8;
+        } else if (this.x > W - this.r) {
+          this.x = W - this.r;
+          this.vx = -Math.abs(this.vx) * 0.8;
+        }
+        if (this.flash > 0) this.flash -= 0.08 * k;
+      }
+
+      draw(time) {
+        const b = bubbleSprite(this.kind, this.color, this.r);
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        if (this.kind === 'golden' || this.kind === 'bomb') {
+          const s = 1 + Math.sin(time * 14 + this.id) * 0.05;
+          ctx.scale(s, s);
+        }
+        ctx.drawImage(b.c, -b.w / 2, -b.h / 2, b.w, b.h);
+        ctx.rotate(this.rot);
+        const es = emojiSprite(this.emoji, Math.round(this.r * 0.95));
+        ctx.drawImage(es.c, -es.w / 2, -es.h / 2 - 3, es.w, es.h);
+        ctx.rotate(-this.rot);
+
+        if (this.cracks.length) {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.lineWidth = 2;
+          ctx.lineJoin = 'round';
+          for (const crack of this.cracks) {
+            ctx.beginPath();
+            ctx.moveTo(crack[0][0], crack[0][1]);
+            for (let i = 1; i < crack.length; i++) ctx.lineTo(crack[i][0], crack[i][1]);
+            ctx.stroke();
+          }
+        }
+        if (this.flash > 0) {
+          ctx.globalAlpha = Math.min(1, this.flash);
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(0, 0, this.r, 0, TAU);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        ctx.restore();
+
+        if (this.maxHp > 1) {
+          for (let i = 0; i < this.maxHp; i++) {
+            ctx.beginPath();
+            ctx.arc(this.x + (i - (this.maxHp - 1) / 2) * 11, this.y - this.r - 9, 3.6, 0, TAU);
+            ctx.fillStyle = i < this.hp ? '#e2e8f0' : 'rgba(255,255,255,0.15)';
+            ctx.fill();
+          }
+        }
+
+        const l = labelSprite(this.labelText, this.color, this.kind);
+        ctx.drawImage(l.c, this.x - l.w / 2, this.y + this.r - 13, l.w, l.h);
+      }
+
+      addCrack() {
+        const a = rand(0, TAU);
+        const pts = [[rand(-4, 4), rand(-4, 4)]];
+        let d = 0;
+        let ang = a;
+        while (d < this.r * 0.9) {
+          d += rand(7, 13);
+          ang += rand(-0.6, 0.6);
+          pts.push([Math.cos(ang) * d, Math.sin(ang) * d]);
+        }
+        this.cracks.push(pts);
+      }
+    }
+
+    // ---------- Game state ----------
+    let G = null;
     let lastRoundSummary = null;
 
-    function startSmashArena() {
-      showScreen(arenaScreen);
-      const rawCustom = document.getElementById('customTargetInput').value;
-      const customTargets = rawCustom.split(',').map(s => s.trim()).filter(Boolean);
-
-      const canvas = document.getElementById('smashCanvas');
-      const arenaWrapper = document.getElementById('arenaWrapper');
-      const ctx = canvas.getContext('2d');
-      const hudScore = document.getElementById('hudScore');
-      const hudTimer = document.getElementById('hudTimer');
-      const hudTimeLabel = document.getElementById('hudTimeLabel');
-      const hudCombo = document.getElementById('hudCombo');
-      const hudStreakBadge = document.getElementById('hudStreakBadge');
-      const hudSpeedBadge = document.getElementById('hudSpeedBadge');
-      const rageFill = document.getElementById('rageFill');
-      const ragePercent = document.getElementById('ragePercent');
-      const btnAbort = document.getElementById('btnAbortSmash');
-
-      hudStreakBadge.style.display = 'none';
-
-      const rect = arenaWrapper.getBoundingClientRect();
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-      const W = rect.width;
-      const H = rect.height;
-
-      let score = 0;
-      let combo = 1;
-      let maxCombo = 1;
-      let comboTimer = null;
-      let totalSmashed = 0;
-      let customSmashedCount = 0;
-
-      // Speed Wave Progression
-      let currentTierIndex = selectedMode === "turbo" ? 2 : 0;
-      let currentTier = SPEED_TIERS[currentTierIndex];
-      let maxWaveReached = currentTier.wave;
-
-      // Timer Mode Setup
-      let isZen = selectedMode === "zen";
-      let timeLeft = selectedMode === "waves" ? 25 : (selectedMode === "blitz" ? 30 : (selectedMode === "turbo" ? 25 : 0));
-      let elapsedTime = 0;
-
-      hudTimeLabel.innerText = isZen ? "Elapsed" : "Time";
-      hudTimer.innerText = isZen ? "0s" : `${timeLeft}s`;
-      hudSpeedBadge.innerText = `WAVE ${currentTier.wave} • ${currentTier.speed}x`;
-      btnAbort.innerText = isZen ? "Finish & View Results" : "Exit Rage Room";
-
-      // Same-Item Streak State
-      let lastItemLabel = null;
-      let sameItemStreak = 0;
-      let maxSameItemStreak = 0;
-      let maxSameItemName = "";
-      let maxSameItemEmoji = "";
-
-      active = true;
-
-      // Item Tracking for this round
-      const roundItemCounts = {};
-      const vibeCounts = { work: 0, ex: 0, bills: 0, drama: 0, study: 0, overthinking: 0, custom: 0 };
-
-      const targets = [];
-      const shards = [];
-      const shockwaves = [];
-      const floatTexts = [];
-      const banners = [];
-
-      class SmashTarget {
-        constructor() {
-          const isCustom = Math.random() < 0.45 && customTargets.length > 0;
-          this.isCustom = isCustom;
-          this.label = isCustom 
-            ? customTargets[Math.floor(Math.random() * customTargets.length)] 
-            : selectedVibe.items[Math.floor(Math.random() * selectedVibe.items.length)];
-          this.emoji = ITEM_EMOJIS[this.label] || (isCustom ? "🎯" : "💥");
-          this.vibeId = isCustom ? "custom" : selectedVibe.id;
-          
-          // Enhanced larger radius for outstanding visibility & CX
-          this.radius = isCustom ? 54 : 48;
-          this.x = Math.random() * (W - this.radius * 2.4) + this.radius * 1.2;
-          this.y = H + this.radius + 15;
-
-          // Speed Scaling based on current wave tier
-          const spd = currentTier.speed;
-          this.vx = (Math.random() - 0.5) * (3.4 * Math.sqrt(spd));
-          this.vy = -(12.5 * spd + Math.random() * 4.2 * spd);
-          this.gravity = 0.35 * (spd * 0.95);
-          this.rotation = (Math.random() - 0.5) * 0.4;
-          this.vRot = (Math.random() - 0.5) * (0.05 * spd);
-          this.color = isCustom ? "#ec4899" : selectedVibe.color;
-        }
-
-        update() {
-          this.x += this.vx;
-          this.y += this.vy;
-          this.vy += this.gravity;
-          this.rotation += this.vRot;
-          if (this.x - this.radius < 4 || this.x + this.radius > W - 4) {
-            this.vx *= -0.8;
-          }
-        }
-
-        draw() {
-          ctx.save();
-          ctx.translate(this.x, this.y);
-
-          // Radial glow
-          ctx.shadowColor = this.color;
-          ctx.shadowBlur = this.isCustom ? 20 : 12;
-
-          // Glass Bubble Base
-          ctx.beginPath();
-          ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-          const grad = ctx.createRadialGradient(-this.radius * 0.3, -this.radius * 0.3, 2, 0, 0, this.radius);
-          grad.addColorStop(0, "rgba(35, 45, 68, 0.95)");
-          grad.addColorStop(0.7, "rgba(16, 22, 34, 0.92)");
-          grad.addColorStop(1, "rgba(8, 12, 20, 0.98)");
-          ctx.fillStyle = grad;
-          ctx.fill();
-
-          // Border ring
-          ctx.lineWidth = this.isCustom ? 3.5 : 2.5;
-          ctx.strokeStyle = this.color;
-          ctx.stroke();
-
-          // Inner Glass Highlight Arc
-          ctx.beginPath();
-          ctx.arc(-this.radius * 0.35, -this.radius * 0.35, this.radius * 0.38, Math.PI * 1.0, Math.PI * 1.55);
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
-          ctx.shadowBlur = 0;
-          ctx.stroke();
-
-          // Large Vibrant Emoji
-          ctx.save();
-          ctx.rotate(this.rotation * 0.6);
-          ctx.font = `${Math.floor(this.radius * 0.88)}px -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(this.emoji, 0, -4);
-          ctx.restore();
-
-          ctx.restore();
-
-          // High-Contrast Upright Non-Rotating Stabilized Text Pill
-          ctx.save();
-          const cleanLabel = this.isCustom ? `⭐ ${this.label}` : this.label;
-          ctx.font = "800 13px 'Plus Jakarta Sans', system-ui, sans-serif";
-          const textMetrics = ctx.measureText(cleanLabel);
-          const badgeWidth = Math.max(76, textMetrics.width + 18);
-          const badgeHeight = 22;
-          const badgeX = this.x - badgeWidth / 2;
-          const badgeY = this.y + this.radius - 12;
-
-          drawRoundedRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, 11);
-          ctx.fillStyle = "rgba(9, 13, 24, 0.94)";
-          ctx.fill();
-          ctx.lineWidth = 1.5;
-          ctx.strokeStyle = this.color;
-          ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-          ctx.shadowBlur = 6;
-          ctx.stroke();
-
-          ctx.fillStyle = "#ffffff";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.shadowBlur = 0;
-          ctx.fillText(cleanLabel, this.x, badgeY + badgeHeight / 2);
-
-          ctx.restore();
-        }
-      }
-
-      function spawnShockwave(x, y, color) {
-        shockwaves.push({ x, y, radius: 10, maxRadius: 65, color, alpha: 1.0 });
-      }
-
-      function spawnShards(x, y, color) {
-        const count = 22 + Math.floor(Math.random() * 8);
-        for (let i = 0; i < count; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = 4 + Math.random() * 10;
-          shards.push({
-            x, y,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed - 2.5,
-            size: 4 + Math.random() * 8,
-            color: Math.random() < 0.35 ? "#ffffff" : color,
-            life: 1.0,
-            decay: 0.022 + Math.random() * 0.03,
-            rot: Math.random() * Math.PI,
-            vRot: (Math.random() - 0.5) * 0.35
-          });
-        }
-      }
-
-      const PUNCH_WORDS = ["💥 BOOM!", "⚡ CRUNCH!", "🔥 SHREDDED!", "💣 VAPORIZED!", "🔨 SMASHED!", "✨ PULVERIZED!"];
-
-      function addFloat(x, y, text, color, isPunchWord = false) {
-        floatTexts.push({ 
-          x, y, text, color, 
-          vy: isPunchWord ? -3.2 : -2.2, 
-          alpha: 1.0, 
-          isPunchWord
-        });
-      }
-
-      function addSpeedBanner(title, sub) {
-        banners.push({
-          title, sub,
-          y: H * 0.38,
-          alpha: 1.0,
-          scale: 0.8,
-          life: 80
-        });
-      }
-
-      function checkSpeedProgression() {
-        const nextIdx = currentTierIndex + 1;
-        if (nextIdx < SPEED_TIERS.length && totalSmashed >= SPEED_TIERS[nextIdx].minSmashed) {
-          currentTierIndex = nextIdx;
-          currentTier = SPEED_TIERS[currentTierIndex];
-          if (currentTier.wave > maxWaveReached) maxWaveReached = currentTier.wave;
-
-          sfx.playLevelUp();
-
-          // Time bonus in waves mode
-          if (selectedMode === "waves") {
-            timeLeft += 5;
-            hudTimer.innerText = `${timeLeft}s`;
-            addFloat(W / 2, H * 0.48, "+5s TIME BONUS! ⏱️", "#34d399", true);
-          }
-
-          hudSpeedBadge.innerText = `WAVE ${currentTier.wave} • ${currentTier.speed}x`;
-          hudSpeedBadge.style.color = "#f59e0b";
-          hudSpeedBadge.style.borderColor = "rgba(245, 158, 11, 0.4)";
-          hudSpeedBadge.style.background = "rgba(245, 158, 11, 0.2)";
-
-          addSpeedBanner(`⚡ SPEED UP! WAVE ${currentTier.wave}`, `${currentTier.name} • ${currentTier.speed}x SPEED & BONUS PTS`);
-
-          // Quick Flash
-          arenaWrapper.style.boxShadow = "inset 0 0 70px rgba(56, 189, 248, 0.5)";
-          setTimeout(() => arenaWrapper.style.boxShadow = "inset 0 0 60px rgba(0, 0, 0, 0.85)", 300);
-        }
-      }
-
-      function handleHit(clientX, clientY) {
-        if (!active) return;
-        const r = canvas.getBoundingClientRect();
-        const touchX = clientX - r.left;
-        const touchY = clientY - r.top;
-
-        let hit = false;
-        for (let i = targets.length - 1; i >= 0; i--) {
-          const t = targets[i];
-          const dist = Math.hypot(touchX - t.x, touchY - t.y);
-          if (dist < t.radius * 1.35) {
-            hit = true;
-            totalSmashed++;
-
-            // Item counts
-            if (!roundItemCounts[t.label]) {
-              roundItemCounts[t.label] = {
-                count: 0,
-                emoji: t.emoji,
-                vibe: t.vibeId,
-                isCustom: t.isCustom,
-                damageValue: ITEM_DAMAGE_VALUES[t.label] || 500
-              };
-            }
-            roundItemCounts[t.label].count += 1;
-            vibeCounts[t.vibeId] = (vibeCounts[t.vibeId] || 0) + 1;
-            if (t.isCustom) customSmashedCount++;
-
-            // Check Same-Item Streak
-            if (t.label === lastItemLabel) {
-              sameItemStreak++;
-            } else {
-              lastItemLabel = t.label;
-              sameItemStreak = 1;
-            }
-
-            if (sameItemStreak > maxSameItemStreak) {
-              maxSameItemStreak = sameItemStreak;
-              maxSameItemName = t.label;
-              maxSameItemEmoji = t.emoji;
-            }
-
-            // Combo multiplier
-            combo++;
-            if (combo > maxCombo) maxCombo = combo;
-            clearTimeout(comboTimer);
-            comboTimer = setTimeout(() => { 
-              combo = 1; 
-              hudCombo.innerText = "x1 COMBO";
-              sameItemStreak = 0;
-              lastItemLabel = null;
-              hudStreakBadge.style.display = 'none';
-            }, 1600);
-
-            // CALCULATE POINTS WITH SPEED BONUS & STREAK BONUS
-            const speedBonusMult = currentTier.bonusMultiplier;
-            const basePoints = Math.round((t.isCustom ? 250 : 100) * combo * speedBonusMult);
-            let streakBonus = 0;
-
-            if (sameItemStreak >= 2) {
-              streakBonus = Math.round(basePoints * (sameItemStreak - 1));
-              sfx.playStreakChime(sameItemStreak);
-            } else {
-              sfx.playShatter();
-            }
-
-            const earned = basePoints + streakBonus;
-            score += earned;
-
-            if (navigator.vibrate) navigator.vibrate(28);
-
-            spawnShockwave(t.x, t.y, sameItemStreak >= 2 ? "#f59e0b" : t.color);
-            spawnShards(t.x, t.y, sameItemStreak >= 2 ? "#f59e0b" : t.color);
-
-            // Floating text feedback
-            if (sameItemStreak >= 2) {
-              const streakTitles = [
-                "", "",
-                `🎯 2x ${t.label.toUpperCase()} STREAK! (+${streakBonus})`,
-                `🔥 3x ${t.label.toUpperCase()} FRENZY! (+${streakBonus})`,
-                `⚡ 4x ${t.label.toUpperCase()} RAMPAGE! (+${streakBonus})`,
-                `👑 ${sameItemStreak}x ${t.label.toUpperCase()} DESTROYER! (+${streakBonus})`
-              ];
-              const streakText = streakTitles[Math.min(sameItemStreak, 5)] || `👑 ${sameItemStreak}x ${t.label.toUpperCase()} STREAK! (+${streakBonus})`;
-              addFloat(t.x, t.y - 30, streakText, "#f59e0b", true);
-              addFloat(t.x, t.y + 14, `+${earned} (${sameItemStreak}x Streak)`, "#fcd34d");
-            } else {
-              const punchWord = PUNCH_WORDS[Math.floor(Math.random() * PUNCH_WORDS.length)];
-              addFloat(t.x, t.y - 15, punchWord, "#ffffff", true);
-              addFloat(t.x, t.y + 12, `+${earned}`, t.isCustom ? "#ec4899" : "#fbbf24");
-            }
-
-            // HUD Streak Badge
-            if (sameItemStreak >= 2) {
-              hudStreakBadge.style.display = 'inline-block';
-              hudStreakBadge.innerText = `🔥 ${sameItemStreak}x ${t.label} (+${sameItemStreak}x PTS)`;
-            } else {
-              hudStreakBadge.style.display = 'none';
-            }
-
-            // Check Speed Wave Progression!
-            checkSpeedProgression();
-
-            // Screen Shake (stronger for high streak and speed)
-            const shakeMag = 10 + Math.min(12, sameItemStreak * 2 + currentTier.wave);
-            arenaWrapper.style.transform = `translate(${(Math.random()-0.5)*shakeMag}px, ${(Math.random()-0.5)*shakeMag}px)`;
-            setTimeout(() => arenaWrapper.style.transform = 'none', 85);
-
-            targets.splice(i, 1);
-            break;
-          }
-        }
-
-        if (!hit) {
-          sfx.playMiss();
-          sameItemStreak = 0;
-          lastItemLabel = null;
-          hudStreakBadge.style.display = 'none';
-        }
-
-        hudScore.innerText = score.toLocaleString();
-        hudCombo.innerText = `x${combo} COMBO`;
-        const ragePct = Math.min(100, Math.floor((totalSmashed / 35) * 100));
-        rageFill.style.width = `${ragePct}%`;
-        ragePercent.innerText = `${ragePct}%`;
-      }
-
-      canvas.onpointerdown = (e) => handleHit(e.clientX, e.clientY);
-
-      let spawnTimer = 0;
-      function loop() {
-        if (!active) return;
-        ctx.clearRect(0, 0, W, H);
-
-        spawnTimer++;
-        const interval = currentTier.spawnInterval;
-        const maxActive = currentTier.maxTargets;
-
-        if (spawnTimer % interval === 0 && targets.length < maxActive) {
-          targets.push(new SmashTarget());
-          if (Math.random() < 0.32 && targets.length < maxActive) {
-            targets.push(new SmashTarget());
-          }
-        }
-
-        // Draw shockwaves
-        for (let i = shockwaves.length - 1; i >= 0; i--) {
-          const sw = shockwaves[i];
-          sw.radius += 3.5;
-          sw.alpha -= 0.055;
-          if (sw.alpha <= 0) {
-            shockwaves.splice(i, 1);
-            continue;
-          }
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-          ctx.lineWidth = 2.5;
-          ctx.strokeStyle = sw.color;
-          ctx.globalAlpha = sw.alpha;
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        // Draw targets
-        for (let i = targets.length - 1; i >= 0; i--) {
-          const t = targets[i];
-          t.update();
-          t.draw();
-          if (t.y > H + 90) targets.splice(i, 1);
-        }
-
-        // Draw shards
-        for (let i = shards.length - 1; i >= 0; i--) {
-          const s = shards[i];
-          s.x += s.vx;
-          s.y += s.vy;
-          s.vy += 0.36;
-          s.rot += s.vRot;
-          s.life -= s.decay;
-
-          if (s.life <= 0) {
-            shards.splice(i, 1);
-            continue;
-          }
-
-          ctx.save();
-          ctx.translate(s.x, s.y);
-          ctx.rotate(s.rot);
-          ctx.globalAlpha = Math.max(0, s.life);
-          ctx.fillStyle = s.color;
-          ctx.fillRect(-s.size/2, -s.size/2, s.size, s.size * 0.75);
-          ctx.restore();
-        }
-
-        // Draw float texts
-        for (let i = floatTexts.length - 1; i >= 0; i--) {
-          const ft = floatTexts[i];
-          ft.y += ft.vy;
-          ft.alpha -= 0.026;
-          if (ft.alpha <= 0) {
-            floatTexts.splice(i, 1);
-            continue;
-          }
-          ctx.save();
-          ctx.globalAlpha = ft.alpha;
-          ctx.font = ft.isPunchWord ? "900 20px 'Outfit', sans-serif" : "800 18px 'Outfit', sans-serif";
-          ctx.fillStyle = ft.color;
-          ctx.textAlign = "center";
-          ctx.shadowColor = ft.color;
-          ctx.shadowBlur = 10;
-          ctx.fillText(ft.text, ft.x, ft.y);
-          ctx.restore();
-        }
-
-        // Draw Big Announcement Banners
-        for (let i = banners.length - 1; i >= 0; i--) {
-          const b = banners[i];
-          b.life--;
-          if (b.scale < 1.0) b.scale += 0.04;
-          if (b.life < 20) b.alpha = b.life / 20;
-
-          if (b.life <= 0) {
-            banners.splice(i, 1);
-            continue;
-          }
-
-          ctx.save();
-          ctx.globalAlpha = b.alpha;
-          ctx.translate(W / 2, b.y);
-          ctx.scale(b.scale, b.scale);
-
-          // Dark banner plate
-          drawRoundedRect(ctx, -140, -26, 280, 52, 16);
-          ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
-          ctx.fill();
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = "#38bdf8";
-          ctx.shadowColor = "rgba(56, 189, 248, 0.7)";
-          ctx.shadowBlur = 14;
-          ctx.stroke();
-
-          ctx.shadowBlur = 0;
-          ctx.font = "900 16px 'Outfit', sans-serif";
-          ctx.fillStyle = "#38bdf8";
-          ctx.textAlign = "center";
-          ctx.fillText(b.title, 0, -4);
-
-          ctx.font = "800 11px 'Plus Jakarta Sans', sans-serif";
-          ctx.fillStyle = "#cbd5e1";
-          ctx.fillText(b.sub, 0, 14);
-
-          ctx.restore();
-        }
-
-        animId = requestAnimationFrame(loop);
-      }
-
-      loop();
-
-      // Main Clock Interval
-      const timerInterval = setInterval(() => {
-        if (!isZen) {
-          timeLeft--;
-          hudTimer.innerText = `${timeLeft}s`;
-
-          if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            active = false;
-            cancelAnimationFrame(animId);
-            finishRound({
-              score,
-              totalSmashed,
-              maxCombo,
-              maxWave: maxWaveReached,
-              maxSameItemStreak,
-              maxSameItemName,
-              maxSameItemEmoji,
-              vibeCounts,
-              customCount: customSmashedCount,
-              itemCounts: roundItemCounts,
-              category: selectedVibe.name,
-              mode: selectedMode
-            });
-          }
-        } else {
-          elapsedTime++;
-          const mins = Math.floor(elapsedTime / 60);
-          const secs = elapsedTime % 60;
-          hudTimer.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-      }, 1000);
-
-      btnAbort.onclick = () => {
-        active = false;
-        clearInterval(timerInterval);
-        cancelAnimationFrame(animId);
-        if (isZen && totalSmashed > 0) {
-          finishRound({
-            score,
-            totalSmashed,
-            maxCombo,
-            maxWave: maxWaveReached,
-            maxSameItemStreak,
-            maxSameItemName,
-            maxSameItemEmoji,
-            vibeCounts,
-            customCount: customSmashedCount,
-            itemCounts: roundItemCounts,
-            category: selectedVibe.name,
-            mode: selectedMode
-          });
-        } else {
-          showScreen(configScreen);
-        }
+    function parseCustom() {
+      return $('customTargetInput').value.split(',').map((s) => s.trim().slice(0, 22)).filter(Boolean).slice(0, 12);
+    }
+
+    function newState() {
+      const mode = selectedMode;
+      const tierIndex = mode === 'turbo' ? 2 : 0;
+      return {
+        mode,
+        timed: mode !== 'zen',
+        weaponId: selectedWeapon,
+        weapon: WEAPONS[selectedWeapon],
+        vibe: selectedVibe,
+        custom: parseCustom(),
+        phase: 'countdown',
+        countdown: 1.8,
+        paused: false,
+        raf: 0,
+        last: performance.now(),
+        time: 0,
+        timeLeft: mode === 'blitz' ? 30 : 25,
+        elapsed: 0,
+        timeScale: 1,
+        lastTickSec: null,
+        tierIndex,
+        tier: getTier(tierIndex),
+        maxWave: tierIndex + 1,
+        score: 0,
+        displayScore: 0,
+        combo: 1,
+        comboT: 0,
+        maxCombo: 1,
+        totalSmashed: 0,
+        customCount: 0,
+        hits: 0,
+        misses: 0,
+        hazardsHit: 0,
+        lastItem: null,
+        sameStreak: 0,
+        maxSameItemStreak: 0,
+        maxSameItemName: '',
+        maxSameItemEmoji: '',
+        itemCounts: {},
+        vibeCounts: { work: 0, ex: 0, bills: 0, drama: 0, study: 0, overthinking: 0, custom: 0 },
+        rage: 0,
+        rageT: 0,
+        rages: 0,
+        slowT: 0,
+        bombs: 0,
+        maxBombChain: 0,
+        armored: 0,
+        golden: 0,
+        maxMulti: 0,
+        spawnAcc: 0.4,
+        lastPowerAt: -10,
+        targets: [],
+        shards: [],
+        halves: [],
+        rings: [],
+        floats: [],
+        swings: [],
+        trails: [],
+        pendingBombs: [],
+        bannerQueue: [],
+        banner: null,
+        shake: 0,
+        hitStop: 0,
+        flash: null,
+        pointers: new Map(),
+        liveMissions: new Set(),
+        liveAch: new Set(),
+        hud: {}
       };
     }
 
-    function finishRound(stats) {
-      sfx.playSuccess();
-      showScreen(resultScreen);
+    function liveStats() {
+      return {
+        smashed: G.totalSmashed,
+        totalSmashed: G.totalSmashed,
+        score: G.score,
+        maxCombo: G.maxCombo,
+        maxWave: G.maxWave,
+        rages: G.rages,
+        bombs: G.bombs,
+        armored: G.armored,
+        golden: G.golden,
+        maxMulti: G.maxMulti,
+        maxBombChain: G.maxBombChain,
+        maxSameItemStreak: G.maxSameItemStreak,
+        hazardsHit: G.hazardsHit
+      };
+    }
 
-      // Calculate Property Damage
-      let propertyDamage = 0;
-      for (const [name, info] of Object.entries(stats.itemCounts)) {
-        propertyDamage += (info.damageValue || 500) * info.count;
+    // ---------- Spawning ----------
+    function rollKind() {
+      const t = G.tierIndex;
+      const zen = G.mode === 'zen';
+      const powerOk = G.time - G.lastPowerAt > 3.2;
+      const table = [];
+      if (!zen && t >= 1) table.push(['hazard', 0.06 + 0.01 * Math.min(t, 5)]);
+      if (t >= 1) table.push(['armored', 0.1]);
+      if (powerOk) {
+        table.push(['golden', 0.045]);
+        if (t >= 1) table.push(['bomb', 0.035]);
+        table.push(['freeze', 0.025]);
+        if (G.timed && G.mode !== 'blitz') table.push(['clock', 0.02]);
       }
-      stats.propertyDamage = propertyDamage;
-
-      // Persist in Career Ledger
-      ledger.recordRound(stats);
-      updateLobbyCareerCount();
-
-      // Display Scores & Fun Stats
-      document.getElementById('finalScore').innerText = stats.score.toLocaleString();
-      document.getElementById('statDamage').innerText = `$${propertyDamage.toLocaleString()}`;
-      document.getElementById('statSpeedWave').innerText = `Wave ${stats.maxWave} (${SPEED_TIERS[stats.maxWave - 1]?.speed || 1.0}x)`;
-      
-      const statStreakEl = document.getElementById('statItemStreak');
-      if (stats.maxSameItemStreak >= 2) {
-        statStreakEl.innerText = `${stats.maxSameItemStreak}x ${stats.maxSameItemEmoji} ${stats.maxSameItemName}`;
-      } else {
-        statStreakEl.innerText = "None (Mix)";
+      let r = Math.random();
+      for (const [kind, p] of table) {
+        if (r < p) {
+          if (['golden', 'bomb', 'freeze', 'clock'].includes(kind)) G.lastPowerAt = G.time;
+          return kind;
+        }
+        r -= p;
       }
+      return 'normal';
+    }
 
-      const badge = document.getElementById('resultBadge');
-      const statZen = document.getElementById('statZen');
+    function makeTarget(kind, opts = {}) {
+      const spd = G.tier.speed;
+      const baseR = clamp(W * 0.1, 36, 50);
+      let label;
+      let emoji;
+      let color = G.vibe.color;
+      let isCustom = false;
+      let vibeId = G.vibe.id;
+      let maxHp = 1;
+      let r = baseR;
+      let oops = '';
 
-      if (stats.totalSmashed >= 35 || stats.maxWave >= 4) {
-        badge.innerText = "💥 CATHARTIC GOD OF DESTRUCTION";
-        badge.style.background = "rgba(239, 68, 68, 0.25)";
-        statZen.innerText = "100% Pure Zen";
-      } else if (stats.totalSmashed >= 18 || stats.maxWave >= 3) {
-        badge.innerText = "🔥 CERTIFIED RAGE DEMON";
-        badge.style.background = "rgba(249, 115, 22, 0.25)";
-        statZen.innerText = "88% Zen";
-      } else {
-        badge.innerText = "⚡ THERAPEUTIC CRUSHER";
-        badge.style.background = "rgba(16, 185, 129, 0.25)";
-        statZen.innerText = "65% Relaxed";
-      }
+      const chooseItem = () => {
+        if (opts.label) {
+          label = opts.label;
+          isCustom = !!opts.isCustom;
+        } else if (G.custom.length && Math.random() < 0.4) {
+          label = pick(G.custom);
+          isCustom = true;
+        } else {
+          label = pick(G.vibe.items);
+        }
+        emoji = ITEM_EMOJIS[label] || (isCustom ? '🎯' : '💥');
+        if (isCustom) {
+          vibeId = 'custom';
+          color = '#ec4899';
+        }
+      };
 
-      // Diagnose Character Persona ("Charter")
-      let diagnosedCharter = CHARACTER_CHARTERS[CHARACTER_CHARTERS.length - 1]; // default chaos
-      for (const ch of CHARACTER_CHARTERS) {
-        if (ch.criteria(stats)) {
-          diagnosedCharter = ch;
+      switch (kind) {
+        case 'armored':
+          chooseItem();
+          maxHp = 3;
+          color = '#94a3b8';
+          r = baseR * 1.12;
           break;
+        case 'golden':
+          chooseItem();
+          color = '#fbbf24';
+          r = baseR * 0.86;
+          break;
+        case 'bomb':
+          label = 'Chain Bomb';
+          emoji = '💣';
+          color = '#f97316';
+          break;
+        case 'freeze':
+          label = 'Slow-Mo';
+          emoji = '🧊';
+          color = '#67e8f9';
+          break;
+        case 'clock':
+          label = '+3 Sec';
+          emoji = '⏱️';
+          color = '#34d399';
+          break;
+        case 'hazard': {
+          const hz = pick(HAZARDS);
+          label = hz.label;
+          emoji = hz.emoji;
+          oops = hz.oops;
+          color = '#22c55e';
+          vibeId = 'hazard';
+          break;
+        }
+        default:
+          chooseItem();
+          if (isCustom) {
+            kind = 'custom';
+            r = baseR * 1.1;
+          }
+      }
+
+      const labelText = {
+        armored: `🛡️ ${label}`,
+        golden: `✨ ${label}`,
+        hazard: `🚫 DON'T: ${label}`,
+        custom: `⭐ ${label}`
+      }[kind] || label;
+
+      r = Math.round(r);
+      // Gravity scales with canvas height so arcs look the same on any screen
+      const g = 0.24 * Math.pow(spd, 1.6) * (H / 440) * (kind === 'golden' ? 1.3 : 1);
+      const peak = rand(0.5, 0.86) * H;
+      const x = opts.x != null ? opts.x : rand(r + 8, W - r - 8);
+      const vy = -Math.sqrt(2 * g * (peak + r));
+      const flight = (2 * -vy) / g;
+      const tx = rand(W * 0.2, W * 0.8);
+      const vx = ((tx - x) / (flight * 0.5)) * rand(0.5, 1);
+
+      return new SmashTarget({
+        kind, label, emoji, color, isCustom, vibeId, maxHp, r, oops, labelText,
+        x, y: H + r, vx, vy, g,
+        rot: rand(-0.3, 0.3),
+        vRot: rand(-0.04, 0.04) * spd
+      });
+    }
+
+    function spawnTick() {
+      const max = G.tier.maxTargets;
+      if (G.targets.length >= max) return;
+      const roll = Math.random();
+      // Volley: a fan of identical items, perfect for same-item streaks and multi-hits
+      if (G.tierIndex >= 1 && roll < 0.1) {
+        const useCustom = G.custom.length && Math.random() < 0.4;
+        const label = useCustom ? pick(G.custom) : pick(G.vibe.items);
+        const n = G.tierIndex >= 3 ? 4 : 3;
+        for (let i = 0; i < n; i++) {
+          const x = W * (0.18 + (0.64 * i) / (n - 1));
+          G.targets.push(makeTarget('normal', { label, isCustom: useCustom, x }));
+        }
+        return;
+      }
+      G.targets.push(makeTarget(rollKind()));
+      if (roll < 0.38 && G.targets.length < max) G.targets.push(makeTarget(rollKind()));
+    }
+
+    // ---------- Effects ----------
+    function spawnRing(x, y, color, maxR = 70, width = 3) {
+      G.rings.push({ x, y, r: 8, maxR, color, a: 1, width });
+    }
+
+    function spawnShards(x, y, color, count) {
+      const room = 650 - G.shards.length;
+      count = Math.min(count, room);
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * TAU;
+        const speed = rand(3, 11);
+        const s = rand(3, 9);
+        G.shards.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 3,
+          pts: [[rand(-s, 0), rand(-s, 0)], [rand(0, s), rand(-s, 0)], [rand(-s / 2, s / 2), rand(0, s)]],
+          color: Math.random() < 0.3 ? '#ffffff' : color,
+          life: 1,
+          decay: rand(0.012, 0.024),
+          rot: Math.random() * Math.PI,
+          vr: rand(-0.35, 0.35)
+        });
+      }
+    }
+
+    function spawnHalves(t) {
+      const sprite = emojiSprite(t.emoji, Math.round(t.r * 0.95));
+      for (const side of [-1, 1]) {
+        G.halves.push({
+          sprite, side,
+          x: t.x + side * 4,
+          y: t.y,
+          vx: side * rand(2.5, 4.5) + t.vx * 0.4,
+          vy: Math.min(t.vy, 0) * 0.3 - rand(2, 5),
+          rot: t.rot,
+          vr: side * rand(0.08, 0.16),
+          life: 1
+        });
+      }
+    }
+
+    function addFloat(x, y, text, color, size = 18, vy = -2.2) {
+      if (G.floats.length > 10) G.floats.shift();
+      G.floats.push({ x: clamp(x, 60, W - 60), y, text, color, size, vy, a: 1, s: 0.5 });
+    }
+
+    function queueBanner(title, sub, color = '#38bdf8') {
+      if (G.bannerQueue.length > 3) G.bannerQueue.shift();
+      G.bannerQueue.push({ title, sub, color, life: 1.25, t: 0 });
+    }
+
+    function bakeShard(s) {
+      fctx.save();
+      fctx.globalAlpha = 0.5;
+      fctx.translate(s.x, H - rand(1, 6));
+      fctx.rotate(s.rot);
+      fctx.fillStyle = s.color;
+      fctx.beginPath();
+      fctx.moveTo(s.pts[0][0], s.pts[0][1] * 0.5);
+      fctx.lineTo(s.pts[1][0], s.pts[1][1] * 0.5);
+      fctx.lineTo(s.pts[2][0], s.pts[2][1] * 0.5);
+      fctx.closePath();
+      fctx.fill();
+      fctx.restore();
+    }
+
+    // ---------- Core smash logic ----------
+    const comboWindow = () => G.weapon.comboWindow * Math.max(0.55, 1 - 0.05 * G.tierIndex);
+
+    function bumpCombo() {
+      G.combo += G.weapon.comboGain;
+      G.comboT = comboWindow();
+      if (G.combo > G.maxCombo) G.maxCombo = G.combo;
+      for (const [m, word] of Object.entries(COMBO_MILESTONES)) {
+        const ms = Number(m);
+        if (G.combo >= ms && G.combo - G.weapon.comboGain < ms) {
+          queueBanner(`🔥 ${ms} COMBO — ${word}`, `Multiplier now x${comboMult(G.combo)}`, '#f59e0b');
+          sfx.levelUp();
+        }
+      }
+    }
+
+    function dropCombo() {
+      if (G.combo >= 5) {
+        addFloat(W / 2, H * 0.2, `COMBO x${G.combo} LOST`, '#94a3b8', 16, -1.2);
+        sfx.comboLost();
+      }
+      G.combo = 1;
+      G.comboT = 0;
+      G.sameStreak = 0;
+      G.lastItem = null;
+    }
+
+    function addRage(amount) {
+      if (G.rageT > 0) return;
+      G.rage = Math.min(100, G.rage + amount);
+      if (G.rage >= 100) {
+        G.rageT = 6;
+        G.rages++;
+        queueBanner('😡 RAGE MODE!', '2x POINTS • FASTER SPAWNS', '#ef4444');
+        sfx.rage();
+        buzz([40, 30, 60]);
+        G.shake = Math.max(G.shake, 16);
+      }
+    }
+
+    function hitTarget(t, dmg, info) {
+      if (t.dead) return 'none';
+      if (t.kind === 'hazard') {
+        t.dead = true;
+        G.hazardsHit++;
+        const penalty = Math.min(G.score, Math.round(600 * G.tier.bonusMultiplier));
+        G.score -= penalty;
+        if (G.timed) G.timeLeft = Math.max(0.5, G.timeLeft - 3);
+        G.combo = 1;
+        G.comboT = 0;
+        G.sameStreak = 0;
+        G.lastItem = null;
+        G.rage = Math.max(0, G.rage - 25);
+        G.flash = { color: '239, 68, 68', a: 0.45 };
+        G.shake = Math.max(G.shake, 14);
+        spawnShards(t.x, t.y, '#86efac', 12);
+        spawnRing(t.x, t.y, '#ef4444', 90, 4);
+        addFloat(t.x, t.y - 26, t.oops, '#f87171', 20, -2.6);
+        addFloat(t.x, t.y + 6, `-${fmt(penalty)}${G.timed ? '  -3s' : ''}`, '#f87171', 17);
+        sfx.hazard();
+        buzz([80, 40, 80]);
+        return 'hazard';
+      }
+
+      t.hp -= dmg;
+      if (t.hp > 0) {
+        t.flash = 1;
+        t.addCrack();
+        t.vy -= 1.5;
+        G.comboT = comboWindow();
+        spawnShards(t.x, t.y, '#cbd5e1', 7);
+        addFloat(t.x, t.y - 22, '🛡️ CRACK!', '#e2e8f0', 16);
+        sfx.clank();
+        buzz(12);
+        return 'cracked';
+      }
+      destroyTarget(t, info);
+      return 'destroyed';
+    }
+
+    function destroyTarget(t, info = {}) {
+      t.dead = true;
+      G.totalSmashed++;
+      const isItem = ['normal', 'custom', 'armored', 'golden'].includes(t.kind);
+
+      if (isItem) {
+        if (!G.itemCounts[t.label]) {
+          G.itemCounts[t.label] = {
+            count: 0,
+            emoji: t.emoji,
+            vibe: t.vibeId,
+            isCustom: t.isCustom,
+            damageValue: ITEM_DAMAGE_VALUES[t.label] || 500
+          };
+        }
+        G.itemCounts[t.label].count++;
+        G.vibeCounts[t.vibeId] = (G.vibeCounts[t.vibeId] || 0) + 1;
+        if (t.isCustom) G.customCount++;
+
+        if (t.label === G.lastItem) {
+          G.sameStreak++;
+        } else {
+          G.lastItem = t.label;
+          G.sameStreak = 1;
+        }
+        if (G.sameStreak > G.maxSameItemStreak) {
+          G.maxSameItemStreak = G.sameStreak;
+          G.maxSameItemName = t.label;
+          G.maxSameItemEmoji = t.emoji;
+        }
+      }
+      if (t.kind === 'armored') G.armored++;
+      if (t.kind === 'golden') G.golden++;
+
+      bumpCombo();
+
+      const base = { normal: 100, custom: 250, armored: 400, golden: 1500, bomb: 200, freeze: 200, clock: 200 }[t.kind] || 100;
+      const streak = isItem ? G.sameStreak : 0;
+      const multi = 1 + 0.5 * (info.multiIndex || 0);
+      const crit = info.crit ? 2 : 1;
+      const rage = G.rageT > 0 ? 2 : 1;
+      const basePoints = Math.round(base * comboMult(G.combo) * G.tier.bonusMultiplier * multi * crit * rage);
+      const streakBonus = streak >= 2 ? Math.round(basePoints * Math.min(streak - 1, 5)) : 0;
+      const earned = basePoints + streakBonus;
+      G.score += earned;
+
+      // Juice
+      const hot = streak >= 2 || t.kind === 'golden';
+      const fxColor = hot ? '#f59e0b' : t.color;
+      const bigShards = G.rageT > 0 ? 30 : 20;
+      spawnShards(t.x, t.y, fxColor, info.viaBomb ? 10 : bigShards);
+      spawnRing(t.x, t.y, fxColor, 70);
+      spawnHalves(t);
+      t.flash = 0;
+      G.shake = Math.max(G.shake, 6 + Math.min(10, streak * 2 + G.tierIndex));
+
+      const pointSize = clamp(16 + Math.log10(Math.max(10, earned)) * 2, 18, 30);
+      if (info.crit) addFloat(t.x, t.y - 44, '💢 CRIT!', '#fb7185', 20, -2.8);
+
+      if (streak >= 2) {
+        const names = { 2: 'STREAK', 3: 'FRENZY', 4: 'RAMPAGE' };
+        addFloat(t.x, t.y - 28, `🎯 ${streak}x ${t.label.toUpperCase()} ${names[streak] || 'DESTROYER'}!`, '#f59e0b', 17, -3);
+        addFloat(t.x, t.y + 12, `+${fmt(earned)}`, '#fcd34d', pointSize);
+        sfx.streakChime(streak);
+      } else {
+        if (Math.random() < 0.15 && !info.viaBomb) addFloat(t.x, t.y - 22, pick(PUNCH_WORDS), '#ffffff', 19, -3);
+        if (!info.viaBomb) addFloat(t.x, t.y + 10, `+${fmt(earned)}`, t.isCustom ? '#f9a8d4' : '#fbbf24', pointSize);
+        sfx.shatter(G.combo);
+      }
+      buzz(info.viaBomb ? 0 : 22);
+
+      // Power-up effects
+      if (t.kind === 'golden') {
+        const goldTime = G.timed && G.mode !== 'blitz';
+        if (goldTime) G.timeLeft += 1;
+        addFloat(t.x, t.y - 50, goldTime ? '🌟 GOLDEN! +1s' : '🌟 GOLDEN!', '#fde047', 22, -2.6);
+        G.hitStop = Math.max(G.hitStop, 70);
+        sfx.golden();
+        addRage(12);
+      } else if (t.kind === 'bomb') {
+        G.pendingBombs.push({ x: t.x, y: t.y, t: 0.1 });
+      } else if (t.kind === 'freeze') {
+        G.slowT = 4;
+        queueBanner('🧊 SLOW-MO', 'Everything slows for 4s', '#67e8f9');
+        sfx.freeze();
+      } else if (t.kind === 'clock') {
+        G.timeLeft += 3;
+        addFloat(t.x, t.y - 40, '⏱️ +3 SECONDS', '#34d399', 21, -2.6);
+        sfx.mission();
+      }
+
+      addRage(t.kind === 'armored' ? 7 : 3.5);
+      checkSpeedProgression();
+      checkLive();
+      return earned;
+    }
+
+    function detonate(b) {
+      G.bombs++;
+      spawnRing(b.x, b.y, '#f97316', Math.max(W, H) * 0.7, 6);
+      spawnRing(b.x, b.y, '#fde047', Math.max(W, H) * 0.45, 3);
+      G.flash = { color: '249, 115, 22', a: 0.5 };
+      G.shake = Math.max(G.shake, 24);
+      G.hitStop = Math.max(G.hitStop, 90);
+      sfx.boom();
+      buzz([60, 30, 120]);
+      let chain = 0;
+      const scoreBefore = G.score;
+      for (const t of G.targets) {
+        if (t.dead || t.kind === 'hazard') continue;
+        destroyTarget(t, { viaBomb: true, multiIndex: Math.min(chain, 6) });
+        chain++;
+      }
+      G.maxBombChain = Math.max(G.maxBombChain, chain);
+      if (chain) addFloat(b.x, b.y, `+${fmt(G.score - scoreBefore)}`, '#fde047', 30, -2);
+      queueBanner(`💣 CHAIN x${chain}!`, chain ? 'Total demolition' : 'Nothing left to blow up', '#f97316');
+      checkLive();
+    }
+
+    function checkSpeedProgression() {
+      const next = getTier(G.tierIndex + 1);
+      const need = Math.round(next.minSmashed * (G.mode === 'blitz' ? 0.75 : 1));
+      if (G.totalSmashed < need) return;
+      G.tierIndex++;
+      G.tier = next;
+      if (next.wave > G.maxWave) G.maxWave = next.wave;
+      sfx.levelUp();
+      if (G.mode === 'waves') {
+        const bonus = next.wave <= 5 ? 5 : next.wave <= 7 ? 3 : 2;
+        G.timeLeft += bonus;
+        addFloat(W / 2, H * 0.52, `+${bonus}s TIME BONUS! ⏱️`, '#34d399', 20, -1.8);
+      }
+      queueBanner(`⚡ SPEED UP! WAVE ${next.wave}`, `${next.name} • ${next.speed}x SPEED & ${next.bonusMultiplier}x PTS`);
+      G.flash = { color: '56, 189, 248', a: 0.25 };
+    }
+
+    // Mid-round mission / achievement pops: the "one more round" hook
+    function checkLive() {
+      const r = liveStats();
+      const daily = ledger.daily();
+      for (const m of todaysMissions()) {
+        if (m.endOnly || daily.done[m.id] || G.liveMissions.has(m.id)) continue;
+        if (missionValue(m, daily, r) >= m.goal) {
+          G.liveMissions.add(m.id);
+          showToast(`✅ Mission done: ${m.text} (+${m.xp} XP)`, '#059669');
+          sfx.mission();
+        }
+      }
+      for (const a of ACHIEVEMENTS) {
+        if (!a.live || ledger.data.achievements[a.id] || G.liveAch.has(a.id)) continue;
+        if (a.test(r, ledger.data)) {
+          G.liveAch.add(a.id);
+          showToast(`🎖️ Achievement: ${a.icon} ${a.name}`, '#b45309');
+        }
+      }
+    }
+
+    // ---------- Input ----------
+    function toLocal(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (W / rect.width),
+        y: (e.clientY - rect.top) * (H / rect.height)
+      };
+    }
+
+    function strike(x, y) {
+      const w = G.weapon;
+      let primary = null;
+      let best = Infinity;
+      for (const t of G.targets) {
+        if (t.dead) continue;
+        const d = Math.hypot(x - t.x, y - t.y);
+        // Hazards get a tighter hitbox so near-misses on items aren't punished
+        const reach = t.kind === 'hazard' ? t.r * 0.95 : t.r * 1.25;
+        if (d < reach && d - t.r < best) {
+          best = d - t.r;
+          primary = t;
         }
       }
 
-      document.getElementById('charterAvatar').innerText = diagnosedCharter.avatar;
-      document.getElementById('charterName').innerText = diagnosedCharter.name;
-      document.getElementById('charterQuote').innerText = `"${diagnosedCharter.quote}"`;
+      G.swings.push({ x, y, life: 1, emoji: w.emoji });
 
-      // Render Demolition Breakdown ("Which things were smashed more")
-      const list = document.getElementById('breakdownList');
+      if (!primary) {
+        G.misses++;
+        if (G.combo > 1) G.comboT -= 0.35;
+        G.sameStreak = 0;
+        G.lastItem = null;
+        spawnRing(x, y, 'rgba(148, 163, 184, 0.6)', 28, 2);
+        sfx.miss();
+        return;
+      }
+
+      const hits = [primary];
+      if (w.splash && primary.kind !== 'hazard') {
+        for (const t of G.targets) {
+          if (t === primary || t.dead || t.kind === 'hazard') continue;
+          if (Math.hypot(x - t.x, y - t.y) - t.r < w.splash) hits.push(t);
+        }
+        spawnRing(x, y, 'rgba(255, 255, 255, 0.5)', w.splash + 20, 2);
+      }
+      resolveHits(hits);
+    }
+
+    function resolveHits(hits) {
+      const w = G.weapon;
+      let destroyed = 0;
+      for (const t of hits) {
+        G.hits++;
+        const crit = !!w.crit && Math.random() < w.crit;
+        if (hitTarget(t, w.dmg, { multiIndex: destroyed, crit }) === 'destroyed') destroyed++;
+      }
+      if (destroyed >= 2) {
+        G.maxMulti = Math.max(G.maxMulti, destroyed);
+        const t = hits[0];
+        addFloat(t.x, t.y - 62, `🎳 MULTI x${destroyed}!`, '#a78bfa', 22, -2.4);
+        G.hitStop = Math.max(G.hitStop, 45 + destroyed * 10);
+        addRage(4 * destroyed);
+        checkLive();
+      }
+    }
+
+    // Swipe: distance from target to the segment the pointer just traveled
+    function segDist(px, py, ax, ay, bx, by) {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const len2 = dx * dx + dy * dy;
+      const t = len2 ? clamp(((px - ax) * dx + (py - ay) * dy) / len2, 0, 1) : 0;
+      return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+    }
+
+    function swipe(p, x, y) {
+      const hits = [];
+      for (const t of G.targets) {
+        if (t.dead || p.hitIds.has(t.id)) continue;
+        if (segDist(t.x, t.y, p.x, p.y, x, y) < t.r * (t.kind === 'hazard' ? 0.8 : 1.1)) {
+          p.hitIds.add(t.id);
+          hits.push(t);
+        }
+      }
+      G.trails.push({ ax: p.x, ay: p.y, bx: x, by: y, life: 1 });
+      p.x = x;
+      p.y = y;
+      if (hits.length) {
+        const w = G.weapon;
+        for (const t of hits) {
+          G.hits++;
+          if (hitTarget(t, w.dmg, { multiIndex: p.destroyed }) === 'destroyed') p.destroyed++;
+        }
+        if (p.destroyed >= 2 && p.destroyed > p.announced) {
+          p.announced = p.destroyed;
+          G.maxMulti = Math.max(G.maxMulti, p.destroyed);
+          if (p.destroyed >= 3) addFloat(x, y - 40, `🏏 SLASH x${p.destroyed}!`, '#a78bfa', 21, -2.4);
+          checkLive();
+        }
+      }
+    }
+
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      sfx.init();
+      if (!G || G.phase === 'over') return;
+      if (G.paused) {
+        setPaused(false);
+        return;
+      }
+      if (G.phase !== 'play') return;
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointers */ }
+      const { x, y } = toLocal(e);
+      G.pointers.set(e.pointerId, { x, y, hitIds: new Set(), destroyed: 0, announced: 1 });
+      strike(x, y);
+      // Targets hit by the initial tap shouldn't be hit again by the same swipe
+      const p = G.pointers.get(e.pointerId);
+      for (const t of G.targets) if (t.dead) p.hitIds.add(t.id);
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!G || G.phase !== 'play' || G.paused || !G.weapon.swipe) return;
+      const p = G.pointers.get(e.pointerId);
+      if (!p) return;
+      const { x, y } = toLocal(e);
+      if (Math.hypot(x - p.x, y - p.y) < 4) return;
+      swipe(p, x, y);
+    });
+
+    const endPointer = (e) => { if (G) G.pointers.delete(e.pointerId); };
+    canvas.addEventListener('pointerup', endPointer);
+    canvas.addEventListener('pointercancel', endPointer);
+    canvas.addEventListener('lostpointercapture', endPointer);
+
+    // ---------- Loop ----------
+    function frame(now) {
+      if (!G || G.phase === 'over') return;
+      G.raf = requestAnimationFrame(frame);
+      const dtMs = clamp(now - G.last, 0, 50);
+      G.last = now;
+      if (!G.paused) {
+        if (G.hitStop > 0) G.hitStop -= dtMs;
+        else update(dtMs / 1000);
+      }
+      if (G && G.phase !== 'over') render();
+    }
+
+    function update(dt) {
+      const k = dt * 60;
+      G.time += dt;
+
+      if (G.phase === 'countdown') {
+        const prev = Math.ceil(G.countdown / 0.6);
+        G.countdown -= dt;
+        const cur = Math.ceil(G.countdown / 0.6);
+        if (cur !== prev && cur > 0) sfx.count(false);
+        if (G.countdown <= 0) {
+          G.phase = 'play';
+          sfx.count(true);
+          G.flash = { color: '255, 255, 255', a: 0.2 };
+        }
+        updateParticles(k);
+        updateHud();
+        return;
+      }
+
+      if (G.timed) {
+        G.timeLeft -= dt * G.timeScale;
+        const sec = Math.ceil(G.timeLeft);
+        if (sec <= 5 && sec > 0 && sec !== G.lastTickSec) {
+          G.lastTickSec = sec;
+          sfx.tick(sec);
+        }
+        if (G.timeLeft <= 0) {
+          G.timeLeft = 0;
+          updateHud();
+          endRound();
+          return;
+        }
+      } else {
+        G.elapsed += dt;
+      }
+
+      const slow = G.slowT > 0 ? 0.45 : 1;
+      if (G.slowT > 0) G.slowT -= dt;
+
+      if (G.combo > 1) {
+        G.comboT -= dt;
+        if (G.comboT <= 0) dropCombo();
+      }
+
+      if (G.rageT > 0) {
+        G.rageT -= dt;
+        if (G.rageT <= 0) {
+          G.rageT = 0;
+          G.rage = 0;
+        }
+      } else {
+        G.rage = Math.max(0, G.rage - 2.5 * dt);
+      }
+
+      for (const b of G.pendingBombs) b.t -= dt;
+      const ready = G.pendingBombs.filter((b) => b.t <= 0);
+      G.pendingBombs = G.pendingBombs.filter((b) => b.t > 0);
+      ready.forEach(detonate);
+
+      const interval = (G.tier.spawnInterval / 60) * (G.rageT > 0 ? 0.65 : 1);
+      G.spawnAcc += dt * slow;
+      while (G.spawnAcc >= interval) {
+        G.spawnAcc -= interval;
+        spawnTick();
+      }
+
+      const ks = k * slow;
+      for (const t of G.targets) {
+        t.update(ks);
+        if (t.vy > 0 && t.y > H + t.r + 24) t.dead = true;
+      }
+      G.targets = G.targets.filter((t) => !t.dead);
+
+      updateParticles(ks);
+      G.shake *= Math.pow(0.82, k);
+      if (G.shake < 0.3) G.shake = 0;
+      if (G.flash) {
+        G.flash.a -= dt * 2.2;
+        if (G.flash.a <= 0) G.flash = null;
+      }
+      updateHud();
+    }
+
+    function updateParticles(k) {
+      for (const s of G.shards) {
+        s.x += s.vx * k;
+        s.y += s.vy * k;
+        s.vy += 0.38 * k;
+        s.vx *= Math.pow(0.99, k);
+        s.rot += s.vr * k;
+        s.life -= s.decay * k;
+        if (s.y > H - 3 && s.vy > 0) {
+          s.y = H - 3;
+          s.vy *= -0.3;
+          s.vx *= 0.6;
+          if (Math.abs(s.vy) < 1.6) {
+            // Debris piles up on the floor for the rest of the round
+            if (Math.random() < 0.55) bakeShard(s);
+            s.life = 0;
+          }
+        }
+      }
+      G.shards = G.shards.filter((s) => s.life > 0);
+
+      for (const h of G.halves) {
+        h.x += h.vx * k;
+        h.y += h.vy * k;
+        h.vy += 0.42 * k;
+        h.rot += h.vr * k;
+        h.life -= 0.025 * k;
+      }
+      G.halves = G.halves.filter((h) => h.life > 0 && h.y < H + 80);
+
+      for (const r of G.rings) {
+        r.r += (r.maxR - r.r) * 0.18 * k + 0.5 * k;
+        r.a -= 0.05 * k;
+      }
+      G.rings = G.rings.filter((r) => r.a > 0);
+
+      for (const f of G.floats) {
+        f.y += f.vy * k;
+        f.vy *= Math.pow(0.97, k);
+        f.s = Math.min(1, f.s + 0.12 * k);
+        f.a -= 0.03 * k;
+      }
+      G.floats = G.floats.filter((f) => f.a > 0);
+
+      for (const s of G.swings) s.life -= 0.11 * k;
+      G.swings = G.swings.filter((s) => s.life > 0);
+      for (const t of G.trails) t.life -= 0.09 * k;
+      G.trails = G.trails.filter((t) => t.life > 0);
+
+      if (!G.banner && G.bannerQueue.length) G.banner = G.bannerQueue.shift();
+      if (G.banner) {
+        G.banner.t += k / 60;
+        if (G.banner.t >= G.banner.life) G.banner = null;
+      }
+    }
+
+    function render() {
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      ctx.save();
+      if (G.shake > 0) ctx.translate((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake);
+
+      ctx.drawImage(floorCanvas, 0, 0, W, H);
+
+      if (G.rageT > 0) {
+        const pulse = 0.18 + Math.sin(G.time * 10) * 0.08;
+        const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.75);
+        vg.addColorStop(0, 'rgba(239, 68, 68, 0)');
+        vg.addColorStop(1, `rgba(239, 68, 68, ${pulse})`);
+        ctx.fillStyle = vg;
+        ctx.fillRect(0, 0, W, H);
+      }
+      if (G.slowT > 0) {
+        ctx.fillStyle = 'rgba(103, 232, 249, 0.07)';
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      for (const r of G.rings) {
+        ctx.globalAlpha = Math.max(0, r.a);
+        ctx.strokeStyle = r.color;
+        ctx.lineWidth = r.width;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.r, 0, TAU);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      for (const t of G.targets) t.draw(G.time);
+
+      for (const h of G.halves) {
+        const sp = h.sprite;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, h.life);
+        ctx.translate(h.x, h.y);
+        ctx.rotate(h.rot);
+        const halfPx = sp.c.width / 2;
+        ctx.drawImage(sp.c, h.side < 0 ? 0 : halfPx, 0, halfPx, sp.c.height, h.side < 0 ? -sp.w / 2 : 0, -sp.h / 2, sp.w / 2, sp.h);
+        ctx.restore();
+      }
+
+      for (const s of G.shards) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, s.life);
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.rot);
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.moveTo(s.pts[0][0], s.pts[0][1]);
+        ctx.lineTo(s.pts[1][0], s.pts[1][1]);
+        ctx.lineTo(s.pts[2][0], s.pts[2][1]);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      if (G.trails.length) {
+        ctx.lineCap = 'round';
+        for (const t of G.trails) {
+          ctx.globalAlpha = Math.max(0, t.life);
+          ctx.strokeStyle = '#fde68a';
+          ctx.lineWidth = 2 + 10 * t.life;
+          ctx.beginPath();
+          ctx.moveTo(t.ax, t.ay);
+          ctx.lineTo(t.bx, t.by);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      for (const s of G.swings) {
+        const sp = emojiSprite(s.emoji, 34);
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, s.life * 1.5);
+        ctx.translate(s.x + 14, s.y - 14);
+        ctx.rotate(-1.1 + (1 - s.life) * 1.6);
+        ctx.drawImage(sp.c, -sp.w / 2, -sp.h / 2, sp.w, sp.h);
+        ctx.restore();
+      }
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (const f of G.floats) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, f.a * 1.4));
+        ctx.font = `900 ${Math.round(f.size * (0.7 + 0.3 * f.s))}px 'Outfit', sans-serif`;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.strokeText(f.text, f.x, f.y);
+        ctx.fillStyle = f.color;
+        ctx.fillText(f.text, f.x, f.y);
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+
+      // Combo timer bar: visible pressure to keep swinging
+      if (G.combo > 1 && G.phase === 'play') {
+        const frac = clamp(G.comboT / comboWindow(), 0, 1);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        drawRoundedRect(ctx, 12, 10, W - 24, 6, 3);
+        ctx.fill();
+        ctx.fillStyle = G.combo >= 20 ? '#ef4444' : G.combo >= 10 ? '#f97316' : '#f59e0b';
+        drawRoundedRect(ctx, 12, 10, Math.max(6, (W - 24) * frac), 6, 3);
+        ctx.fill();
+      }
+      if (G.slowT > 0) {
+        ctx.font = "800 12px 'Plus Jakarta Sans', sans-serif";
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#67e8f9';
+        ctx.fillText(`🧊 SLOW-MO ${G.slowT.toFixed(1)}s`, W - 14, 30);
+      }
+
+      if (G.banner) {
+        const b = G.banner;
+        const inT = Math.min(1, b.t / 0.18);
+        const outA = b.t > b.life - 0.3 ? (b.life - b.t) / 0.3 : 1;
+        const scale = 0.7 + 0.3 * (1 - Math.pow(1 - inT, 3));
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, outA);
+        ctx.translate(W / 2, Math.max(52, H * 0.14));
+        ctx.scale(scale, scale);
+        const bw = Math.min(300, W - 24);
+        drawRoundedRect(ctx, -bw / 2, -26, bw, 52, 16);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = b.color;
+        ctx.stroke();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = "900 18px 'Outfit', sans-serif";
+        ctx.fillStyle = b.color;
+        ctx.fillText(b.title, 0, -7);
+        ctx.font = "800 11px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillText(b.sub, 0, 14);
+        ctx.restore();
+      }
+
+      if (G.flash) {
+        ctx.fillStyle = `rgba(${G.flash.color}, ${Math.max(0, G.flash.a)})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      if (G.phase === 'countdown') {
+        const n = Math.ceil(G.countdown / 0.6);
+        const frac = (G.countdown % 0.6) / 0.6;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.globalAlpha = 0.35 + 0.65 * frac;
+        ctx.font = `900 ${Math.round(70 + 40 * frac)}px 'Outfit', sans-serif`;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(String(n), W / 2, H / 2);
+        ctx.globalAlpha = 1;
+        ctx.font = "800 13px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillStyle = '#94a3b8';
+        const hint = G.weapon.swipe ? 'Drag to slash • avoid 🚫 hazards' : 'Tap to smash • avoid 🚫 hazards';
+        ctx.fillText(hint, W / 2, H / 2 + 70);
+        ctx.restore();
+      }
+
+      if (G.paused) {
+        ctx.fillStyle = 'rgba(5, 8, 15, 0.72)';
+        ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = "900 34px 'Outfit', sans-serif";
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('⏸ PAUSED', W / 2, H / 2 - 12);
+        ctx.font = "700 13px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('Tap to resume', W / 2, H / 2 + 22);
+      }
+    }
+
+    // ---------- HUD (DOM writes only when values change) ----------
+    const hudEls = {
+      score: $('hudScore'),
+      timer: $('hudTimer'),
+      timeLabel: $('hudTimeLabel'),
+      speed: $('hudSpeedBadge'),
+      combo: $('hudCombo'),
+      comboLabel: $('hudComboLabel'),
+      streak: $('hudStreakBadge'),
+      rageFill: $('rageFill'),
+      ragePct: $('ragePercent'),
+      rageLabel: $('rageMeterLabel')
+    };
+
+    function setHud(key, val, apply) {
+      if (G.hud[key] === val) return;
+      G.hud[key] = val;
+      apply(val);
+    }
+
+    function updateHud() {
+      G.displayScore += (G.score - G.displayScore) * 0.3;
+      if (Math.abs(G.score - G.displayScore) < 1) G.displayScore = G.score;
+      setHud('score', fmt(G.displayScore), (v) => { hudEls.score.textContent = v; });
+
+      if (G.timed) {
+        const sec = Math.max(0, Math.ceil(G.timeLeft));
+        setHud('timer', `${sec}s`, (v) => { hudEls.timer.textContent = v; });
+        setHud('danger', sec <= 5, (v) => hudEls.timer.classList.toggle('danger', v));
+      } else {
+        const s = Math.floor(G.elapsed);
+        setHud('timer', `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`, (v) => { hudEls.timer.textContent = v; });
+      }
+
+      setHud('speed', `WAVE ${G.tier.wave} • ${G.tier.speed}x`, (v) => {
+        hudEls.speed.textContent = v;
+        const hot = G.tierIndex > (G.mode === 'turbo' ? 2 : 0);
+        hudEls.speed.style.color = hot ? '#f59e0b' : '#38bdf8';
+        hudEls.speed.style.borderColor = hot ? 'rgba(245, 158, 11, 0.4)' : 'rgba(56, 189, 248, 0.35)';
+        hudEls.speed.style.background = hot ? 'rgba(245, 158, 11, 0.2)' : 'rgba(56, 189, 248, 0.18)';
+      });
+
+      setHud('combo', `x${comboMult(G.combo)}`, (v) => { hudEls.combo.textContent = v; });
+      setHud('comboCount', G.combo, (v) => { hudEls.comboLabel.textContent = v > 1 ? `Combo ${v}` : 'Multiplier'; });
+
+      const streakText = G.sameStreak >= 2 ? `🔥 ${G.sameStreak}x ${G.lastItem}` : '';
+      setHud('streak', streakText, (v) => {
+        hudEls.streak.style.display = v ? 'inline-block' : 'none';
+        hudEls.streak.textContent = v;
+      });
+
+      const raging = G.rageT > 0;
+      const pct = raging ? Math.round((G.rageT / 6) * 100) : Math.floor(G.rage);
+      setHud('ragePct', pct, (v) => {
+        hudEls.rageFill.style.width = `${v}%`;
+        hudEls.ragePct.textContent = `${v}%`;
+      });
+      setHud('raging', raging, (v) => {
+        hudEls.rageFill.classList.toggle('raging', v);
+        hudEls.rageLabel.textContent = v ? '😡 RAGE MODE — 2x POINTS!' : 'RAGE METER — fill it for 2x points';
+        hudEls.rageLabel.style.color = v ? '#f87171' : '';
+        hudEls.ragePct.style.color = v ? '#f87171' : '#10b981';
+      });
+    }
+
+    // ---------- Round lifecycle ----------
+    function stopLoop() {
+      if (G) {
+        cancelAnimationFrame(G.raf);
+        G.phase = 'over';
+      }
+    }
+
+    function startSmashArena() {
+      stopLoop();
+      sfx.init();
+      saveSettings();
+      dossierModal.style.display = 'none';
+      showScreen(arenaScreen);
+      resizeCanvas();
+      fctx.clearRect(0, 0, W, H);
+
+      G = newState();
+      hudEls.timeLabel.textContent = G.timed ? 'Time' : 'Elapsed';
+      $('btnAbortSmash').textContent = G.timed ? 'Exit Rage Room' : 'Finish & View Results';
+      $('btnPause').textContent = '⏸ Pause';
+      hudEls.timer.classList.remove('danger');
+      updateHud();
+      G.raf = requestAnimationFrame(frame);
+    }
+
+    function setPaused(p) {
+      if (!G || G.phase === 'over' || G.paused === p) return;
+      G.paused = p;
+      G.last = performance.now();
+      G.pointers.clear();
+      $('btnPause').textContent = p ? '▶ Resume' : '⏸ Pause';
+      if (p) render();
+    }
+
+    $('btnPause').addEventListener('click', () => {
+      if (G) setPaused(!G.paused);
+    });
+
+    $('btnAbortSmash').addEventListener('click', () => {
+      if (!G) return;
+      if (!G.timed && G.totalSmashed > 0) {
+        endRound();
+      } else {
+        stopLoop();
+        renderLobby();
+        showScreen(configScreen);
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && G && G.phase !== 'over') setPaused(true);
+    });
+    window.addEventListener('blur', () => {
+      if (G && G.phase === 'play') setPaused(true);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target && e.target.tagName === 'INPUT') return;
+      const inArena = arenaScreen.style.display !== 'none';
+      const inResults = resultScreen.style.display !== 'none';
+      const inLobby = configScreen.style.display !== 'none';
+      if (dossierModal.style.display === 'flex') {
+        if (e.key === 'Escape') dossierModal.style.display = 'none';
+        return;
+      }
+      if (inArena && G && (e.key === 'Escape' || e.key === 'p' || e.key === 'P')) {
+        setPaused(!G.paused);
+      } else if (inResults && (e.key === ' ' || e.key === 'Enter' || e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        startSmashArena();
+      } else if (inLobby && e.key === 'Enter' && !(e.target && e.target.closest && e.target.closest('button'))) {
+        startSmashArena();
+      }
+    });
+
+    function endRound() {
+      if (!G || G.phase === 'over') return;
+      stopLoop();
+      toastQueue.length = 0;
+      const stats = {
+        ...liveStats(),
+        maxSameItemName: G.maxSameItemName,
+        maxSameItemEmoji: G.maxSameItemEmoji,
+        vibeCounts: G.vibeCounts,
+        customCount: G.customCount,
+        itemCounts: G.itemCounts,
+        category: G.vibe.name,
+        mode: G.mode,
+        weapon: G.weaponId,
+        hits: G.hits,
+        misses: G.misses,
+        cleanRound: G.hazardsHit === 0 && G.totalSmashed >= 25 ? 1 : 0,
+        rounds: 1
+      };
+      finishRound(stats);
+    }
+
+    function commitRound(stats) {
+      const d = ledger.data;
+      const daily = ledger.daily();
+      const before = levelInfo(d.xp);
+
+      d.careerRounds++;
+      d.careerTotalSmashed += stats.totalSmashed;
+      d.careerTotalScore += stats.score;
+      d.careerDamages += stats.propertyDamage;
+      d.highestCombo = Math.max(d.highestCombo || 0, stats.maxCombo);
+      d.maxWaveReached = Math.max(d.maxWaveReached || 1, stats.maxWave);
+      if (stats.maxSameItemStreak > (d.bestItemStreak.count || 0)) {
+        d.bestItemStreak = { count: stats.maxSameItemStreak, item: stats.maxSameItemName, emoji: stats.maxSameItemEmoji };
+      }
+      for (const [name, info] of Object.entries(stats.itemCounts)) {
+        if (!d.itemStats[name]) d.itemStats[name] = { count: 0, emoji: info.emoji, vibe: info.vibe };
+        d.itemStats[name].count += info.count;
+      }
+
+      const today = dateKey();
+      if (d.dayStreak.last !== today) {
+        const y = new Date();
+        y.setDate(y.getDate() - 1);
+        d.dayStreak.count = d.dayStreak.last === dateKey(y) ? d.dayStreak.count + 1 : 1;
+        d.dayStreak.last = today;
+      }
+
+      const completed = [];
+      for (const m of todaysMissions()) {
+        if (daily.done[m.id]) continue;
+        const v = missionValue(m, daily, stats);
+        daily.progress[m.id] = v;
+        if (v >= m.goal) {
+          daily.done[m.id] = true;
+          completed.push(m);
+        }
+      }
+      let sweep = false;
+      if (!daily.sweep && todaysMissions().every((m) => daily.done[m.id])) {
+        daily.sweep = true;
+        sweep = true;
+      }
+
+      const xpGained = 40 + Math.round(stats.totalSmashed * 0.8) + Math.round(Math.min(stats.maxCombo, 40) * 1.5) + (stats.maxWave - 1) * 12 +
+        completed.reduce((a, m) => a + m.xp, 0) + (sweep ? DAILY_SWEEP_XP : 0);
+      d.xp += xpGained;
+      const after = levelInfo(d.xp);
+
+      const prevBest = d.bestScores[stats.mode] || 0;
+      const isBest = stats.score > prevBest && stats.score > 0;
+      if (isBest) d.bestScores[stats.mode] = stats.score;
+
+      const newAch = [];
+      for (const a of ACHIEVEMENTS) {
+        if (!d.achievements[a.id] && a.test(stats, d, after)) {
+          d.achievements[a.id] = Date.now();
+          newAch.push(a);
+        }
+      }
+
+      const unlockedWeapons = Object.values(WEAPONS).filter((w) => w.unlock > before.level && w.unlock <= after.level);
+      ledger.save();
+      return { xpGained, before, after, isBest, prevBest, completed, sweep, newAch, unlockedWeapons };
+    }
+
+    function animateNumber(el, to, ms) {
+      const start = performance.now();
+      const step = (now) => {
+        const p = Math.min(1, (now - start) / ms);
+        el.textContent = fmt(to * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    function finishRound(stats) {
+      sfx.success();
+      let propertyDamage = 0;
+      for (const info of Object.values(stats.itemCounts)) propertyDamage += (info.damageValue || 500) * info.count;
+      stats.propertyDamage = propertyDamage;
+
+      const res = commitRound(stats);
+      showScreen(resultScreen);
+
+      animateNumber($('finalScore'), stats.score, 900);
+
+      const bestEl = $('resultBest');
+      if (res.isBest) {
+        bestEl.className = 'result-best new';
+        bestEl.textContent = res.prevBest > 0 ? `🏆 NEW PERSONAL BEST! (+${fmt(stats.score - res.prevBest)})` : '🏆 FIRST SCORE ON THE BOARD!';
+        setTimeout(() => sfx.levelUp(), 400);
+      } else {
+        bestEl.className = 'result-best';
+        const gap = res.prevBest - stats.score;
+        const close = gap <= res.prevBest * 0.15;
+        bestEl.textContent = close ? `😤 So close! Only ${fmt(gap)} pts from your best (${fmt(res.prevBest)})` : `🏆 Your best: ${fmt(res.prevBest)} — ${fmt(gap)} to beat it`;
+      }
+
+      // XP / level
+      const lvl = res.after;
+      $('resLevel').textContent = `LEVEL ${lvl.level}`;
+      $('resRank').textContent = lvl.title;
+      $('resXpGain').textContent = `+${fmt(res.xpGained)} XP`;
+      const fill = $('resXpFill');
+      const startPct = res.after.level > res.before.level ? 0 : (res.before.into / res.before.need) * 100;
+      fill.style.transition = 'none';
+      fill.style.width = `${startPct}%`;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        fill.style.transition = '';
+        fill.style.width = `${(lvl.into / lvl.need) * 100}%`;
+      }));
+      const nextWeapon = Object.values(WEAPONS).find((w) => w.unlock > lvl.level);
+      $('resXpSub').textContent = `${fmt(lvl.need - lvl.into)} XP to Level ${lvl.level + 1}` + (nextWeapon ? ` · ${nextWeapon.emoji} ${nextWeapon.name} unlocks at Lvl ${nextWeapon.unlock}` : '');
+
+      const unlocks = [];
+      if (res.after.level > res.before.level) {
+        unlocks.push(`<div class="unlock-item levelup"><span class="ico">⬆️</span><div>LEVEL UP! Now Level ${lvl.level}<small>${esc(lvl.title)}</small></div></div>`);
+      }
+      for (const w of res.unlockedWeapons) {
+        unlocks.push(`<div class="unlock-item levelup"><span class="ico">${w.emoji}</span><div>New weapon: ${esc(w.name)}<small>${esc(w.desc)}</small></div></div>`);
+      }
+      for (const m of res.completed) {
+        unlocks.push(`<div class="unlock-item"><span class="ico">✅</span><div>Mission complete: ${esc(m.text)}<small>+${m.xp} XP</small></div></div>`);
+      }
+      if (res.sweep) {
+        unlocks.push(`<div class="unlock-item"><span class="ico">🏅</span><div>All daily missions cleared!<small>+${DAILY_SWEEP_XP} bonus XP · new missions tomorrow</small></div></div>`);
+      }
+      if (res.newAch.length) {
+        const chips = res.newAch.map((a) => `<span class="ach-chip" title="${esc(a.desc)}">${a.icon} ${esc(a.name)}</span>`).join('');
+        unlocks.push(`<div class="unlock-item ach"><span class="ico">🎖️</span><div>${res.newAch.length === 1 ? 'Achievement unlocked' : `${res.newAch.length} achievements unlocked`}<div class="ach-chips">${chips}</div></div></div>`);
+      }
+      if (!unlocks.length) {
+        const daily = ledger.daily();
+        const nextM = todaysMissions().find((m) => !daily.done[m.id]);
+        if (nextM) {
+          const v = Math.min(nextM.goal, daily.progress[nextM.id] || 0);
+          unlocks.push(`<div class="unlock-item" style="background:rgba(56,189,248,0.08);border-color:rgba(56,189,248,0.3);"><span class="ico">🎯</span><div>Next mission: ${esc(nextM.text)}<small>${fmt(v)} / ${fmt(nextM.goal)} · +${nextM.xp} XP</small></div></div>`);
+        }
+      }
+      const unlockBox = $('resUnlocks');
+      unlockBox.innerHTML = unlocks.join('');
+      [...unlockBox.children].forEach((el, i) => { el.style.animationDelay = `${0.15 + i * 0.12}s`; });
+
+      // Stats
+      $('statDamage').textContent = `$${fmt(propertyDamage)}`;
+      $('statSpeedWave').textContent = `Wave ${stats.maxWave} (${getTier(stats.maxWave - 1).speed}x)`;
+      $('statMaxCombo').textContent = `${stats.maxCombo} hits (x${comboMult(stats.maxCombo)})`;
+      const swings = stats.hits + stats.misses;
+      $('statAccuracy').textContent = swings ? `${Math.round((stats.hits / swings) * 100)}%` : '—';
+      $('statItemStreak').textContent = stats.maxSameItemStreak >= 2 ? `${stats.maxSameItemStreak}x ${stats.maxSameItemEmoji} ${stats.maxSameItemName}` : "None (Mix)";
+      const hz = $('statHazards');
+      hz.textContent = stats.hazardsHit ? `${stats.hazardsHit} 😿` : '0 😇';
+      hz.style.color = stats.hazardsHit ? '#f87171' : '#34d399';
+
+      const badge = $('resultBadge');
+      if (stats.totalSmashed >= 60 || stats.maxWave >= 5) {
+        badge.textContent = "💥 CATHARTIC GOD OF DESTRUCTION";
+        badge.style.background = "rgba(239, 68, 68, 0.25)";
+      } else if (stats.totalSmashed >= 30 || stats.maxWave >= 3) {
+        badge.textContent = "🔥 CERTIFIED RAGE DEMON";
+        badge.style.background = "rgba(249, 115, 22, 0.25)";
+      } else {
+        badge.textContent = "⚡ THERAPEUTIC CRUSHER";
+        badge.style.background = "rgba(16, 185, 129, 0.25)";
+      }
+
+      const charter = CHARACTER_CHARTERS.find((ch) => ch.criteria(stats)) || CHARACTER_CHARTERS[CHARACTER_CHARTERS.length - 1];
+      $('charterAvatar').textContent = charter.avatar;
+      $('charterName').textContent = charter.name;
+      $('charterQuote').textContent = `"${charter.quote}"`;
+
+      const list = $('breakdownList');
       list.innerHTML = "";
-      document.getElementById('breakdownTotalBadge').innerText = `${stats.totalSmashed} Items Smashed`;
-
+      const itemTotal = Object.values(stats.itemCounts).reduce((a, i) => a + i.count, 0);
+      $('breakdownTotalBadge').textContent = `${stats.totalSmashed} Items Smashed`;
       const sortedItems = Object.entries(stats.itemCounts).sort((a, b) => b[1].count - a[1].count);
-
       if (sortedItems.length === 0) {
         list.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:12px;">No items were smashed. Try swinging faster next time!</div>`;
       } else {
@@ -2120,17 +3731,16 @@
         sortedItems.forEach(([name, info], idx) => {
           const pct = Math.round((info.count / topCount) * 100);
           const isNemesis = idx === 0 && info.count >= 2;
-
           const row = document.createElement('div');
           row.className = "breakdown-row";
           row.innerHTML = `
             <div class="breakdown-info">
               <span class="breakdown-label">
-                <span>${info.emoji || '🎯'}</span>
-                <span>${name}</span>
+                <span>${esc(info.emoji || '🎯')}</span>
+                <span>${esc(name)}</span>
                 ${isNemesis ? '<span class="nemesis-tag">👑 TOP NEMESIS</span>' : ''}
               </span>
-              <span class="breakdown-count"><strong>${info.count}</strong> smashed (${Math.round((info.count/stats.totalSmashed)*100)}%)</span>
+              <span class="breakdown-count"><strong>${info.count}</strong> (${Math.round((info.count / itemTotal) * 100)}%)</span>
             </div>
             <div class="breakdown-bar-bg">
               <div class="breakdown-bar-fill" style="width:${pct}%;"></div>
@@ -2140,37 +3750,69 @@
         });
       }
 
-      // Save for sharing
       lastRoundSummary = {
         score: stats.score,
         totalSmashed: stats.totalSmashed,
+        mode: stats.mode,
+        isBest: res.isBest,
+        level: lvl.level,
+        combo: stats.maxCombo,
         topNemesis: sortedItems.length > 0 ? `${sortedItems[0][1].emoji} ${sortedItems[0][0]} (${sortedItems[0][1].count} smashed)` : "None",
         streak: stats.maxSameItemStreak >= 2 ? `${stats.maxSameItemStreak}x ${stats.maxSameItemEmoji} ${stats.maxSameItemName}` : "None",
         wave: stats.maxWave,
-        speed: SPEED_TIERS[stats.maxWave - 1]?.speed || 1.0,
-        charter: diagnosedCharter.name,
-        damage: `$${propertyDamage.toLocaleString()}`
+        speed: getTier(stats.maxWave - 1).speed,
+        charter: charter.name,
+        damage: `$${fmt(propertyDamage)}`
       };
     }
 
     // Share / Copy Report
-    document.getElementById('btnShareReport').addEventListener('click', () => {
+    $('btnShareReport').addEventListener('click', async () => {
       if (!lastRoundSummary) return;
-      const text = `💥 RAGE ROOM SMASH REPORT
-🎯 Demolition Score: ${lastRoundSummary.score.toLocaleString()} pts (${lastRoundSummary.totalSmashed} items smashed)
-⚡ Peak Speed: Wave ${lastRoundSummary.wave} (${lastRoundSummary.speed}x Speed)
-👑 Top Nemesis: ${lastRoundSummary.topNemesis}
-🔥 Nemesis Streak: ${lastRoundSummary.streak}
-🎭 Character Persona: ${lastRoundSummary.charter}
-💸 Fictional Damages: ${lastRoundSummary.damage}
-👉 Demolish your stress free: https://apps.arunkumars.in/games/smash/`;
+      const s = lastRoundSummary;
+      const modeNames = { waves: 'Rage Waves', blitz: '30s Blitz', turbo: 'Turbo Rush', zen: 'Endless Zen' };
+      const text = `💥 RAGE ROOM SMASH REPORT${s.isBest ? ' — NEW PERSONAL BEST!' : ''}
+🎯 Score: ${fmt(s.score)} pts in ${modeNames[s.mode]} (${s.totalSmashed} items smashed)
+🔗 Max Combo: ${s.combo} hits • ⚡ Peak: Wave ${s.wave} (${s.speed}x)
+👑 Top Nemesis: ${s.topNemesis}
+🔥 Nemesis Streak: ${s.streak}
+🎭 Persona: ${s.charter} (Lvl ${s.level})
+💸 Fictional Damages: ${s.damage}
+👉 Can you beat me? https://apps.arunkumars.in/games/smash/`;
 
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => showToast("Report copied to clipboard! 📋"));
-      } else {
-        showToast("Report ready! 📋");
+      try {
+        if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+          await navigator.share({ text });
+          return;
+        }
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("Report copied to clipboard! 📋");
+      } catch (e) {
+        showToast("Couldn't access clipboard 😕", '#b91c1c');
       }
     });
+
+    // Test/debug hooks (read-only snapshot + round control)
+    window.__smash = {
+      state: () => G && {
+        phase: G.phase, paused: G.paused, mode: G.mode, weapon: G.weaponId,
+        score: G.score, combo: G.combo, timeLeft: G.timeLeft, totalSmashed: G.totalSmashed,
+        wave: G.tier.wave, rage: G.rage, rageT: G.rageT, slowT: G.slowT, hazardsHit: G.hazardsHit,
+        W, H,
+        targets: G.targets.filter((t) => !t.dead).map((t) => ({ id: t.id, x: t.x, y: t.y, r: t.r, kind: t.kind, hp: t.hp, label: t.label }))
+      },
+      spawn: (kind) => { if (G) G.targets.push(makeTarget(kind)); },
+      setTimeScale: (k) => { if (G) G.timeScale = k; },
+      end: () => endRound(),
+      ledger: () => ledger.data
+    };
+
+    renderLobby();
+    showScreen(configScreen);
   </script>
 </body>
 </html>
