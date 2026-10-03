@@ -1,5 +1,6 @@
 // Message boards. `text` is what goes to the panel; `label` is the button caption.
 import { COLORS } from "./scene.js";
+import { APK_EYES_META } from "./apk_eyes.js";
 
 export const BOARDS = [
   {
@@ -43,6 +44,13 @@ export const EYES = [
   { mode: "cyan_cyber", label: "Cyber rings", hint: "Sci-fi aperture", icon: "🤖", color: COLORS.cyan },
   { mode: "cylon", label: "Scanner bar", hint: "Knight Rider", icon: "⚡", color: COLORS.red },
   { mode: "winking", label: "Winking", hint: "Wink loop", icon: "😉", color: COLORS.amber },
+  ...APK_EYES_META.map((m) => ({
+    mode: m.mode,
+    label: m.label,
+    hint: m.hint,
+    icon: m.icon,
+    color: m.color,
+  })),
 ];
 
 export const PALETTE = [COLORS.red, COLORS.amber, COLORS.green, COLORS.cyan, "#3b82f6", COLORS.purple, "#ec4899", COLORS.white];

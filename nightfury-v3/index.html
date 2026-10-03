@@ -128,7 +128,20 @@
       <!-- ============================== MESSAGES -->
       <section class="view" id="view-messages" data-view="messages">
         <div class="card">
-          <div class="seg" id="boardTabs" role="tablist"></div>
+          <div class="card-head">
+            <div class="seg" id="boardTabs" role="tablist"></div>
+            <div class="rotate-controls">
+              <button type="button" class="rotate-toggle-btn" id="boardsRotateBtn" title="Automatically rotate category messages">
+                <span class="rotate-badge">🔄</span> <span id="boardsRotateLabel">Auto rotate</span>
+              </button>
+              <select class="select-small" id="boardsRotateInterval" title="Rotate interval">
+                <option value="5s">5s</option>
+                <option value="10s" selected>10s</option>
+                <option value="15s">15s</option>
+                <option value="30s">30s</option>
+              </select>
+            </div>
+          </div>
           <div class="grid presets" id="presetGrid"></div>
           <p class="empty" id="mineEmpty" hidden>No saved messages yet. Compose one in <b>Studio</b> and tap <b>Save</b>.</p>
         </div>
@@ -137,7 +150,23 @@
       <!-- ============================== EYES -->
       <section class="view" id="view-eyes" data-view="eyes">
         <div class="card">
-          <div class="card-head"><h2>Devil eyes</h2><small>Animated in preview · still frame on panel unless Live animation is on</small></div>
+          <div class="card-head">
+            <div>
+              <h2>Devil eyes</h2>
+              <small>Animated in preview · still frame on panel unless Live animation is on</small>
+            </div>
+            <div class="rotate-controls">
+              <button type="button" class="rotate-toggle-btn" id="eyesRotateBtn" title="Automatically rotate through eyes">
+                <span class="rotate-badge">🔄</span> <span id="eyesRotateLabel">Auto rotate</span>
+              </button>
+              <select class="select-small" id="eyesRotateInterval" title="Rotate interval">
+                <option value="5s">5s</option>
+                <option value="10s" selected>10s</option>
+                <option value="15s">15s</option>
+                <option value="30s">30s</option>
+              </select>
+            </div>
+          </div>
           <div class="grid eyes" id="eyesGrid"></div>
         </div>
       </section>
@@ -258,6 +287,9 @@
         </div>
         <div class="field-row">Show messages for
           <span class="seg small" data-setting="holdKey"><button type="button" data-v="5s">5s</button><button type="button" data-v="10s">10s</button><button type="button" data-v="30s">30s</button><button type="button" data-v="sticky">Pin</button></span>
+        </div>
+        <div class="field-row">Auto-rotate interval
+          <span class="seg small" data-setting="autoRotateInterval"><button type="button" data-v="5s">5s</button><button type="button" data-v="10s">10s</button><button type="button" data-v="15s">15s</button><button type="button" data-v="30s">30s</button></span>
         </div>
         <div class="field-row">When stopped
           <span class="seg small" data-setting="stoppedMode"><button type="button" data-v="stopped">STOPPED</button><button type="button" data-v="message">Message</button><button type="button" data-v="clock">Clock</button></span>

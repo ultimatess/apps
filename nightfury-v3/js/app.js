@@ -127,6 +127,10 @@ const state = {
   animTick: 0,
   activeTab: "drive",
   board: "road",
+  autoRotate: S.autoRotate || false,
+  autoRotateCategory: S.autoRotateCategory || "eyes",
+  autoRotateIndex: 0,
+  nextRotateAt: 0,
 };
 
 // ------------------------------------------------------------------ telemetry
@@ -259,6 +263,15 @@ function loop() {
     renderTelemetry(now);
     renderHoldBar(now);
   }
+
+  if (state.autoRotate) {
+    const intervalMs = HOLD_OPTIONS[S.autoRotateInterval] || 10000;
+    if (now >= state.nextRotateAt) {
+      state.nextRotateAt = now + intervalMs;
+      rotateCategoryItem(1);
+    }
+  }
+
   requestAnimationFrame(loop);
 }
 
@@ -269,8 +282,17 @@ function showUser(scene, label) {
   if (label) toast(label);
 }
 
-function sendMessage(item, { remember = true } = {}) {
-  tap();
+function sendMessage(item, { remember = true, isAutoRotate = false } = {}) {
+  if (!isAutoRotate) {
+    tap();
+    const board = BOARDS.find((b) => b.id === state.board) || BOARDS[0];
+    const items = state.board === "mine" ? store.custom : board.items;
+    const idx = items?.findIndex((it) => it.text === item.text);
+    if (idx !== undefined && idx >= 0) state.autoRotateIndex = idx;
+    if (state.autoRotate && state.autoRotateCategory === "board") {
+      state.nextRotateAt = performance.now() + (HOLD_OPTIONS[S.autoRotateInterval] || 10000);
+    }
+  }
   const scene = { kind: "text", text: item.text, color: item.color ?? S.color, style: item.style ?? S.style, speed: item.speed ?? S.speed };
   showUser(scene, panel.connected ? `Sent · ${item.label ?? item.text}` : `Preview · ${item.label ?? item.text}`);
   if (remember) {
@@ -280,9 +302,17 @@ function sendMessage(item, { remember = true } = {}) {
   markActivePreset();
 }
 
-function showEyes(eye) {
-  tap();
+function showEyes(eye, { isAutoRotate = false } = {}) {
+  if (!isAutoRotate) {
+    tap();
+    const idx = EYES.findIndex((e) => e.mode === eye.mode);
+    if (idx >= 0) state.autoRotateIndex = idx;
+    if (state.autoRotate && state.autoRotateCategory === "eyes") {
+      state.nextRotateAt = performance.now() + (HOLD_OPTIONS[S.autoRotateInterval] || 10000);
+    }
+  }
   showUser({ kind: "devil", mode: eye.mode, color: eye.color }, `Eyes · ${eye.label}`);
+  markActiveEyes();
 }
 
 function manualBrake() {
@@ -541,6 +571,7 @@ function renderEyes() {
     const b = document.createElement("button");
     b.className = "preset eye-card";
     b.style.setProperty("--c", eye.color);
+    b.dataset.mode = eye.mode;
     const title = document.createElement("b");
     title.textContent = `${eye.icon} ${eye.label}`;
     const hint = document.createElement("small");
@@ -549,6 +580,65 @@ function renderEyes() {
     b.addEventListener("click", () => showEyes(eye));
     grid.append(b);
   }
+  markActiveEyes();
+}
+
+function markActiveEyes() {
+  const mode = state.user?.scene.kind === "devil" ? state.user.scene.mode : null;
+  $("eyesGrid")?.querySelectorAll(".preset").forEach((b) => b.classList.toggle("active", b.dataset.mode === mode));
+}
+
+function setAutoRotate(enabled, category = state.autoRotateCategory) {
+  state.autoRotate = enabled;
+  state.autoRotateCategory = category;
+  store.set({ autoRotate: enabled, autoRotateCategory: category });
+  if (enabled) {
+    const intervalMs = HOLD_OPTIONS[S.autoRotateInterval] || 10000;
+    state.nextRotateAt = performance.now() + intervalMs;
+    toast(`Auto-rotate started (${S.autoRotateInterval || "10s"})`);
+    rotateCategoryItem(0);
+  } else {
+    toast("Auto-rotate paused");
+  }
+  renderRotateUI();
+}
+
+function rotateCategoryItem(delta = 1) {
+  if (state.autoRotateCategory === "eyes") {
+    state.autoRotateIndex = (state.autoRotateIndex + delta + EYES.length) % EYES.length;
+    const eye = EYES[state.autoRotateIndex];
+    if (eye) showEyes(eye, { isAutoRotate: true });
+  } else {
+    const board = BOARDS.find((b) => b.id === state.board) || BOARDS[0];
+    const items = state.board === "mine" ? store.custom : board.items;
+    if (items && items.length > 0) {
+      state.autoRotateIndex = (state.autoRotateIndex + delta + items.length) % items.length;
+      const item = items[state.autoRotateIndex];
+      if (item) sendMessage(item, { remember: false, isAutoRotate: true });
+    }
+  }
+}
+
+function renderRotateUI() {
+  const isEyes = state.autoRotate && state.autoRotateCategory === "eyes";
+  const isBoards = state.autoRotate && state.autoRotateCategory === "board";
+
+  const eyesBtn = $("eyesRotateBtn");
+  const eyesLabel = $("eyesRotateLabel");
+  const eyesSel = $("eyesRotateInterval");
+  if (eyesBtn) eyesBtn.classList.toggle("active", isEyes);
+  if (eyesLabel) eyesLabel.textContent = isEyes ? "Rotating" : "Auto rotate";
+  if (eyesSel) eyesSel.value = S.autoRotateInterval || "10s";
+
+  const boardsBtn = $("boardsRotateBtn");
+  const boardsLabel = $("boardsRotateLabel");
+  const boardsSel = $("boardsRotateInterval");
+  if (boardsBtn) boardsBtn.classList.toggle("active", isBoards);
+  if (boardsLabel) boardsLabel.textContent = isBoards ? "Rotating" : "Auto rotate";
+  if (boardsSel) boardsSel.value = S.autoRotateInterval || "10s";
+
+  markActiveEyes();
+  markActivePreset();
 }
 
 function renderPalette() {
@@ -625,6 +715,11 @@ function bindSettings() {
       const key = seg.dataset.setting;
       store.set({ [key]: btn.dataset.v });
       if (key === "brakeSensitivity") brakeDetector.setSensitivity(btn.dataset.v);
+      if (key === "autoRotateInterval") {
+        if ($("eyesRotateInterval")) $("eyesRotateInterval").value = btn.dataset.v;
+        if ($("boardsRotateInterval")) $("boardsRotateInterval").value = btn.dataset.v;
+        if (state.autoRotate) state.nextRotateAt = performance.now() + (HOLD_OPTIONS[btn.dataset.v] || 10000);
+      }
       syncSettingsUI();
     });
   });
@@ -658,6 +753,8 @@ function syncSettingsUI() {
   $("limitInput").value = S.limitKmh ? Math.round(mph ? kmhToMph(S.limitKmh) : S.limitKmh) : "";
   $("limitInput").placeholder = "off";
   $("limitUnit").textContent = mph ? "mph" : "km/h";
+  if ($("eyesRotateInterval")) $("eyesRotateInterval").value = S.autoRotateInterval || "10s";
+  if ($("boardsRotateInterval")) $("boardsRotateInterval").value = S.autoRotateInterval || "10s";
 }
 
 function applySettingsToUI() {
@@ -671,6 +768,7 @@ function applySettingsToUI() {
   markSeg($("styleSeg"), "style", S.style);
   markSeg($("voiceLang"), "lang", S.voiceLang);
   markColor();
+  renderRotateUI();
 }
 
 // ------------------------------------------------------------------ voice
@@ -897,6 +995,32 @@ function bind() {
     store.set({ style: b.dataset.style });
     markSeg($("styleSeg"), "style", S.style);
     updateFitHint();
+  });
+
+  $("eyesRotateBtn")?.addEventListener("click", () => {
+    tap();
+    const willEnable = !(state.autoRotate && state.autoRotateCategory === "eyes");
+    setAutoRotate(willEnable, "eyes");
+  });
+  $("eyesRotateInterval")?.addEventListener("change", (e) => {
+    store.set({ autoRotateInterval: e.target.value });
+    if ($("boardsRotateInterval")) $("boardsRotateInterval").value = e.target.value;
+    if (state.autoRotate) state.nextRotateAt = performance.now() + (HOLD_OPTIONS[e.target.value] || 10000);
+    toast(`Rotate interval: ${e.target.value}`);
+    syncSettingsUI();
+  });
+
+  $("boardsRotateBtn")?.addEventListener("click", () => {
+    tap();
+    const willEnable = !(state.autoRotate && state.autoRotateCategory === "board");
+    setAutoRotate(willEnable, "board");
+  });
+  $("boardsRotateInterval")?.addEventListener("change", (e) => {
+    store.set({ autoRotateInterval: e.target.value });
+    if ($("eyesRotateInterval")) $("eyesRotateInterval").value = e.target.value;
+    if (state.autoRotate) state.nextRotateAt = performance.now() + (HOLD_OPTIONS[e.target.value] || 10000);
+    toast(`Rotate interval: ${e.target.value}`);
+    syncSettingsUI();
   });
 
   bindSettings();

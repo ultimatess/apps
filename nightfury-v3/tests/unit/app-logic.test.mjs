@@ -145,7 +145,8 @@ test("store persists settings, custom messages and recents", () => {
   const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
   const a = createStore(storage);
   assert.equal(a.settings.brightness, DEFAULT_SETTINGS.brightness);
-  a.set({ brightness: 42, unit: "mph" });
+  assert.equal(a.settings.autoRotate, false);
+  a.set({ brightness: 42, unit: "mph", autoRotate: true, autoRotateInterval: "15s" });
   a.addCustom({ text: "ONE" });
   a.addCustom({ text: "TWO" });
   a.addCustom({ text: "ONE" }); // dedupe, moves to front
@@ -153,6 +154,8 @@ test("store persists settings, custom messages and recents", () => {
   const b = createStore(storage);
   assert.equal(b.settings.brightness, 42);
   assert.equal(b.settings.unit, "mph");
+  assert.equal(b.settings.autoRotate, true);
+  assert.equal(b.settings.autoRotateInterval, "15s");
   assert.deepEqual(b.custom.map((c) => c.text), ["ONE", "TWO"]);
   assert.equal(b.recents.length, 8);
   assert.equal(b.recents[0].text, "R11");
@@ -161,6 +164,7 @@ test("store persists settings, custom messages and recents", () => {
   const c = createStore(storage);
   assert.deepEqual(c.custom.map((x) => x.text), ["TWO"]);
   assert.equal(c.settings.brightness, DEFAULT_SETTINGS.brightness);
+  assert.equal(c.settings.autoRotate, false);
 });
 
 test("store survives broken storage", () => {

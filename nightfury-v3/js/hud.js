@@ -4,7 +4,7 @@
 import { COLORS } from "./scene.js";
 import { kmhToMph } from "./telemetry.js";
 
-export const HOLD_OPTIONS = { "5s": 5000, "10s": 10000, "30s": 30000, sticky: Infinity };
+export const HOLD_OPTIONS = { "5s": 5000, "10s": 10000, "15s": 15000, "30s": 30000, sticky: Infinity };
 
 export const DEFAULT_MESSAGE = { kind: "text", text: "வணக்கம் 🤝", color: COLORS.cyan, style: "static", speed: 6 };
 

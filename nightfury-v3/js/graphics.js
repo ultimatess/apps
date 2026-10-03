@@ -3,8 +3,10 @@
 import { Bitmap } from "./bitmap.js";
 import { COLS, ROWS } from "./protocol.js";
 import { drawText, measure, renderText } from "./font5x7.js";
+import { APK_EYES_META, getApkEyeBitmap, isApkEye } from "./apk_eyes.js";
 
-export const DEVIL_MODES = ["angry", "cyan_cyber", "cylon", "winking"];
+export const APK_EYE_MODES = APK_EYES_META.map((m) => m.mode);
+export const DEVIL_MODES = ["angry", "cyan_cyber", "cylon", "winking", ...APK_EYE_MODES];
 
 export function turnArrows(direction, tick = 0) {
   const bmp = new Bitmap();
@@ -26,6 +28,7 @@ export function turnArrows(direction, tick = 0) {
 }
 
 export function devilEyes(mode, frame = 0) {
+  if (isApkEye(mode)) return getApkEyeBitmap(mode, frame);
   const bmp = new Bitmap();
   const on = (x, y) => { if (x >= 0 && x < COLS && y >= 0 && y < ROWS) bmp.data[y * COLS + x] = 1; };
   const off = (x, y) => { if (x >= 0 && x < COLS && y >= 0 && y < ROWS) bmp.data[y * COLS + x] = 0; };

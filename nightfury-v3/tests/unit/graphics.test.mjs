@@ -89,6 +89,13 @@ test("devil eyes: each mode lights pixels, animated modes change over time", () 
   for (const mode of Gx.DEVIL_MODES) assert.ok(Gx.devilEyes(mode, 0).litCount() > 20, mode);
   assert.ok(!Gx.devilEyes("cylon", 0).equals(Gx.devilEyes("cylon", 30)));
   assert.ok(!Gx.devilEyes("winking", 0).equals(Gx.devilEyes("winking", 100)));
+  assert.equal(Gx.APK_EYE_MODES.length, 9);
+  for (const mode of Gx.APK_EYE_MODES) {
+    const f0 = Gx.devilEyes(mode, 0);
+    const f50 = Gx.devilEyes(mode, 50);
+    assert.ok(f0.litCount() > 100, `${mode} has lit pixels (count=${f0.litCount()})`);
+    assert.ok(!f0.equals(f50), `${mode} changes over time`);
+  }
 });
 
 test("bitmap helpers", () => {

@@ -22,6 +22,9 @@ export const DEFAULT_SETTINGS = {
   haptics: true,
   voiceLang: "ta-IN",
   sensorsWanted: false,
+  autoRotate: false,
+  autoRotateInterval: "10s",
+  autoRotateCategory: "eyes",
 };
 
 export function createStore(storage = globalThis.localStorage) {
