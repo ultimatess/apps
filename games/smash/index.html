@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rage Room Smash | Stress Relief & Cathartic Destruction</title>
+  <meta name="description" content="Satisfying virtual rage room: smash laptops, bills, alarms, bad vibes, and customized annoyances into a million pieces with realistic physics and sound FX!" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #ef4444;
+      --accent-glow: rgba(239, 68, 68, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overscroll-behavior-y: contain;
+      touch-action: manipulation;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(239, 68, 68, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(249, 115, 22, 0.06) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: #fff;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* Screen containers */
+    .screen {
+      background: rgba(18, 24, 38, 0.85);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 24px 20px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1, h2, h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+    }
+
+    .title {
+      font-size: 28px;
+      background: linear-gradient(135deg, #fff, #fca5a5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    /* Vibe Cards Grid */
+    .grid-vibes {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .vibe-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 14px 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .vibe-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .vibe-card.active {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.15);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+    }
+
+    .vibe-icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .vibe-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .vibe-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Weapon selector */
+    .weapon-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .weapon-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 10px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .weapon-card.active {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.15);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+    }
+
+    .weapon-emoji {
+      font-size: 24px;
+      margin-bottom: 2px;
+    }
+
+    .weapon-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Custom input field */
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: #ef4444;
+    }
+
+    /* Buttons */
+    .btn-smash {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .btn-smash:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(239, 68, 68, 0.5);
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Arena & Gameplay */
+    #arenaScreen {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .hud-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 10px 16px;
+    }
+
+    .hud-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hud-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .hud-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      border-radius: 20px;
+      border: 2px dashed rgba(239, 68, 68, 0.35);
+      background: radial-gradient(circle at center, #171f30 0%, #080c14 100%);
+      overflow: hidden;
+      touch-action: none;
+      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    .rage-progress-wrap {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 9999px;
+      height: 14px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      position: relative;
+    }
+
+    .rage-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+      border-radius: 9999px;
+      transition: width 0.15s ease-out;
+    }
+
+    /* Result Screen */
+    #resultScreen {
+      display: none;
+      text-align: center;
+    }
+
+    .score-big {
+      font-family: 'Outfit', sans-serif;
+      font-size: 54px;
+      font-weight: 900;
+      color: #ef4444;
+      line-height: 1;
+      margin: 14px 0 6px;
+      text-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+    }
+
+    .stats-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-nav">
+      <a href="../index.html" class="nav-link">← Games Collection</a>
+      <span class="badge">💥 Rage Room</span>
+      <button id="btnSoundToggle" style="background:none; border:none; color:var(--text-muted); font-size:13px; font-weight:700; cursor:pointer;">
+        🔊 Sound ON
+      </button>
+    </div>
+
+    <!-- CONFIG / LOBBY SCREEN -->
+    <div id="configScreen" class="screen">
+      <h1 class="title">Rage Room Smash</h1>
+      <p class="subtitle">Pick what's testing your nerves today. Tap flying targets to demolish them with extreme prejudice!</p>
+
+      <span class="input-label">1. Choose Your Therapy Vibe:</span>
+      <div class="grid-vibes" id="vibeContainer"></div>
+
+      <span class="input-label">2. Select Your Demolition Weapon:</span>
+      <div class="weapon-grid" id="weaponContainer">
+        <div class="weapon-card active" data-weapon="hammer">
+          <div class="weapon-emoji">🔨</div>
+          <div class="weapon-name">Sledge</div>
+        </div>
+        <div class="weapon-card" data-weapon="bat">
+          <div class="weapon-emoji">🏏</div>
+          <div class="weapon-name">Bat</div>
+        </div>
+        <div class="weapon-card" data-weapon="crowbar">
+          <div class="weapon-emoji">🪓</div>
+          <div class="weapon-name">Crowbar</div>
+        </div>
+        <div class="weapon-card" data-weapon="knuckles">
+          <div class="weapon-emoji">🥊</div>
+          <div class="weapon-name">Knuckles</div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">3. Personal Annoyances (Optional):</label>
+        <input type="text" id="customTargetInput" class="input-field" placeholder="e.g. Traffic, Todd, JavaScript Bugs, Rent (comma separated)" />
+      </div>
+
+      <button class="btn-smash" id="btnStartSmash">
+        ENTER RAGE ROOM 💥
+      </button>
+    </div>
+
+    <!-- ARENA SCREEN -->
+    <div id="arenaScreen" class="screen">
+      <div class="hud-bar">
+        <div class="hud-stat">
+          <span class="hud-label">Score</span>
+          <span class="hud-val" id="hudScore">0</span>
+        </div>
+        <div class="hud-stat" style="align-items:center;">
+          <span class="hud-label">Time</span>
+          <span class="hud-val" id="hudTimer" style="color:#ef4444;">30s</span>
+        </div>
+        <div class="hud-stat" style="align-items:flex-end;">
+          <span class="hud-label">Multiplier</span>
+          <span class="hud-val" id="hudCombo" style="color:#f59e0b;">x1 COMBO</span>
+        </div>
+      </div>
+
+      <div class="canvas-container" id="arenaWrapper">
+        <canvas id="smashCanvas"></canvas>
+      </div>
+
+      <div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px; font-weight:700;">
+          <span style="color:var(--text-muted);">CATHARSIS METER:</span>
+          <span id="ragePercent" style="color:#10b981;">0%</span>
+        </div>
+        <div class="rage-progress-wrap">
+          <div class="rage-progress-fill" id="rageFill"></div>
+        </div>
+      </div>
+
+      <button class="btn-secondary" id="btnAbortSmash">Exit Rage Room</button>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="resultScreen" class="screen">
+      <div class="badge" id="resultBadge" style="margin-bottom:12px;">CATHARTIC MASTER</div>
+      <div class="score-big" id="finalScore">0</div>
+      <p style="color:var(--text-muted); font-size:13px; font-weight:700; text-transform:uppercase;">Demolition Points Scored</p>
+
+      <div class="stats-card">
+        <div class="stat-row">
+          <span style="color:var(--text-muted);">Objects Demolished:</span>
+          <strong id="finalSmashed" style="color:#fff;">0 items</strong>
+        </div>
+        <div class="stat-row">
+          <span style="color:var(--text-muted);">Therapy Category:</span>
+          <strong id="finalCategory" style="color:#fca5a5;">Work & Boss</strong>
+        </div>
+        <div class="stat-row">
+          <span style="color:var(--text-muted);">Stress Relieved:</span>
+          <strong id="finalRelief" style="color:#34d399;">100% Zen Achieved</strong>
+        </div>
+        <div style="margin-top:12px; font-size:13px; color:var(--text-muted); line-height:1.5;" id="finalVerdict">
+          Total Zen achieved! You crushed every single annoyance straight out of this universe.
+        </div>
+      </div>
+
+      <button class="btn-smash" id="btnPlayAgain">SMASH AGAIN 💥</button>
+      <button class="btn-secondary" id="btnBackLobby">Change Vibe / Targets</button>
+    </div>
+  </div>
+
+  <script>
+    // Audio FX using Web Audio API
+    class ProceduralAudio {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playShatter() {
+        if (!this.enabled || !this.ctx) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        // Noise burst (glass crash)
+        const bufferSize = this.ctx.sampleRate * 0.12;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        const whiteNoise = this.ctx.createBufferSource();
+        whiteNoise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(1800, now);
+
+        const gainNode = this.ctx.createGain();
+        gainNode.gain.setValueAtTime(0.6, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+        whiteNoise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.ctx.destination);
+        whiteNoise.start(now);
+
+        // Low thud impact
+        const osc = this.ctx.createOscillator();
+        const oscGain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+        oscGain.gain.setValueAtTime(0.7, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.connect(oscGain);
+        oscGain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      }
+
+      playMiss() {
+        if (!this.enabled || !this.ctx) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      }
+
+      playSuccess() {
+        if (!this.enabled || !this.ctx) return;
+        this.init();
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const now = this.ctx.currentTime + idx * 0.09;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        });
+      }
+    }
+
+    const sfx = new ProceduralAudio();
+
+    // Sound toggle
+    const btnSound = document.getElementById('btnSoundToggle');
+    btnSound.addEventListener('click', () => {
+      sfx.enabled = !sfx.enabled;
+      btnSound.innerText = sfx.enabled ? "🔊 Sound ON" : "🔇 Sound MUTED";
+    });
+
+    // Stress Vibe Packs
+    const VIBES = [
+      { id: "work", name: "Work & Boss", icon: "💼", color: "#f97316", items: ["Laptop", "Unread Email", "Printer Jam", "Alarm Clock", "Meeting Invite", "Cold Coffee", "Broken Stapler", "Overdue Report"] },
+      { id: "ex", name: "Ex & Heartbreak", icon: "💔", color: "#ec4899", items: ["Love Letter", "Old Teddy", "Regretful Text", "Photo Frame", "Perfume", "Anniversary Gift", "Mixtape"] },
+      { id: "bills", name: "Bills & Broke", icon: "💸", color: "#eab308", items: ["Rent Bill", "Empty Wallet", "Tax Notice", "Broken ATM", "Calculator", "Credit Card Debt", "Electricity Bill"] },
+      { id: "drama", name: "Friends & Drama", icon: "🔥", color: "#ef4444", items: ["Group Chat", "Fake Friend", "Spilled Tea", "Secret Tape", "Left On Read", "Mic Drop", "Passive Note"] },
+      { id: "study", name: "Exams & College", icon: "📚", color: "#3b82f6", items: ["Final Exam", "Heavy Textbook", "F-Grade Sheet", "Energy Drink", "Pop Quiz", "Overdue Thesis"] },
+      { id: "overthinking", name: "Overthinking", icon: "🧠", color: "#a855f7", items: ["3 AM Thoughts", "Regret Mirror", "Anxiety Bubble", "Loud Noise", "What-If Cloud", "Dying Battery"] }
+    ];
+
+    const ITEM_EMOJIS = {
+      "Laptop": "💻", "Unread Email": "📨", "Printer Jam": "🖨️", "Alarm Clock": "⏰", "Meeting Invite": "📅", "Cold Coffee": "☕", "Broken Stapler": "📎", "Overdue Report": "📊",
+      "Love Letter": "💌", "Old Teddy": "🧸", "Regretful Text": "📱", "Photo Frame": "🖼️", "Perfume": "🍾", "Anniversary Gift": "🎁", "Mixtape": "📼",
+      "Rent Bill": "🧾", "Empty Wallet": "👛", "Tax Notice": "📑", "Broken ATM": "🏧", "Calculator": "🧮", "Credit Card Debt": "💳", "Electricity Bill": "⚡",
+      "Group Chat": "💬", "Fake Friend": "🎭", "Spilled Tea": "☕", "Secret Tape": "📼", "Left On Read": "👁️", "Mic Drop": "🎤", "Passive Note": "📝",
+      "Final Exam": "📝", "Heavy Textbook": "📚", "F-Grade Sheet": "📄", "Energy Drink": "🥫", "Pop Quiz": "❓", "Overdue Thesis": "📁",
+      "3 AM Thoughts": "💭", "Regret Mirror": "🪞", "Anxiety Bubble": "🫧", "Loud Noise": "📢", "What-If Cloud": "☁️", "Dying Battery": "🪫"
+    };
+
+    let selectedVibe = VIBES[0];
+    let selectedWeapon = "hammer";
+
+    // Populate Vibes
+    const vibeContainer = document.getElementById('vibeContainer');
+    VIBES.forEach((v, idx) => {
+      const card = document.createElement('div');
+      card.className = `vibe-card ${idx === 0 ? 'active' : ''}`;
+      card.innerHTML = `
+        <div class="vibe-icon">${v.icon}</div>
+        <div class="vibe-title">${v.name}</div>
+        <div class="vibe-desc">${v.items.length} targets</div>
+      `;
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.vibe-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        selectedVibe = v;
+      });
+      vibeContainer.appendChild(card);
+    });
+
+    // Weapon selector
+    document.querySelectorAll('.weapon-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.weapon-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        selectedWeapon = card.dataset.weapon;
+      });
+    });
+
+    // Screens
+    const configScreen = document.getElementById('configScreen');
+    const arenaScreen = document.getElementById('arenaScreen');
+    const resultScreen = document.getElementById('resultScreen');
+
+    const showScreen = (s) => {
+      configScreen.style.display = 'none';
+      arenaScreen.style.display = 'none';
+      resultScreen.style.display = 'none';
+      s.style.display = 'flex';
+      s.style.flexDirection = 'column';
+    };
+
+    document.getElementById('btnStartSmash').addEventListener('click', () => {
+      sfx.init();
+      startSmashArena();
+    });
+
+    document.getElementById('btnPlayAgain').addEventListener('click', () => {
+      startSmashArena();
+    });
+
+    document.getElementById('btnBackLobby').addEventListener('click', () => {
+      showScreen(configScreen);
+    });
+
+    // Smash Arena Canvas Loop
+    let active = false;
+    let animId = null;
+
+    function startSmashArena() {
+      showScreen(arenaScreen);
+      const rawCustom = document.getElementById('customTargetInput').value;
+      const customTargets = rawCustom.split(',').map(s => s.trim()).filter(Boolean);
+
+      const canvas = document.getElementById('smashCanvas');
+      const arenaWrapper = document.getElementById('arenaWrapper');
+      const ctx = canvas.getContext('2d');
+      const hudScore = document.getElementById('hudScore');
+      const hudTimer = document.getElementById('hudTimer');
+      const hudCombo = document.getElementById('hudCombo');
+      const rageFill = document.getElementById('rageFill');
+      const ragePercent = document.getElementById('ragePercent');
+
+      const rect = arenaWrapper.getBoundingClientRect();
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      const W = rect.width;
+      const H = rect.height;
+
+      let score = 0;
+      let combo = 1;
+      let comboTimer = null;
+      let timeLeft = 30;
+      let totalSmashed = 0;
+      active = true;
+
+      const targets = [];
+      const shards = [];
+      const floatTexts = [];
+
+      class SmashTarget {
+        constructor() {
+          const isCustom = Math.random() < 0.45 && customTargets.length > 0;
+          this.isCustom = isCustom;
+          this.label = isCustom ? customTargets[Math.floor(Math.random() * customTargets.length)] : selectedVibe.items[Math.floor(Math.random() * selectedVibe.items.length)];
+          this.emoji = ITEM_EMOJIS[this.label] || (isCustom ? "🎯" : "💥");
+          this.radius = isCustom ? 38 : 32;
+          this.x = Math.random() * (W - this.radius * 2) + this.radius;
+          this.y = H + this.radius + 10;
+          this.vx = (Math.random() - 0.5) * 4;
+          this.vy = -(12 + Math.random() * 5);
+          this.gravity = 0.38;
+          this.rotation = Math.random() * Math.PI * 2;
+          this.vRot = (Math.random() - 0.5) * 0.1;
+          this.color = isCustom ? "#ec4899" : selectedVibe.color;
+        }
+
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          this.vy += this.gravity;
+          this.rotation += this.vRot;
+          if (this.x - this.radius < 0 || this.x + this.radius > W) {
+            this.vx *= -0.8;
+          }
+        }
+
+        draw() {
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.rotation);
+
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(18, 24, 38, 0.9)";
+          ctx.fill();
+          ctx.lineWidth = this.isCustom ? 3 : 2;
+          ctx.strokeStyle = this.color;
+          ctx.shadowColor = this.color;
+          ctx.shadowBlur = this.isCustom ? 16 : 8;
+          ctx.stroke();
+
+          ctx.font = `${this.radius * 0.9}px sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(this.emoji, 0, -4);
+
+          ctx.font = "bold 9px Outfit, sans-serif";
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(this.label.substring(0, 14), 0, this.radius - 8);
+
+          ctx.restore();
+        }
+      }
+
+      function spawnShards(x, y, color) {
+        const count = 16 + Math.floor(Math.random() * 8);
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 3 + Math.random() * 9;
+          shards.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 2,
+            size: 3 + Math.random() * 7,
+            color: Math.random() < 0.3 ? "#ffffff" : color,
+            life: 1.0,
+            decay: 0.02 + Math.random() * 0.03,
+            rot: Math.random() * Math.PI,
+            vRot: (Math.random() - 0.5) * 0.3
+          });
+        }
+      }
+
+      function addFloat(x, y, text, color) {
+        floatTexts.push({ x, y, text, color, vy: -2, alpha: 1.0 });
+      }
+
+      function handleHit(clientX, clientY) {
+        if (!active) return;
+        const r = canvas.getBoundingClientRect();
+        const touchX = clientX - r.left;
+        const touchY = clientY - r.top;
+
+        let hit = false;
+        for (let i = targets.length - 1; i >= 0; i--) {
+          const t = targets[i];
+          const dist = Math.hypot(touchX - t.x, touchY - t.y);
+          if (dist < t.radius * 1.35) {
+            hit = true;
+            totalSmashed++;
+
+            combo++;
+            clearTimeout(comboTimer);
+            comboTimer = setTimeout(() => { combo = 1; hudCombo.innerText = "x1 COMBO"; }, 1500);
+
+            const earned = (t.isCustom ? 250 : 100) * combo;
+            score += earned;
+
+            sfx.playShatter();
+            spawnShards(t.x, t.y, t.color);
+            addFloat(t.x, t.y, `+${earned}`, t.isCustom ? "#ec4899" : "#fbbf24");
+
+            arenaWrapper.style.transform = `translate(${(Math.random()-0.5)*12}px, ${(Math.random()-0.5)*12}px)`;
+            setTimeout(() => arenaWrapper.style.transform = 'none', 80);
+
+            targets.splice(i, 1);
+            break;
+          }
+        }
+
+        if (!hit) sfx.playMiss();
+
+        hudScore.innerText = score.toLocaleString();
+        hudCombo.innerText = `x${combo} COMBO`;
+        const ragePct = Math.min(100, Math.floor((totalSmashed / 25) * 100));
+        rageFill.style.width = `${ragePct}%`;
+        ragePercent.innerText = `${ragePct}%`;
+      }
+
+      canvas.onpointerdown = (e) => handleHit(e.clientX, e.clientY);
+
+      let spawnTimer = 0;
+      function loop() {
+        if (!active) return;
+        ctx.clearRect(0, 0, W, H);
+
+        spawnTimer++;
+        if (spawnTimer % 32 === 0 && targets.length < 8) {
+          targets.push(new SmashTarget());
+          if (Math.random() < 0.3) targets.push(new SmashTarget());
+        }
+
+        for (let i = targets.length - 1; i >= 0; i--) {
+          const t = targets[i];
+          t.update();
+          t.draw();
+          if (t.y > H + 80) targets.splice(i, 1);
+        }
+
+        for (let i = shards.length - 1; i >= 0; i--) {
+          const s = shards[i];
+          s.x += s.vx;
+          s.y += s.vy;
+          s.vy += 0.35;
+          s.rot += s.vRot;
+          s.life -= s.decay;
+
+          if (s.life <= 0) {
+            shards.splice(i, 1);
+            continue;
+          }
+
+          ctx.save();
+          ctx.translate(s.x, s.y);
+          ctx.rotate(s.rot);
+          ctx.globalAlpha = Math.max(0, s.life);
+          ctx.fillStyle = s.color;
+          ctx.fillRect(-s.size/2, -s.size/2, s.size, s.size * 0.7);
+          ctx.restore();
+        }
+
+        for (let i = floatTexts.length - 1; i >= 0; i--) {
+          const ft = floatTexts[i];
+          ft.y += ft.vy;
+          ft.alpha -= 0.025;
+          if (ft.alpha <= 0) {
+            floatTexts.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = ft.alpha;
+          ctx.font = "800 22px Outfit, sans-serif";
+          ctx.fillStyle = ft.color;
+          ctx.textAlign = "center";
+          ctx.shadowColor = ft.color;
+          ctx.shadowBlur = 10;
+          ctx.fillText(ft.text, ft.x, ft.y);
+          ctx.restore();
+        }
+
+        animId = requestAnimationFrame(loop);
+      }
+
+      loop();
+
+      const timerInterval = setInterval(() => {
+        timeLeft--;
+        hudTimer.innerText = `${timeLeft}s`;
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          active = false;
+          cancelAnimationFrame(animId);
+          showResults(score, totalSmashed, selectedVibe.name);
+        }
+      }, 1000);
+
+      document.getElementById('btnAbortSmash').onclick = () => {
+        active = false;
+        clearInterval(timerInterval);
+        cancelAnimationFrame(animId);
+        showScreen(configScreen);
+      };
+    }
+
+    function showResults(score, smashed, category) {
+      sfx.playSuccess();
+      showScreen(resultScreen);
+      document.getElementById('finalScore').innerText = score.toLocaleString();
+      document.getElementById('finalSmashed').innerText = `${smashed} items`;
+      document.getElementById('finalCategory').innerText = category;
+
+      const badge = document.getElementById('resultBadge');
+      const relief = document.getElementById('finalRelief');
+      const verdict = document.getElementById('finalVerdict');
+
+      if (smashed >= 30) {
+        badge.innerText = "💥 CATHARTIC GOD OF DESTRUCTION";
+        badge.style.background = "rgba(239, 68, 68, 0.25)";
+        relief.innerText = "100% Pure Zen Achieved";
+        verdict.innerText = "Total demolition! You smashed every single annoyance into microscopic dust. You are fully decompressed.";
+      } else if (smashed >= 18) {
+        badge.innerText = "🔥 CERTIFIED RAGE DEMON";
+        badge.style.background = "rgba(249, 115, 22, 0.25)";
+        relief.innerText = "85% Stress Evaporated";
+        verdict.innerText = "Incredible destruction! Your blood pressure just dropped 20 points. Great work.";
+      } else {
+        badge.innerText = "⚡ THERAPEUTIC CRUSHER";
+        badge.style.background = "rgba(16, 185, 129, 0.25)";
+        relief.innerText = "60% Relaxed";
+        verdict.innerText = "Solid stress demolition! If you still feel tension, jump back in for another round.";
+      }
+    }
+  </script>
+</body>
+</html>
