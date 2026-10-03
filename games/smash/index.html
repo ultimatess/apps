@@ -8,7 +8,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -19,6 +19,8 @@
       --text-muted: #94a3b8;
       --accent: #ef4444;
       --accent-glow: rgba(239, 68, 68, 0.35);
+      --gold: #f59e0b;
+      --gold-glow: rgba(245, 158, 11, 0.35);
     }
 
     * {
@@ -43,8 +45,9 @@
       display: flex;
       flex-direction: column;
       background-image: 
-        radial-gradient(circle at 15% 15%, rgba(239, 68, 68, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 85% 85%, rgba(249, 115, 22, 0.06) 0%, transparent 40%);
+        radial-gradient(circle at 15% 15%, rgba(239, 68, 68, 0.1) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(249, 115, 22, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
       background-attachment: fixed;
     }
 
@@ -52,7 +55,7 @@
       width: 100%;
       max-width: 540px;
       margin: 0 auto;
-      padding: 20px 16px 40px;
+      padding: 16px 16px 40px;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -62,13 +65,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      gap: 8px;
     }
 
     .nav-link {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
@@ -78,6 +82,32 @@
 
     .nav-link:hover {
       color: #fff;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon-pill {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .btn-icon-pill:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
     }
 
     .badge {
@@ -97,13 +127,13 @@
 
     /* Screen containers */
     .screen {
-      background: rgba(18, 24, 38, 0.85);
+      background: rgba(18, 24, 38, 0.88);
       border: 1px solid var(--card-border);
       border-radius: 24px;
-      padding: 24px 20px;
+      padding: 22px 18px;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
       animation: fadeIn 0.25s ease-out;
     }
 
@@ -127,9 +157,9 @@
 
     .subtitle {
       color: var(--text-muted);
-      font-size: 14px;
+      font-size: 13.5px;
       line-height: 1.5;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     /* Vibe Cards Grid */
@@ -144,7 +174,7 @@
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--card-border);
       border-radius: 16px;
-      padding: 14px 12px;
+      padding: 13px 12px;
       cursor: pointer;
       text-align: left;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -163,12 +193,12 @@
 
     .vibe-icon {
       font-size: 24px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .vibe-title {
       font-family: 'Outfit', sans-serif;
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 700;
       color: #fff;
     }
@@ -251,7 +281,7 @@
       padding: 16px;
       border-radius: 16px;
       font-family: 'Outfit', sans-serif;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
       color: #fff;
       background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -282,6 +312,10 @@
       cursor: pointer;
       margin-top: 10px;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .btn-secondary:hover {
@@ -299,7 +333,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.5);
       border: 1px solid var(--card-border);
       border-radius: 16px;
       padding: 10px 16px;
@@ -320,7 +354,7 @@
 
     .hud-val {
       font-family: 'Outfit', sans-serif;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 800;
       color: #fff;
     }
@@ -328,13 +362,13 @@
     .canvas-container {
       position: relative;
       width: 100%;
-      height: 380px;
+      height: 440px;
       border-radius: 20px;
-      border: 2px dashed rgba(239, 68, 68, 0.35);
-      background: radial-gradient(circle at center, #171f30 0%, #080c14 100%);
+      border: 2px dashed rgba(239, 68, 68, 0.4);
+      background: radial-gradient(circle at center, #172133 0%, #080c14 100%);
       overflow: hidden;
       touch-action: none;
-      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+      box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.85);
     }
 
     canvas {
@@ -374,30 +408,257 @@
       font-weight: 900;
       color: #ef4444;
       line-height: 1;
-      margin: 14px 0 6px;
+      margin: 12px 0 4px;
       text-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
     }
 
-    .stats-card {
+    /* Character Charter Card */
+    .charter-card {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(245, 158, 11, 0.08));
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-radius: 18px;
+      padding: 16px;
+      margin: 16px 0;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .charter-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .charter-avatar {
+      font-size: 34px;
+      width: 50px;
+      height: 50px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .charter-meta {
+      flex: 1;
+    }
+
+    .charter-badge {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #f59e0b;
+    }
+
+    .charter-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .charter-quote {
+      font-size: 12.5px;
+      color: #cbd5e1;
+      line-height: 1.45;
+      font-style: italic;
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    /* Frequency Breakdown & Stats */
+    .breakdown-section {
       background: rgba(0, 0, 0, 0.4);
       border: 1px solid var(--card-border);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 16px;
-      margin: 20px 0;
+      margin-bottom: 16px;
       text-align: left;
     }
 
-    .stat-row {
+    .section-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
-      font-size: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .stat-row:last-child {
-      border-bottom: none;
+    .breakdown-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .breakdown-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .breakdown-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .breakdown-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #f1f5f9;
+    }
+
+    .nemesis-tag {
+      font-size: 10px;
+      background: #f59e0b;
+      color: #000;
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-weight: 800;
+    }
+
+    .breakdown-count {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    .breakdown-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .breakdown-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #ef4444, #f59e0b);
+    }
+
+    /* Fun Stat Grid */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: left;
+    }
+
+    .stat-card-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 3px;
+    }
+
+    /* Modal / Dossier */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: #111726;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      max-width: 480px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+      animation: modalPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .btn-close {
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(50px);
+      background: #10b981;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 2000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
   </style>
 </head>
@@ -406,16 +667,24 @@
   <div class="container">
     <div class="header-nav">
       <a href="../index.html" class="nav-link">← Games Collection</a>
-      <span class="badge">💥 Rage Room</span>
-      <button id="btnSoundToggle" style="background:none; border:none; color:var(--text-muted); font-size:13px; font-weight:700; cursor:pointer;">
-        🔊 Sound ON
-      </button>
+      <div class="header-actions">
+        <button id="btnOpenDossier" class="btn-icon-pill">
+          📊 Smash Dossier
+        </button>
+        <button id="btnSoundToggle" class="btn-icon-pill">
+          🔊 Sound ON
+        </button>
+      </div>
     </div>
 
     <!-- CONFIG / LOBBY SCREEN -->
     <div id="configScreen" class="screen">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span class="badge">💥 Rage Room</span>
+        <span id="lobbyCareerCount" style="font-size:12px; font-weight:700; color:var(--text-muted);">Career: 0 Smashed</span>
+      </div>
       <h1 class="title">Rage Room Smash</h1>
-      <p class="subtitle">Pick what's testing your nerves today. Tap flying targets to demolish them with extreme prejudice!</p>
+      <p class="subtitle">Pick what's testing your nerves today. Tap flying targets to demolish them into a million pieces!</p>
 
       <span class="input-label">1. Choose Your Therapy Vibe:</span>
       <div class="grid-vibes" id="vibeContainer"></div>
@@ -486,32 +755,108 @@
 
     <!-- RESULTS SCREEN -->
     <div id="resultScreen" class="screen">
-      <div class="badge" id="resultBadge" style="margin-bottom:12px;">CATHARTIC MASTER</div>
+      <div class="badge" id="resultBadge" style="margin-bottom:8px;">CATHARTIC MASTER</div>
       <div class="score-big" id="finalScore">0</div>
-      <p style="color:var(--text-muted); font-size:13px; font-weight:700; text-transform:uppercase;">Demolition Points Scored</p>
+      <p style="color:var(--text-muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Demolition Points Scored</p>
 
-      <div class="stats-card">
-        <div class="stat-row">
-          <span style="color:var(--text-muted);">Objects Demolished:</span>
-          <strong id="finalSmashed" style="color:#fff;">0 items</strong>
+      <!-- Character Charter Diagnosis -->
+      <div class="charter-card" id="charterCard">
+        <div class="charter-header">
+          <div class="charter-avatar" id="charterAvatar">💼</div>
+          <div class="charter-meta">
+            <div class="charter-badge">YOUR RAGE CHARACTER</div>
+            <div class="charter-name" id="charterName">The Corporate Demolitionist</div>
+          </div>
         </div>
-        <div class="stat-row">
-          <span style="color:var(--text-muted);">Therapy Category:</span>
-          <strong id="finalCategory" style="color:#fca5a5;">Work & Boss</strong>
+        <div class="charter-quote" id="charterQuote">
+          "Turned 48 meetings that could have been emails straight into shrapnel."
         </div>
-        <div class="stat-row">
-          <span style="color:var(--text-muted);">Stress Relieved:</span>
-          <strong id="finalRelief" style="color:#34d399;">100% Zen Achieved</strong>
+      </div>
+
+      <!-- Fun Stats Grid -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card-label">💸 Property Damage</div>
+          <div class="stat-card-val" id="statDamage">$0</div>
         </div>
-        <div style="margin-top:12px; font-size:13px; color:var(--text-muted); line-height:1.5;" id="finalVerdict">
-          Total Zen achieved! You crushed every single annoyance straight out of this universe.
+        <div class="stat-card">
+          <div class="stat-card-label">⚡ Highest Streak</div>
+          <div class="stat-card-val" id="statMaxCombo">x1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">🔊 Frustration Silenced</div>
+          <div class="stat-card-val" id="statDecibels">0 dB</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">🎯 Zen Status</div>
+          <div class="stat-card-val" id="statZen" style="color:#34d399;">100%</div>
+        </div>
+      </div>
+
+      <!-- Frequency Breakdown: What was smashed more -->
+      <div class="breakdown-section">
+        <div class="section-title">
+          <span>💥 Demolition Breakdown</span>
+          <span id="breakdownTotalBadge">0 Items</span>
+        </div>
+        <div class="breakdown-list" id="breakdownList">
+          <!-- Populated by JS -->
         </div>
       </div>
 
       <button class="btn-smash" id="btnPlayAgain">SMASH AGAIN 💥</button>
+      <button class="btn-secondary" id="btnShareReport">📋 Share Demolition Report</button>
       <button class="btn-secondary" id="btnBackLobby">Change Vibe / Targets</button>
     </div>
   </div>
+
+  <!-- DOSSIER / CAREER MODAL -->
+  <div class="modal-overlay" id="dossierModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size:20px; color:#fff;">📊 Demolition Dossier</h3>
+        <button class="btn-close" id="btnCloseDossier">&times;</button>
+      </div>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
+        Lifetime record of your virtual stress relief and most-smashed arch-nemeses.
+      </p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card-label">Total Smashed</div>
+          <div class="stat-card-val" id="careerTotalSmashed">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">All-Time Score</div>
+          <div class="stat-card-val" id="careerTotalScore">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Fictional Damages</div>
+          <div class="stat-card-val" id="careerDamages">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Rounds Played</div>
+          <div class="stat-card-val" id="careerRounds">0</div>
+        </div>
+      </div>
+
+      <div class="breakdown-section" style="margin-top:14px;">
+        <div class="section-title">
+          <span>🏆 All-Time Most Smashed</span>
+          <span style="color:#f59e0b; font-size:11px;">Top Nemeses</span>
+        </div>
+        <div class="breakdown-list" id="careerBreakdownList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <button class="btn-secondary" id="btnClearHistory" style="color:#f87171; border-color:rgba(239,68,68,0.3); margin-top:14px;">
+        🗑️ Reset Demolition History
+      </button>
+    </div>
+  </div>
+
+  <div class="toast" id="toastMessage">Copied to clipboard! 📋</div>
 
   <script>
     // Audio FX using Web Audio API
@@ -537,7 +882,7 @@
         const now = this.ctx.currentTime;
 
         // Noise burst (glass crash)
-        const bufferSize = this.ctx.sampleRate * 0.12;
+        const bufferSize = Math.floor(this.ctx.sampleRate * 0.14);
         const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
         const output = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
@@ -549,11 +894,11 @@
 
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'highpass';
-        filter.frequency.setValueAtTime(1800, now);
+        filter.frequency.setValueAtTime(1600, now);
 
         const gainNode = this.ctx.createGain();
-        gainNode.gain.setValueAtTime(0.6, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        gainNode.gain.setValueAtTime(0.7, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
 
         whiteNoise.connect(filter);
         filter.connect(gainNode);
@@ -564,14 +909,14 @@
         const osc = this.ctx.createOscillator();
         const oscGain = this.ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(120, now);
-        osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
-        oscGain.gain.setValueAtTime(0.7, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(32, now + 0.12);
+        oscGain.gain.setValueAtTime(0.75, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
         osc.connect(oscGain);
         oscGain.connect(this.ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.1);
+        osc.stop(now + 0.12);
       }
 
       playMiss() {
@@ -639,6 +984,158 @@
       "3 AM Thoughts": "💭", "Regret Mirror": "🪞", "Anxiety Bubble": "🫧", "Loud Noise": "📢", "What-If Cloud": "☁️", "Dying Battery": "🪫"
     };
 
+    const ITEM_DAMAGE_VALUES = {
+      "Laptop": 1200, "Unread Email": 350, "Printer Jam": 500, "Alarm Clock": 45, "Meeting Invite": 250, "Cold Coffee": 8, "Broken Stapler": 22, "Overdue Report": 600,
+      "Love Letter": 5000, "Old Teddy": 35, "Regretful Text": 1500, "Photo Frame": 60, "Perfume": 120, "Anniversary Gift": 450, "Mixtape": 80,
+      "Rent Bill": 2200, "Empty Wallet": 50, "Tax Notice": 3500, "Broken ATM": 9000, "Calculator": 30, "Credit Card Debt": 4500, "Electricity Bill": 280,
+      "Group Chat": 800, "Fake Friend": 2500, "Spilled Tea": 150, "Secret Tape": 1000, "Left On Read": 950, "Mic Drop": 200, "Passive Note": 75,
+      "Final Exam": 1800, "Heavy Textbook": 220, "F-Grade Sheet": 3000, "Energy Drink": 6, "Pop Quiz": 400, "Overdue Thesis": 5000,
+      "3 AM Thoughts": 4000, "Regret Mirror": 150, "Anxiety Bubble": 2200, "Loud Noise": 300, "What-If Cloud": 1800, "Dying Battery": 90
+    };
+
+    // FUN CHARACTER ARCHETYPES ("Charters")
+    const CHARACTER_CHARTERS = [
+      {
+        id: "corporate",
+        name: "The Corporate Demolitionist",
+        avatar: "👔",
+        vibeMatch: "work",
+        quote: "Turned 'per my last email' and 14 Zoom invites into absolute dust.",
+        criteria: (s) => s.vibeCounts["work"] >= 6
+      },
+      {
+        id: "debt",
+        name: "The Debt Decimator",
+        avatar: "💸",
+        vibeMatch: "bills",
+        quote: "You can't pay overdue invoices if the paper has been vaporized by a bat.",
+        criteria: (s) => s.vibeCounts["bills"] >= 6
+      },
+      {
+        id: "heartbreak",
+        name: "The Heartbreak Titan",
+        avatar: "💔",
+        vibeMatch: "ex",
+        quote: "Closure is completely overrated. Crushing photo frames is clinically proven.",
+        criteria: (s) => s.vibeCounts["ex"] >= 6
+      },
+      {
+        id: "semester",
+        name: "The Semester Slayer",
+        avatar: "🎓",
+        vibeMatch: "study",
+        quote: "Passed the exam of pure destruction with a 4.0 GPA in sledgehammer mechanics.",
+        criteria: (s) => s.vibeCounts["study"] >= 6
+      },
+      {
+        id: "zen",
+        name: "The Zen Berserker",
+        avatar: "🧘",
+        vibeMatch: "overthinking",
+        quote: "Silence internal existential dread by hitting 3 AM thoughts with a 20lb hammer.",
+        criteria: (s) => s.vibeCounts["overthinking"] >= 6
+      },
+      {
+        id: "vendetta",
+        name: "The Vendetta Specialist",
+        avatar: "🎯",
+        vibeMatch: "custom",
+        quote: "You came in with a deeply specific grudge, and you executed it flawlessly.",
+        criteria: (s) => s.customCount >= 4
+      },
+      {
+        id: "sonic",
+        name: "The Sonic Annihilator",
+        avatar: "⚡",
+        vibeMatch: "speed",
+        quote: "Mach-speed finger fury. Targets barely spawned before being dismantled.",
+        criteria: (s) => s.maxCombo >= 8
+      },
+      {
+        id: "chaos",
+        name: "The Chaos Sovereign",
+        avatar: "💥",
+        vibeMatch: "all",
+        quote: "Equal-opportunity destroyer. Everything in this room met catastrophic end.",
+        criteria: () => true
+      }
+    ];
+
+    // Career Ledger Tracker
+    const STORAGE_KEY = "smash_room_ledger_v2";
+
+    class SmashLedger {
+      constructor() {
+        this.data = this.load();
+      }
+
+      load() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch(e) {
+          console.error(e);
+        }
+        return {
+          careerTotalSmashed: 0,
+          careerTotalScore: 0,
+          careerDamages: 0,
+          careerRounds: 0,
+          highestCombo: 0,
+          itemStats: {}
+        };
+      }
+
+      save() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+        } catch(e) {
+          console.error(e);
+        }
+      }
+
+      recordRound(roundData) {
+        this.data.careerRounds += 1;
+        this.data.careerTotalSmashed += roundData.totalSmashed;
+        this.data.careerTotalScore += roundData.score;
+        this.data.careerDamages += roundData.propertyDamage;
+        if (roundData.maxCombo > this.data.highestCombo) {
+          this.data.highestCombo = roundData.maxCombo;
+        }
+
+        for (const [name, info] of Object.entries(roundData.itemCounts)) {
+          if (!this.data.itemStats[name]) {
+            this.data.itemStats[name] = { count: 0, emoji: info.emoji, vibe: info.vibe };
+          }
+          this.data.itemStats[name].count += info.count;
+        }
+
+        this.save();
+      }
+
+      reset() {
+        this.data = {
+          careerTotalSmashed: 0,
+          careerTotalScore: 0,
+          careerDamages: 0,
+          careerRounds: 0,
+          highestCombo: 0,
+          itemStats: {}
+        };
+        this.save();
+      }
+    }
+
+    const ledger = new SmashLedger();
+
+    function updateLobbyCareerCount() {
+      const el = document.getElementById('lobbyCareerCount');
+      if (el) {
+        el.innerText = `Career: ${ledger.data.careerTotalSmashed.toLocaleString()} Smashed`;
+      }
+    }
+    updateLobbyCareerCount();
+
     let selectedVibe = VIBES[0];
     let selectedWeapon = "hammer";
 
@@ -692,12 +1189,97 @@
     });
 
     document.getElementById('btnBackLobby').addEventListener('click', () => {
+      updateLobbyCareerCount();
       showScreen(configScreen);
     });
+
+    // Dossier Modal
+    const dossierModal = document.getElementById('dossierModal');
+    document.getElementById('btnOpenDossier').onclick = () => {
+      renderCareerDossier();
+      dossierModal.style.display = 'flex';
+    };
+
+    document.getElementById('btnCloseDossier').onclick = () => {
+      dossierModal.style.display = 'none';
+    };
+
+    dossierModal.onclick = (e) => {
+      if (e.target === dossierModal) dossierModal.style.display = 'none';
+    };
+
+    document.getElementById('btnClearHistory').onclick = () => {
+      if (confirm("Reset all smashed item history and demolition records?")) {
+        ledger.reset();
+        renderCareerDossier();
+        updateLobbyCareerCount();
+        showToast("Records reset 🗑️");
+      }
+    };
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function renderCareerDossier() {
+      document.getElementById('careerTotalSmashed').innerText = ledger.data.careerTotalSmashed.toLocaleString();
+      document.getElementById('careerTotalScore').innerText = ledger.data.careerTotalScore.toLocaleString();
+      document.getElementById('careerDamages').innerText = `$${ledger.data.careerDamages.toLocaleString()}`;
+      document.getElementById('careerRounds').innerText = ledger.data.careerRounds.toLocaleString();
+
+      const list = document.getElementById('careerBreakdownList');
+      list.innerHTML = "";
+
+      const items = Object.entries(ledger.data.itemStats).sort((a, b) => b[1].count - a[1].count);
+      if (items.length === 0) {
+        list.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:12px;">No objects smashed yet. Enter the rage room to begin!</div>`;
+        return;
+      }
+
+      const maxCount = items[0][1].count || 1;
+      items.slice(0, 8).forEach(([name, info], idx) => {
+        const pct = Math.round((info.count / maxCount) * 100);
+        const row = document.createElement('div');
+        row.className = "breakdown-row";
+        row.innerHTML = `
+          <div class="breakdown-info">
+            <span class="breakdown-label">
+              <span>${info.emoji || '💥'}</span>
+              <span>${name}</span>
+              ${idx === 0 ? '<span class="nemesis-tag">👑 ARCH-NEMESIS</span>' : ''}
+            </span>
+            <span class="breakdown-count">${info.count} smashed</span>
+          </div>
+          <div class="breakdown-bar-bg">
+            <div class="breakdown-bar-fill" style="width:${pct}%;"></div>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    // Helper: Round Rectangle Pill for Canvas
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.arcTo(x + width, y, x + width, y + radius, radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+      ctx.lineTo(x + radius, y + height);
+      ctx.arcTo(x, y + height, x, y + height - radius, radius);
+      ctx.lineTo(x, y + radius);
+      ctx.arcTo(x, y, x + radius, y, radius);
+      ctx.closePath();
+    }
 
     // Smash Arena Canvas Loop
     let active = false;
     let animId = null;
+    let lastRoundSummary = null;
 
     function startSmashArena() {
       showScreen(arenaScreen);
@@ -723,30 +1305,43 @@
 
       let score = 0;
       let combo = 1;
+      let maxCombo = 1;
       let comboTimer = null;
       let timeLeft = 30;
       let totalSmashed = 0;
+      let customSmashedCount = 0;
       active = true;
+
+      // Item Tracking for this round
+      const roundItemCounts = {};
+      const vibeCounts = { work: 0, ex: 0, bills: 0, drama: 0, study: 0, overthinking: 0, custom: 0 };
 
       const targets = [];
       const shards = [];
+      const shockwaves = [];
       const floatTexts = [];
 
       class SmashTarget {
         constructor() {
           const isCustom = Math.random() < 0.45 && customTargets.length > 0;
           this.isCustom = isCustom;
-          this.label = isCustom ? customTargets[Math.floor(Math.random() * customTargets.length)] : selectedVibe.items[Math.floor(Math.random() * selectedVibe.items.length)];
+          this.label = isCustom 
+            ? customTargets[Math.floor(Math.random() * customTargets.length)] 
+            : selectedVibe.items[Math.floor(Math.random() * selectedVibe.items.length)];
           this.emoji = ITEM_EMOJIS[this.label] || (isCustom ? "🎯" : "💥");
-          this.radius = isCustom ? 38 : 32;
-          this.x = Math.random() * (W - this.radius * 2) + this.radius;
-          this.y = H + this.radius + 10;
-          this.vx = (Math.random() - 0.5) * 4;
-          this.vy = -(12 + Math.random() * 5);
-          this.gravity = 0.38;
-          this.rotation = Math.random() * Math.PI * 2;
-          this.vRot = (Math.random() - 0.5) * 0.1;
+          this.vibeId = isCustom ? "custom" : selectedVibe.id;
+          
+          // Enhanced larger radius for outstanding visibility & CX
+          this.radius = isCustom ? 54 : 48;
+          this.x = Math.random() * (W - this.radius * 2.4) + this.radius * 1.2;
+          this.y = H + this.radius + 15;
+          this.vx = (Math.random() - 0.5) * 3.6;
+          this.vy = -(12.8 + Math.random() * 4.6);
+          this.gravity = 0.36;
+          this.rotation = (Math.random() - 0.5) * 0.4;
+          this.vRot = (Math.random() - 0.5) * 0.05;
           this.color = isCustom ? "#ec4899" : selectedVibe.color;
+          this.glowColor = isCustom ? "rgba(236, 72, 153, 0.4)" : `${selectedVibe.color}66`;
         }
 
         update() {
@@ -754,60 +1349,119 @@
           this.y += this.vy;
           this.vy += this.gravity;
           this.rotation += this.vRot;
-          if (this.x - this.radius < 0 || this.x + this.radius > W) {
+          if (this.x - this.radius < 4 || this.x + this.radius > W - 4) {
             this.vx *= -0.8;
           }
         }
 
         draw() {
+          // 1. Draw glowing orb & large emoji (with slight rotation)
           ctx.save();
           ctx.translate(this.x, this.y);
-          ctx.rotate(this.rotation);
 
+          // Subtle radial glow
+          ctx.shadowColor = this.color;
+          ctx.shadowBlur = this.isCustom ? 20 : 12;
+
+          // Glass Bubble Base
           ctx.beginPath();
           ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(18, 24, 38, 0.9)";
+          const grad = ctx.createRadialGradient(-this.radius * 0.3, -this.radius * 0.3, 2, 0, 0, this.radius);
+          grad.addColorStop(0, "rgba(35, 45, 68, 0.95)");
+          grad.addColorStop(0.7, "rgba(16, 22, 34, 0.92)");
+          grad.addColorStop(1, "rgba(8, 12, 20, 0.98)");
+          ctx.fillStyle = grad;
           ctx.fill();
-          ctx.lineWidth = this.isCustom ? 3 : 2;
+
+          // Border ring
+          ctx.lineWidth = this.isCustom ? 3.5 : 2.5;
           ctx.strokeStyle = this.color;
-          ctx.shadowColor = this.color;
-          ctx.shadowBlur = this.isCustom ? 16 : 8;
           ctx.stroke();
 
-          ctx.font = `${this.radius * 0.9}px sans-serif`;
+          // Inner Glass Highlight / Specular Reflection Arc
+          ctx.beginPath();
+          ctx.arc(-this.radius * 0.35, -this.radius * 0.35, this.radius * 0.38, Math.PI * 1.0, Math.PI * 1.55);
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+          ctx.shadowBlur = 0;
+          ctx.stroke();
+
+          // Large Vibrant Emoji
+          ctx.save();
+          ctx.rotate(this.rotation * 0.6);
+          ctx.font = `${Math.floor(this.radius * 0.88)}px -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(this.emoji, 0, -4);
+          ctx.restore();
 
-          ctx.font = "bold 9px Outfit, sans-serif";
+          ctx.restore();
+
+          // 2. DRAW HIGH-CONTRAST NON-ROTATING STABILIZED BADGE PILL (CX & READABILITY ENHANCEMENT)
+          // The text badge always faces forward upright so users can read what they are smashing with ease!
+          ctx.save();
+          const cleanLabel = this.isCustom ? `⭐ ${this.label}` : this.label;
+          ctx.font = "800 13px 'Plus Jakarta Sans', system-ui, sans-serif";
+          const textMetrics = ctx.measureText(cleanLabel);
+          const badgeWidth = Math.max(76, textMetrics.width + 18);
+          const badgeHeight = 22;
+          const badgeX = this.x - badgeWidth / 2;
+          const badgeY = this.y + this.radius - 12;
+
+          // Badge Background Pill
+          drawRoundedRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, 11);
+          ctx.fillStyle = "rgba(9, 13, 24, 0.94)";
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = this.color;
+          ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+          ctx.shadowBlur = 6;
+          ctx.stroke();
+
+          // Badge Text
           ctx.fillStyle = "#ffffff";
-          ctx.fillText(this.label.substring(0, 14), 0, this.radius - 8);
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.shadowBlur = 0;
+          ctx.fillText(cleanLabel, this.x, badgeY + badgeHeight / 2);
 
           ctx.restore();
         }
       }
 
+      function spawnShockwave(x, y, color) {
+        shockwaves.push({ x, y, radius: 10, maxRadius: 65, color, alpha: 1.0 });
+      }
+
       function spawnShards(x, y, color) {
-        const count = 16 + Math.floor(Math.random() * 8);
+        const count = 22 + Math.floor(Math.random() * 8);
         for (let i = 0; i < count; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const speed = 3 + Math.random() * 9;
+          const speed = 4 + Math.random() * 10;
           shards.push({
             x, y,
             vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed - 2,
-            size: 3 + Math.random() * 7,
-            color: Math.random() < 0.3 ? "#ffffff" : color,
+            vy: Math.sin(angle) * speed - 2.5,
+            size: 4 + Math.random() * 8,
+            color: Math.random() < 0.35 ? "#ffffff" : color,
             life: 1.0,
-            decay: 0.02 + Math.random() * 0.03,
+            decay: 0.022 + Math.random() * 0.03,
             rot: Math.random() * Math.PI,
-            vRot: (Math.random() - 0.5) * 0.3
+            vRot: (Math.random() - 0.5) * 0.35
           });
         }
       }
 
-      function addFloat(x, y, text, color) {
-        floatTexts.push({ x, y, text, color, vy: -2, alpha: 1.0 });
+      const PUNCH_WORDS = ["💥 BOOM!", "⚡ CRUNCH!", "🔥 SHREDDED!", "💣 VAPORIZED!", "🔨 SMASHED!", "✨ PULVERIZED!"];
+
+      function addFloat(x, y, text, color, isPunchWord = false) {
+        floatTexts.push({ 
+          x, y, text, color, 
+          vy: isPunchWord ? -3.2 : -2.2, 
+          alpha: 1.0, 
+          isPunchWord,
+          scale: isPunchWord ? 1.3 : 1.0
+        });
       }
 
       function handleHit(clientX, clientY) {
@@ -824,7 +1478,22 @@
             hit = true;
             totalSmashed++;
 
+            // Track item count for breakdown
+            if (!roundItemCounts[t.label]) {
+              roundItemCounts[t.label] = {
+                count: 0,
+                emoji: t.emoji,
+                vibe: t.vibeId,
+                isCustom: t.isCustom,
+                damageValue: ITEM_DAMAGE_VALUES[t.label] || 500
+              };
+            }
+            roundItemCounts[t.label].count += 1;
+            vibeCounts[t.vibeId] = (vibeCounts[t.vibeId] || 0) + 1;
+            if (t.isCustom) customSmashedCount++;
+
             combo++;
+            if (combo > maxCombo) maxCombo = combo;
             clearTimeout(comboTimer);
             comboTimer = setTimeout(() => { combo = 1; hudCombo.innerText = "x1 COMBO"; }, 1500);
 
@@ -832,11 +1501,19 @@
             score += earned;
 
             sfx.playShatter();
-            spawnShards(t.x, t.y, t.color);
-            addFloat(t.x, t.y, `+${earned}`, t.isCustom ? "#ec4899" : "#fbbf24");
+            if (navigator.vibrate) navigator.vibrate(28);
 
-            arenaWrapper.style.transform = `translate(${(Math.random()-0.5)*12}px, ${(Math.random()-0.5)*12}px)`;
-            setTimeout(() => arenaWrapper.style.transform = 'none', 80);
+            spawnShockwave(t.x, t.y, t.color);
+            spawnShards(t.x, t.y, t.color);
+
+            // Punch comic word
+            const punchWord = PUNCH_WORDS[Math.floor(Math.random() * PUNCH_WORDS.length)];
+            addFloat(t.x, t.y - 15, punchWord, "#ffffff", true);
+            addFloat(t.x, t.y + 12, `+${earned}`, t.isCustom ? "#ec4899" : "#fbbf24");
+
+            // Juicy Screen Shake
+            arenaWrapper.style.transform = `translate(${(Math.random()-0.5)*14}px, ${(Math.random()-0.5)*14}px)`;
+            setTimeout(() => arenaWrapper.style.transform = 'none', 85);
 
             targets.splice(i, 1);
             break;
@@ -860,18 +1537,39 @@
         ctx.clearRect(0, 0, W, H);
 
         spawnTimer++;
-        if (spawnTimer % 32 === 0 && targets.length < 8) {
+        if (spawnTimer % 30 === 0 && targets.length < 8) {
           targets.push(new SmashTarget());
-          if (Math.random() < 0.3) targets.push(new SmashTarget());
+          if (Math.random() < 0.28) targets.push(new SmashTarget());
         }
 
+        // Draw shockwaves
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+          const sw = shockwaves[i];
+          sw.radius += 3.2;
+          sw.alpha -= 0.055;
+          if (sw.alpha <= 0) {
+            shockwaves.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = sw.color;
+          ctx.globalAlpha = sw.alpha;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Draw targets
         for (let i = targets.length - 1; i >= 0; i--) {
           const t = targets[i];
           t.update();
           t.draw();
-          if (t.y > H + 80) targets.splice(i, 1);
+          if (t.y > H + 90) targets.splice(i, 1);
         }
 
+        // Draw shards
         for (let i = shards.length - 1; i >= 0; i--) {
           const s = shards[i];
           s.x += s.vx;
@@ -890,21 +1588,22 @@
           ctx.rotate(s.rot);
           ctx.globalAlpha = Math.max(0, s.life);
           ctx.fillStyle = s.color;
-          ctx.fillRect(-s.size/2, -s.size/2, s.size, s.size * 0.7);
+          ctx.fillRect(-s.size/2, -s.size/2, s.size, s.size * 0.75);
           ctx.restore();
         }
 
+        // Draw float texts
         for (let i = floatTexts.length - 1; i >= 0; i--) {
           const ft = floatTexts[i];
           ft.y += ft.vy;
-          ft.alpha -= 0.025;
+          ft.alpha -= 0.026;
           if (ft.alpha <= 0) {
             floatTexts.splice(i, 1);
             continue;
           }
           ctx.save();
           ctx.globalAlpha = ft.alpha;
-          ctx.font = "800 22px Outfit, sans-serif";
+          ctx.font = ft.isPunchWord ? "900 20px 'Outfit', sans-serif" : "800 18px 'Outfit', sans-serif";
           ctx.fillStyle = ft.color;
           ctx.textAlign = "center";
           ctx.shadowColor = ft.color;
@@ -926,7 +1625,15 @@
           clearInterval(timerInterval);
           active = false;
           cancelAnimationFrame(animId);
-          showResults(score, totalSmashed, selectedVibe.name);
+          finishRound({
+            score,
+            totalSmashed,
+            maxCombo,
+            vibeCounts,
+            customCount: customSmashedCount,
+            itemCounts: roundItemCounts,
+            category: selectedVibe.name
+          });
         }
       }, 1000);
 
@@ -938,34 +1645,117 @@
       };
     }
 
-    function showResults(score, smashed, category) {
+    function finishRound(stats) {
       sfx.playSuccess();
       showScreen(resultScreen);
-      document.getElementById('finalScore').innerText = score.toLocaleString();
-      document.getElementById('finalSmashed').innerText = `${smashed} items`;
-      document.getElementById('finalCategory').innerText = category;
+
+      // Calculate Property Damage
+      let propertyDamage = 0;
+      for (const [name, info] of Object.entries(stats.itemCounts)) {
+        propertyDamage += (info.damageValue || 500) * info.count;
+      }
+      stats.propertyDamage = propertyDamage;
+
+      // Persist in Career Ledger
+      ledger.recordRound(stats);
+      updateLobbyCareerCount();
+
+      // Display Scores
+      document.getElementById('finalScore').innerText = stats.score.toLocaleString();
+      document.getElementById('statDamage').innerText = `$${propertyDamage.toLocaleString()}`;
+      document.getElementById('statMaxCombo').innerText = `x${stats.maxCombo}`;
+      document.getElementById('statDecibels').innerText = `${(stats.totalSmashed * 3.2 + 35).toFixed(1)} dB`;
 
       const badge = document.getElementById('resultBadge');
-      const relief = document.getElementById('finalRelief');
-      const verdict = document.getElementById('finalVerdict');
+      const statZen = document.getElementById('statZen');
 
-      if (smashed >= 30) {
+      if (stats.totalSmashed >= 30) {
         badge.innerText = "💥 CATHARTIC GOD OF DESTRUCTION";
         badge.style.background = "rgba(239, 68, 68, 0.25)";
-        relief.innerText = "100% Pure Zen Achieved";
-        verdict.innerText = "Total demolition! You smashed every single annoyance into microscopic dust. You are fully decompressed.";
-      } else if (smashed >= 18) {
+        statZen.innerText = "100% Pure Zen";
+      } else if (stats.totalSmashed >= 18) {
         badge.innerText = "🔥 CERTIFIED RAGE DEMON";
         badge.style.background = "rgba(249, 115, 22, 0.25)";
-        relief.innerText = "85% Stress Evaporated";
-        verdict.innerText = "Incredible destruction! Your blood pressure just dropped 20 points. Great work.";
+        statZen.innerText = "88% Zen";
       } else {
         badge.innerText = "⚡ THERAPEUTIC CRUSHER";
         badge.style.background = "rgba(16, 185, 129, 0.25)";
-        relief.innerText = "60% Relaxed";
-        verdict.innerText = "Solid stress demolition! If you still feel tension, jump back in for another round.";
+        statZen.innerText = "65% Relaxed";
       }
+
+      // Diagnose Character Persona ("Charter")
+      let diagnosedCharter = CHARACTER_CHARTERS[CHARACTER_CHARTERS.length - 1]; // default chaos
+      for (const ch of CHARACTER_CHARTERS) {
+        if (ch.criteria(stats)) {
+          diagnosedCharter = ch;
+          break;
+        }
+      }
+
+      document.getElementById('charterAvatar').innerText = diagnosedCharter.avatar;
+      document.getElementById('charterName').innerText = diagnosedCharter.name;
+      document.getElementById('charterQuote').innerText = `"${diagnosedCharter.quote}"`;
+
+      // Render Demolition Breakdown ("Which things were smashed more")
+      const list = document.getElementById('breakdownList');
+      list.innerHTML = "";
+      document.getElementById('breakdownTotalBadge').innerText = `${stats.totalSmashed} Items Smashed`;
+
+      const sortedItems = Object.entries(stats.itemCounts).sort((a, b) => b[1].count - a[1].count);
+
+      if (sortedItems.length === 0) {
+        list.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:12px;">No items were smashed. Try swinging faster next time!</div>`;
+      } else {
+        const topCount = sortedItems[0][1].count || 1;
+        sortedItems.forEach(([name, info], idx) => {
+          const pct = Math.round((info.count / topCount) * 100);
+          const isNemesis = idx === 0 && info.count >= 2;
+
+          const row = document.createElement('div');
+          row.className = "breakdown-row";
+          row.innerHTML = `
+            <div class="breakdown-info">
+              <span class="breakdown-label">
+                <span>${info.emoji || '🎯'}</span>
+                <span>${name}</span>
+                ${isNemesis ? '<span class="nemesis-tag">👑 TOP NEMESIS</span>' : ''}
+              </span>
+              <span class="breakdown-count"><strong>${info.count}</strong> smashed (${Math.round((info.count/stats.totalSmashed)*100)}%)</span>
+            </div>
+            <div class="breakdown-bar-bg">
+              <div class="breakdown-bar-fill" style="width:${pct}%;"></div>
+            </div>
+          `;
+          list.appendChild(row);
+        });
+      }
+
+      // Save for sharing
+      lastRoundSummary = {
+        score: stats.score,
+        totalSmashed: stats.totalSmashed,
+        topNemesis: sortedItems.length > 0 ? `${sortedItems[0][1].emoji} ${sortedItems[0][0]} (${sortedItems[0][1].count} smashed)` : "None",
+        charter: diagnosedCharter.name,
+        damage: `$${propertyDamage.toLocaleString()}`
+      };
     }
+
+    // Share / Copy Report
+    document.getElementById('btnShareReport').addEventListener('click', () => {
+      if (!lastRoundSummary) return;
+      const text = `💥 RAGE ROOM SMASH REPORT
+🎯 Demolition Score: ${lastRoundSummary.score.toLocaleString()} pts (${lastRoundSummary.totalSmashed} items smashed)
+👑 Top Nemesis: ${lastRoundSummary.topNemesis}
+🎭 Character Persona: ${lastRoundSummary.charter}
+💸 Fictional Damages: ${lastRoundSummary.damage}
+👉 Demolish your stress free: https://apps.arunkumars.in/games/smash/`;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast("Report copied to clipboard! 📋"));
+      } else {
+        showToast("Report ready! 📋");
+      }
+    });
   </script>
 </body>
 </html>
