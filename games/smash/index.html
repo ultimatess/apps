@@ -142,6 +142,16 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes pulseStreak {
+      0% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.08); filter: brightness(1.3); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    .streak-active-badge {
+      animation: pulseStreak 0.5s infinite ease-in-out;
+    }
+
     h1, h2, h3 {
       font-family: 'Outfit', sans-serif;
       font-weight: 800;
@@ -733,6 +743,7 @@
         <div class="hud-stat" style="align-items:flex-end;">
           <span class="hud-label">Multiplier</span>
           <span class="hud-val" id="hudCombo" style="color:#f59e0b;">x1 COMBO</span>
+          <div id="hudStreakBadge" class="streak-active-badge" style="display:none; font-size:10px; font-weight:800; color:#ef4444; background:rgba(239,68,68,0.25); border:1px solid rgba(239,68,68,0.4); padding:2px 7px; border-radius:9999px; margin-top:3px; white-space:nowrap;"></div>
         </div>
       </div>
 
@@ -780,12 +791,12 @@
           <div class="stat-card-val" id="statDamage">$0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-label">⚡ Highest Streak</div>
+          <div class="stat-card-label">⚡ Highest Combo</div>
           <div class="stat-card-val" id="statMaxCombo">x1</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-label">🔊 Frustration Silenced</div>
-          <div class="stat-card-val" id="statDecibels">0 dB</div>
+          <div class="stat-card-label">🔥 Best Item Streak</div>
+          <div class="stat-card-val" id="statItemStreak" style="color:#f59e0b;">None</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">🎯 Zen Status</div>
@@ -818,7 +829,7 @@
         <button class="btn-close" id="btnCloseDossier">&times;</button>
       </div>
       <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
-        Lifetime record of your virtual stress relief and most-smashed arch-nemeses.
+        Lifetime record of your virtual stress relief, nemesis streaks, and most-smashed arch-nemeses.
       </p>
 
       <div class="stat-grid">
@@ -835,8 +846,8 @@
           <div class="stat-card-val" id="careerDamages">$0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-label">Rounds Played</div>
-          <div class="stat-card-val" id="careerRounds">0</div>
+          <div class="stat-card-label">Best Item Streak</div>
+          <div class="stat-card-val" id="careerBestStreak" style="color:#f59e0b; font-size:15px;">None</div>
         </div>
       </div>
 
@@ -919,6 +930,41 @@
         osc.stop(now + 0.12);
       }
 
+      playStreakChime(streakCount) {
+        if (!this.enabled || !this.ctx) return;
+        this.init();
+        const baseFreq = 520 + Math.min(6, streakCount) * 110;
+        const now = this.ctx.currentTime;
+
+        // Ascending crystalline arpeggio chords
+        [baseFreq, baseFreq * 1.25, baseFreq * 1.5].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const t = now + idx * 0.045;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        });
+
+        // Add a satisfying low sub-bass punch
+        const sub = this.ctx.createOscillator();
+        const subGain = this.ctx.createGain();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(120, now);
+        sub.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+        subGain.gain.setValueAtTime(0.5, now);
+        subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        sub.connect(subGain);
+        subGain.connect(this.ctx.destination);
+        sub.start(now);
+        sub.stop(now + 0.15);
+      }
+
       playMiss() {
         if (!this.enabled || !this.ctx) return;
         this.init();
@@ -996,6 +1042,14 @@
     // FUN CHARACTER ARCHETYPES ("Charters")
     const CHARACTER_CHARTERS = [
       {
+        id: "streak_sniper",
+        name: "The Laser-Focused Nemesis Slayer",
+        avatar: "🎯",
+        vibeMatch: "streak",
+        quote: "Ignored the entire chaos of the room to obliterate one single nemesis over and over.",
+        criteria: (s) => s.maxSameItemStreak >= 3
+      },
+      {
         id: "corporate",
         name: "The Corporate Demolitionist",
         avatar: "👔",
@@ -1038,7 +1092,7 @@
       {
         id: "vendetta",
         name: "The Vendetta Specialist",
-        avatar: "🎯",
+        avatar: "⭐",
         vibeMatch: "custom",
         quote: "You came in with a deeply specific grudge, and you executed it flawlessly.",
         criteria: (s) => s.customCount >= 4
@@ -1082,6 +1136,7 @@
           careerDamages: 0,
           careerRounds: 0,
           highestCombo: 0,
+          bestItemStreak: { count: 0, item: "None", emoji: "" },
           itemStats: {}
         };
       }
@@ -1103,6 +1158,17 @@
           this.data.highestCombo = roundData.maxCombo;
         }
 
+        if (!this.data.bestItemStreak) {
+          this.data.bestItemStreak = { count: 0, item: "None", emoji: "" };
+        }
+        if (roundData.maxSameItemStreak > (this.data.bestItemStreak.count || 0)) {
+          this.data.bestItemStreak = {
+            count: roundData.maxSameItemStreak,
+            item: roundData.maxSameItemName,
+            emoji: roundData.maxSameItemEmoji
+          };
+        }
+
         for (const [name, info] of Object.entries(roundData.itemCounts)) {
           if (!this.data.itemStats[name]) {
             this.data.itemStats[name] = { count: 0, emoji: info.emoji, vibe: info.vibe };
@@ -1120,6 +1186,7 @@
           careerDamages: 0,
           careerRounds: 0,
           highestCombo: 0,
+          bestItemStreak: { count: 0, item: "None", emoji: "" },
           itemStats: {}
         };
         this.save();
@@ -1228,7 +1295,14 @@
       document.getElementById('careerTotalSmashed').innerText = ledger.data.careerTotalSmashed.toLocaleString();
       document.getElementById('careerTotalScore').innerText = ledger.data.careerTotalScore.toLocaleString();
       document.getElementById('careerDamages').innerText = `$${ledger.data.careerDamages.toLocaleString()}`;
-      document.getElementById('careerRounds').innerText = ledger.data.careerRounds.toLocaleString();
+
+      const bestStreakEl = document.getElementById('careerBestStreak');
+      const bStreak = ledger.data.bestItemStreak;
+      if (bStreak && bStreak.count >= 2) {
+        bestStreakEl.innerText = `${bStreak.count}x ${bStreak.emoji} ${bStreak.item}`;
+      } else {
+        bestStreakEl.innerText = "None yet";
+      }
 
       const list = document.getElementById('careerBreakdownList');
       list.innerHTML = "";
@@ -1292,8 +1366,11 @@
       const hudScore = document.getElementById('hudScore');
       const hudTimer = document.getElementById('hudTimer');
       const hudCombo = document.getElementById('hudCombo');
+      const hudStreakBadge = document.getElementById('hudStreakBadge');
       const rageFill = document.getElementById('rageFill');
       const ragePercent = document.getElementById('ragePercent');
+
+      hudStreakBadge.style.display = 'none';
 
       const rect = arenaWrapper.getBoundingClientRect();
       const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -1310,6 +1387,14 @@
       let timeLeft = 30;
       let totalSmashed = 0;
       let customSmashedCount = 0;
+
+      // Same-Item Streak State
+      let lastItemLabel = null;
+      let sameItemStreak = 0;
+      let maxSameItemStreak = 0;
+      let maxSameItemName = "";
+      let maxSameItemEmoji = "";
+
       active = true;
 
       // Item Tracking for this round
@@ -1492,27 +1577,85 @@
             vibeCounts[t.vibeId] = (vibeCounts[t.vibeId] || 0) + 1;
             if (t.isCustom) customSmashedCount++;
 
+            // CHECK SAME-ITEM STREAK
+            if (t.label === lastItemLabel) {
+              sameItemStreak++;
+            } else {
+              lastItemLabel = t.label;
+              sameItemStreak = 1;
+            }
+
+            if (sameItemStreak > maxSameItemStreak) {
+              maxSameItemStreak = sameItemStreak;
+              maxSameItemName = t.label;
+              maxSameItemEmoji = t.emoji;
+            }
+
+            // Combo multiplier
             combo++;
             if (combo > maxCombo) maxCombo = combo;
             clearTimeout(comboTimer);
-            comboTimer = setTimeout(() => { combo = 1; hudCombo.innerText = "x1 COMBO"; }, 1500);
+            comboTimer = setTimeout(() => { 
+              combo = 1; 
+              hudCombo.innerText = "x1 COMBO";
+              sameItemStreak = 0;
+              lastItemLabel = null;
+              hudStreakBadge.style.display = 'none';
+            }, 1600);
 
-            const earned = (t.isCustom ? 250 : 100) * combo;
+            // CALCULATE POINTS WITH SAME-ITEM STREAK BONUS
+            const basePoints = (t.isCustom ? 250 : 100) * combo;
+            let streakBonus = 0;
+
+            if (sameItemStreak >= 2) {
+              // Streak Bonus escalates for consecutive strikes on the same target!
+              // 2 in a row = +100% of base
+              // 3 in a row = +200% of base
+              // 4 in a row = +300% of base
+              streakBonus = Math.round(basePoints * (sameItemStreak - 1));
+              sfx.playStreakChime(sameItemStreak);
+            } else {
+              sfx.playShatter();
+            }
+
+            const earned = basePoints + streakBonus;
             score += earned;
 
-            sfx.playShatter();
             if (navigator.vibrate) navigator.vibrate(28);
 
-            spawnShockwave(t.x, t.y, t.color);
-            spawnShards(t.x, t.y, t.color);
+            spawnShockwave(t.x, t.y, sameItemStreak >= 2 ? "#f59e0b" : t.color);
+            spawnShards(t.x, t.y, sameItemStreak >= 2 ? "#f59e0b" : t.color);
 
-            // Punch comic word
-            const punchWord = PUNCH_WORDS[Math.floor(Math.random() * PUNCH_WORDS.length)];
-            addFloat(t.x, t.y - 15, punchWord, "#ffffff", true);
-            addFloat(t.x, t.y + 12, `+${earned}`, t.isCustom ? "#ec4899" : "#fbbf24");
+            // Floating text feedback
+            if (sameItemStreak >= 2) {
+              const streakTitles = [
+                "",
+                "",
+                `🎯 2x ${t.label.toUpperCase()} STREAK! (+${streakBonus})`,
+                `🔥 3x ${t.label.toUpperCase()} FRENZY! (+${streakBonus})`,
+                `⚡ 4x ${t.label.toUpperCase()} RAMPAGE! (+${streakBonus})`,
+                `👑 ${sameItemStreak}x ${t.label.toUpperCase()} DESTROYER! (+${streakBonus})`
+              ];
+              const streakText = streakTitles[Math.min(sameItemStreak, 5)] || `👑 ${sameItemStreak}x ${t.label.toUpperCase()} STREAK! (+${streakBonus})`;
+              addFloat(t.x, t.y - 30, streakText, "#f59e0b", true);
+              addFloat(t.x, t.y + 14, `+${earned} (${sameItemStreak}x Streak Bonus)`, "#fcd34d");
+            } else {
+              const punchWord = PUNCH_WORDS[Math.floor(Math.random() * PUNCH_WORDS.length)];
+              addFloat(t.x, t.y - 15, punchWord, "#ffffff", true);
+              addFloat(t.x, t.y + 12, `+${earned}`, t.isCustom ? "#ec4899" : "#fbbf24");
+            }
 
-            // Juicy Screen Shake
-            arenaWrapper.style.transform = `translate(${(Math.random()-0.5)*14}px, ${(Math.random()-0.5)*14}px)`;
+            // HUD Streak Badge
+            if (sameItemStreak >= 2) {
+              hudStreakBadge.style.display = 'inline-block';
+              hudStreakBadge.innerText = `🔥 ${sameItemStreak}x ${t.label} STREAK (+${sameItemStreak}x PTS)`;
+            } else {
+              hudStreakBadge.style.display = 'none';
+            }
+
+            // Screen Shake (stronger for high streak)
+            const shakeMag = 10 + Math.min(10, sameItemStreak * 2);
+            arenaWrapper.style.transform = `translate(${(Math.random()-0.5)*shakeMag}px, ${(Math.random()-0.5)*shakeMag}px)`;
             setTimeout(() => arenaWrapper.style.transform = 'none', 85);
 
             targets.splice(i, 1);
@@ -1520,7 +1663,12 @@
           }
         }
 
-        if (!hit) sfx.playMiss();
+        if (!hit) {
+          sfx.playMiss();
+          sameItemStreak = 0;
+          lastItemLabel = null;
+          hudStreakBadge.style.display = 'none';
+        }
 
         hudScore.innerText = score.toLocaleString();
         hudCombo.innerText = `x${combo} COMBO`;
@@ -1629,6 +1777,9 @@
             score,
             totalSmashed,
             maxCombo,
+            maxSameItemStreak,
+            maxSameItemName,
+            maxSameItemEmoji,
             vibeCounts,
             customCount: customSmashedCount,
             itemCounts: roundItemCounts,
@@ -1660,11 +1811,17 @@
       ledger.recordRound(stats);
       updateLobbyCareerCount();
 
-      // Display Scores
+      // Display Scores & Fun Stats
       document.getElementById('finalScore').innerText = stats.score.toLocaleString();
       document.getElementById('statDamage').innerText = `$${propertyDamage.toLocaleString()}`;
       document.getElementById('statMaxCombo').innerText = `x${stats.maxCombo}`;
-      document.getElementById('statDecibels').innerText = `${(stats.totalSmashed * 3.2 + 35).toFixed(1)} dB`;
+      
+      const statStreakEl = document.getElementById('statItemStreak');
+      if (stats.maxSameItemStreak >= 2) {
+        statStreakEl.innerText = `${stats.maxSameItemStreak}x ${stats.maxSameItemEmoji} ${stats.maxSameItemName}`;
+      } else {
+        statStreakEl.innerText = "None (Mix)";
+      }
 
       const badge = document.getElementById('resultBadge');
       const statZen = document.getElementById('statZen');
@@ -1735,6 +1892,7 @@
         score: stats.score,
         totalSmashed: stats.totalSmashed,
         topNemesis: sortedItems.length > 0 ? `${sortedItems[0][1].emoji} ${sortedItems[0][0]} (${sortedItems[0][1].count} smashed)` : "None",
+        streak: stats.maxSameItemStreak >= 2 ? `${stats.maxSameItemStreak}x ${stats.maxSameItemEmoji} ${stats.maxSameItemName}` : "None",
         charter: diagnosedCharter.name,
         damage: `$${propertyDamage.toLocaleString()}`
       };
@@ -1746,6 +1904,7 @@
       const text = `💥 RAGE ROOM SMASH REPORT
 🎯 Demolition Score: ${lastRoundSummary.score.toLocaleString()} pts (${lastRoundSummary.totalSmashed} items smashed)
 👑 Top Nemesis: ${lastRoundSummary.topNemesis}
+🔥 Nemesis Streak: ${lastRoundSummary.streak}
 🎭 Character Persona: ${lastRoundSummary.charter}
 💸 Fictional Damages: ${lastRoundSummary.damage}
 👉 Demolish your stress free: https://apps.arunkumars.in/games/smash/`;
