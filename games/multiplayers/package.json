@@ -1,0 +1,18 @@
+{
+  "name": "multiplayers",
+  "version": "1.0.0",
+  "description": "Zero-server WebRTC Peer-to-Peer multiplayer party games platform inspired by NetplayJS",
+  "type": "module",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "netplay",
+    "webrtc",
+    "party-games",
+    "peer-to-peer",
+    "spyfall"
+  ],
+  "author": "ultimatess",
+  "license": "MIT"
+}
