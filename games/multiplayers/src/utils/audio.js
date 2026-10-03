@@ -4,8 +4,21 @@
  */
 
 let audioCtx = null;
+let muted = (() => {
+  try { return localStorage.getItem('np_muted') === '1'; } catch (e) { return false; }
+})();
+
+export function isMuted() {
+  return muted;
+}
+
+export function setMuted(value) {
+  muted = !!value;
+  try { localStorage.setItem('np_muted', muted ? '1' : '0'); } catch (e) { /* ignore */ }
+}
 
 function getAudioContext() {
+  if (muted) return null;
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (AudioContextClass) {
@@ -164,5 +177,77 @@ export function playVictory() {
       osc.start(startTime);
       osc.stop(startTime + 0.7);
     });
+  } catch (e) {}
+}
+
+function tone(ctx, { type = 'sine', from, to = from, start = 0, duration = 0.2, volume = 0.2 }) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const t0 = ctx.currentTime + start;
+  osc.type = type;
+  osc.frequency.setValueAtTime(from, t0);
+  if (to !== from) osc.frequency.exponentialRampToValueAtTime(to, t0 + duration);
+  gain.gain.setValueAtTime(volume, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.02);
+}
+
+/** Soft two-note blip when a player joins the room */
+export function playJoin() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    tone(ctx, { from: 660, start: 0, duration: 0.12, volume: 0.12 });
+    tone(ctx, { from: 990, start: 0.09, duration: 0.18, volume: 0.12 });
+  } catch (e) {}
+}
+
+/** Bright "ding" for a correct answer */
+export function playCorrect() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    tone(ctx, { type: 'triangle', from: 880, start: 0, duration: 0.15, volume: 0.2 });
+    tone(ctx, { type: 'triangle', from: 1320, start: 0.1, duration: 0.3, volume: 0.2 });
+  } catch (e) {}
+}
+
+/** Low "bonk" for a wrong answer / false start */
+export function playWrong() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    tone(ctx, { type: 'square', from: 220, to: 110, duration: 0.3, volume: 0.12 });
+  } catch (e) {}
+}
+
+/** Noise burst for crashes and explosions */
+export function playExplosion() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const length = Math.floor(ctx.sampleRate * 0.5);
+    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.5);
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    gain.gain.value = 0.35;
+    src.buffer = buffer;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+  } catch (e) {}
+}
+
+/** Countdown beep: short for 3-2-1, long and high for GO */
+export function playCountdown(isGo = false) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    tone(ctx, { type: 'square', from: isGo ? 1046 : 523, duration: isGo ? 0.45 : 0.15, volume: 0.12 });
   } catch (e) {}
 }

@@ -1,78 +1,109 @@
-# Netplay-Party: P2P Multiplayer Party Deck & NetplayJS Arcade
+# Netplay Party: P2P Party Deck & Arcade
 
-A zero-server peer-to-peer multiplayer platform inspired by **[NetplayJS](https://rameshvarun.github.io/netplayjs/)** and **Jackbox Games**.
+A zero-server, peer-to-peer party platform inspired by **[NetplayJS](https://rameshvarun.github.io/netplayjs/)** and **Jackbox Games**.
 
-Play party deduction games and fast 60fps arcade duels using a central display (TV, laptop, or tablet) as the shared game screen, while every player uses their smartphone as their private controller, virtual gamepad, secret role card, or drawing pad.
+One big screen (TV, laptop, tablet) is the shared game board. Every player's phone is their private controller: secret role card, gamepad, buzzer, drawing pad or ballot. No apps, no accounts.
 
 ---
 
-## 📂 Architecture & Directory Structure
+## 🎮 The 13 Games
 
-All games are split into modular categories and dedicated folders:
+### 🎭 Social Deduction
+| Game | Players | What happens |
+|---|---|---|
+| 🕵️ **Spyfall** | 3–12 | Everyone knows the location except the Spy. Question each other, call one accusation per round, or (as the Spy) reveal yourself and steal the win by naming the location. 18 location packs. |
+| 🌙 **Mafia & Werewolf** | 4–16 | Silent night on phones: Mafia, Doctor, Detective, Jester, Vigilante. **Everyone** taps at night, so phone activity reveals nothing. Spoken narrator, tie-safe voting, full role reveal at the end. |
+| 🤥 **Two Truths & a Lie** *(new)* | 3–12 | Type 2 truths and 1 lie on your phone. The TV shows each player's statements in turn; everyone votes on the lie. Awards for the best liar and the best lie detector. |
+
+### 🎉 Party & Quiz
+| Game | Players | What happens |
+|---|---|---|
+| 🎨 **Fake Artist** | 3–10 | One continuous line each, streamed live to the TV. The Fake never goes first. If caught, the Fake picks the word from 8 options to steal the win. |
+| 🧠 **Trivia Blitz** *(new)* | 1–16 | Kahoot-style multiple choice: 80 questions across 8 topics. Faster correct answers score more, and streaks earn bonuses. |
+| 🤠 **Quick Draw Showdown** *(new)* | 2–16 | WAIT FOR IT... DRAW! Fastest tap wins. Trick words ("DRUM!") catch jumpy fingers. Reaction times are measured on the phone, so wifi lag doesn't decide the winner. |
+| 🔥 **Most Likely To...** | 3–16 | Secret votes, animated bar-chart reveal, and an awards ceremony of everyone's titles. |
+| ⚡ **5-Second Rule** | 2–12 | Prompts arm after a short read delay, the first buzz locks everyone else out, and the host judges each answer. |
+| 🎯 **Secret Missions** | 3–16 | Everyone hunts exactly one person (a random single cycle). Complete your mission for +2, or expose your hunter for +1. |
+
+### 🕹️ Arcade
+| Game | Players | What happens |
+|---|---|---|
+| 🏓 **Netplay Pong** | 1–2 + queue | Thumb-slider paddles, countdown serves, angle-based bounces. **Winner stays on** for the next challenger. Solo players face the AI. |
+| 🏍️ **Light Cycles** *(new)* | 2–6 | Tron-style neon trails. Tap LEFT or RIGHT to turn, and bikes speed up the longer a round lasts. First to 3 round wins. Solo players face a bot. |
+| 🟦 **Square Arena Clash** | 1–6 | Analog thumb joystick and a Turbo button. Grab stars, and ram rivals while boosting to steal their points. The final 10 seconds score double. |
+| 🔴 **Connect 4 Grid Duel** | 1–2 + queue | Tap the board on your phone, with falling-disc animation on the TV. Winner stays on. The solo AI wins when it can, blocks your wins, and plays the centre. |
+
+---
+
+## ✨ Platform features
+
+- **Rejoin on refresh.** Each phone has a stable player id in `sessionStorage`. A refreshed or sleeping phone rejoins as the same player, and the host replays the current screen and its secret card.
+- **Late joiners** land straight in the running game, as a spectator or queued challenger where that applies.
+- **TV refresh reclaims the same room code.** Phones reconnect automatically.
+- **Connection health.** Heartbeats in both directions, a 45-second seat hold for dropped players, and a "reconnecting" overlay on phones.
+- **Host dock** on every screen: room code, player count, lobby, mute and fullscreen.
+- **Player-count fit** highlighting in the hub, and the host can remove players.
+- **Safe by default.** Names are sanitised on the host and all free text is escaped. There are no blocking `alert`/`confirm` calls on the TV.
+- **Clean teardown.** Every game's listeners, timers and animation loops are disposed when you switch games.
+
+---
+
+## 📂 Architecture
 
 ```text
-games/multiplayers/src/games/
-├── social-deduction/                    # Hidden Information & Bluffing
-│   ├── spyfall/
-│   │   ├── spyfall-host.js              # Big screen board, timer, accusation trial
-│   │   └── spyfall-controller.js        # Secret location card, cross-out notepad, ballots
-│   └── mafia/
-│       ├── mafia-host.js                # Silent night phase narrator, day lynch trial
-│       └── mafia-controller.js          # Private roles (Doctor, Detective, Mafia), night moves
-├── party-antics/                        # Creative, Antics & Buzzer Antics
-│   ├── fake-artist/
-│   │   ├── fake-artist-host.js          # Real-time WebRTC stroke streaming canvas
-│   │   └── fake-artist-controller.js    # Mobile touch drawing pad, 1-stroke turn submit
-│   ├── most-likely/
-│   │   ├── most-likely-host.js          # Animated bar-chart results on big screen
-│   │   └── most-likely-controller.js    # Simultaneous blind voting grid
-│   ├── fivesec/
-│   │   ├── fivesec-host.js              # 5-second ticking Web Audio clock & grading
-│   │   └── fivesec-controller.js        # Low-latency giant buzzer
-│   └── secret-names/
-│       ├── secret-names-host.js         # Secret mission overview & reveal
-│       └── secret-names-controller.js   # Covert party challenge & target card
-├── arcade/                              # Fast 60fps NetplayJS Arcade Action
-│   ├── pong/
-│   │   ├── pong-host.js                 # 60fps retro-arcade paddle & ball physics
-│   │   └── pong-controller.js           # Vertical touch paddle slider on smartphone
-│   ├── square-tag/
-│   │   ├── tag-host.js                  # 4-player arena clash, star collection
-│   │   └── tag-controller.js            # Virtual 4-way D-Pad + Turbo Boost button
-│   └── connect4/
-│       ├── connect4-host.js             # 7x6 tactical board with falling chip physics
-│       └── connect4-controller.js       # Mobile 7-column drop selector
-└── hub/
-    └── party-hub.js                     # Central game selector with Category Tabs
+games/multiplayers/
+├── index.html · styles.css · server.mjs (static server + LAN IP for QR codes)
+├── src/
+│   ├── app.js                 # Host/phone coordinator, dock, reconnect overlay
+│   ├── netplay/
+│   │   ├── peer-manager.js    # HostSession / ClientSession (PeerJS), scopes, replay, heartbeats
+│   │   ├── local-peer.js      # BroadcastChannel stand-in for PeerJS (?net=local)
+│   │   ├── room-code.js · qrcode.js
+│   ├── games/
+│   │   ├── registry.js        # game id -> { Host, Controller }
+│   │   ├── hub/party-hub.js   # catalog + lobby
+│   │   ├── social-deduction/  # spyfall, mafia, two-truths
+│   │   ├── party-antics/      # fake-artist, trivia, quick-draw, most-likely, fivesec, secret-names
+│   │   └── arcade/            # pong, light-cycles, square-tag, connect4 (+ pure *-logic.js)
+│   ├── data/                  # locations, words, prompts, trivia, mafia roles
+│   └── utils/                 # ui (escape, toast, dialog, queue), audio, narrator, wake-lock
+└── tests/
+    ├── unit/*.test.mjs        # pure rules: win checks, AI, collisions, scoring, data integrity
+    └── e2e/run.mjs            # 1 TV + 5 phones in headless Chrome, every game end to end
 ```
 
----
-
-## 🎮 The 9 Multiplayer Games
-
-### 1. 🎭 Social Deduction
-- **🕵️‍♂️ Spyfall**: 18 packs (Tamil Cinema, India Hotspots, Kingdoms, Sci-Fi). Everyone knows the location except the Spy. Secret cards, cross-out notepad, and accusation trial.
-- **🌙 Mafia & Werewolf**: 7 roles (Mafia, Doctor, Detective, Town, Jester, Vigilante, Bodyguard). Simultaneous, silent night moves on phones with zero accidental rustling.
-
-### 2. 🎨 Creative & Party Antics
-- **🎨 Fake Artist**: Collaborative drawing! Players take turns drawing **ONE stroke** on their mobile touchscreens. Lines stream over WebRTC in real time to the TV screen! Imposter guessing & voting.
-- **🔥 Most Likely To...**: 77 hilarious & desi prompts. Simultaneous blind voting on phones with animated bar chart reveals.
-- **⚡ 5-Second Rule**: Sub-10ms buzzer battle. First to buzz gets a 5-second ticking Web Audio clock to name 3 items out loud.
-- **🎯 Secret Names**: Discreet party challenges where each player is secretly assigned another player to target.
-
-### 3. 🕹️ NetplayJS Arcade & Action
-- **🏓 Netplay Pong**: Directly inspired by NetplayJS's classic Pong! 2 players slide their thumb on their mobile screens to deflect the glowing ball at 60fps.
-- **🟦 Square Arena Clash**: Directly inspired by NetplayJS's `SimpleGame`! 2–4 players use virtual mobile D-pads to steer their squares, collect golden stars, and tag opponents.
-- **🔴🟡 Connect 4 Grid Duel**: Tactical 4-in-a-row drop-column duel. Tap columns on your phone to drop chips into the glowing TV grid.
+Each game is a `Host` class (renders the TV and owns the state) and a `Controller` class (renders the phone and sends actions). The host broadcasts public state and unicasts private payloads. Games receive a **scoped session** whose listeners are removed automatically on game switch.
 
 ---
 
-## 🚀 Running the Suite
+## 🚀 Running
 
 ```bash
 cd games/multiplayers
-node server.mjs
+npm start            # node server.mjs  → http://localhost:3000
 ```
 
-- **Host (Big Screen / TV / Laptop)**: `http://localhost:3000`
-- **Mobile Controllers (Same Wi-Fi)**: `http://<your-lan-ip>:3000`
+- **Host (TV / laptop):** open `http://localhost:3000` and choose **Create Room**.
+- **Phones (same wifi):** scan the QR code, or open `http://<lan-ip>:3000` and enter the code.
+
+**Offline / single machine:** add `?net=local` (for example `http://localhost:3000/?net=local`). Tabs in the same browser then talk over BroadcastChannel, with no internet or signaling server needed.
+
+---
+
+## ✅ QA loop
+
+The definition of done for any change is that this loop stays green:
+
+```bash
+npm test     # unit: rules, AI, scoring, content packs (fast, no browser)
+npm run e2e  # real Chrome: TV + 5 phones play all 13 games, plus refresh, wifi drop, late join, XSS
+npm run qa   # both
+```
+
+The E2E run writes a screenshot of every key TV and phone screen to `tests/e2e/artifacts/`. Review them on each change for the CX half of the loop: is the text readable from the couch, are tap targets thumb-sized, is it always obvious what to do next?
+
+**Manual checklist** (things a headless browser can't judge):
+1. Join with 3+ real phones on the same wifi, including one iPhone and one Android.
+2. Lock one phone mid-game for 30 seconds, unlock it, and check it rejoins on its own.
+3. Play Pong and Light Cycles on a TV across the room. Check the controls feel immediate.
+4. Turn the narrator on in Mafia and check that night and day announcements are audible.

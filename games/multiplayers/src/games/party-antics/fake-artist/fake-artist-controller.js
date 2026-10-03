@@ -1,308 +1,278 @@
 import { requestWakeLock, vibrate } from '../../../utils/wake-lock.js';
+import { escapeHtml, controllerHeader, confirmDialog } from '../../../utils/ui.js';
+import { drawStrokes } from './fake-artist-host.js';
 
 export class FakeArtistController {
   constructor(session, container) {
     this.session = session;
     this.container = container;
-
     this.publicState = null;
     this.privateState = null;
-    this.isCardRevealed = true;
-    this.hasDrawnThisTurn = false;
+    this.isCardRevealed = false;
+    this.myStroke = null; // [[x, y], ...] for the current turn
+    this.strokeDone = false;
+    this.turnKey = null;
 
-    this.isDrawing = false;
-    this.canvas = null;
-    this.ctx = null;
-
-    this.setupNetworkHandlers();
-  }
-
-  setupNetworkHandlers() {
     this.session.on('stateUpdate', (state) => {
+      const key = `${state.roundId}-${state.phase}-${state.activePlayerId}-${state.strokes?.length}`;
+      const changed = key !== this.turnKey;
+      this.turnKey = key;
       this.publicState = state;
+      if (!changed && this.container.querySelector('#mobileCanvas')) return; // don't wipe a stroke in progress
+      if (changed) {
+        this.myStroke = null;
+        this.strokeDone = false;
+        if (state.phase === 'DRAWING' && state.activePlayerId === this.session.playerId) vibrate([80, 40, 80]);
+      }
       this.render();
     });
 
     this.session.on('privatePayload', (data) => {
-      if (data.game === 'fake-artist') {
-        this.privateState = data;
-        this.isCardRevealed = true;
-        this.hasDrawnThisTurn = false;
-        requestWakeLock();
+      if (this.privateState?.roundId !== data.roundId) {
+        this.isCardRevealed = false;
         vibrate([80, 40, 80]);
-        this.render();
+        requestWakeLock();
       }
+      this.privateState = data;
+      this.render();
     });
+  }
+
+  shell(right, inner) {
+    this.container.innerHTML = `
+      <div class="controller-screen">
+        ${controllerHeader(this.session, right)}
+        <div class="controller-body">${inner}</div>
+      </div>
+    `;
   }
 
   render() {
     if (!this.container) return;
+    const s = this.publicState;
+    const inRound = s && (s.turnOrder || []).includes(this.session.playerId);
 
-    if (!this.publicState || this.publicState.phase === 'SETUP') {
-      this.renderLobby();
-    } else if (this.publicState.phase === 'DRAWING') {
+    if (!s || s.phase === 'SETUP') {
+      this.shell('', `<div class="glass-card lobby-wait-card"><h2>🎨 Fake Artist</h2><p class="subtitle">Get your drawing finger ready. The host is picking the word pack!</p></div>`);
+    } else if (!inRound || !this.privateState) {
+      this.shell('', `<div class="glass-card lobby-wait-card"><h2>🎨 Round in progress</h2><p class="subtitle">You'll be dealt in next round. Watch the drawing on the TV!</p></div>`);
+    } else if (s.phase === 'DRAWING') {
       this.renderDrawing();
-    } else if (this.publicState.phase === 'VOTING') {
+    } else if (s.phase === 'VOTING') {
       this.renderVoting();
-    } else if (this.publicState.phase === 'IMPOSTER_GUESS') {
+    } else if (s.phase === 'IMPOSTER_GUESS') {
       this.renderImposterGuess();
-    } else if (this.publicState.phase === 'ROUND_OVER') {
+    } else {
       this.renderRoundOver();
     }
   }
 
-  renderLobby() {
-    this.container.innerHTML = `
-      <div class="controller-screen">
-        <header class="controller-header">
-          <div class="user-pill">${this.session.avatar} ${this.session.playerName}</div>
-          <div class="room-pill">${this.session.roomCode}</div>
-        </header>
-        <div class="controller-body">
-          <div class="glass-card lobby-wait-card">
-            <h2>🎨 Fake Artist</h2>
-            <p>Look at the TV! The host is selecting the category and starting the game.</p>
+  wordCard() {
+    const p = this.privateState;
+    return `
+      <button class="secret-card compact ${p.isImposter ? 'card-spy' : 'card-location'} ${this.isCardRevealed ? 'revealed' : 'hidden'}" id="cardToggle">
+        ${this.isCardRevealed ? `
+          <div class="card-content">
+            <div class="card-badge">${p.isImposter ? '🚨 YOU ARE THE FAKE ARTIST' : '🎨 SECRET WORD'}</div>
+            <h1 class="card-title">${p.isImposter ? '???' : escapeHtml(p.secretWord)}</h1>
+            <p class="card-desc">Category: <strong>${escapeHtml(p.category)}</strong>${p.isImposter ? '. Bluff a believable line!' : ''}</p>
           </div>
-        </div>
-      </div>
+        ` : `<div class="curtain-content"><span class="eye-icon">🔒</span><h3>Secret word</h3><p>Tap to peek</p></div>`}
+      </button>
     `;
   }
 
-  renderDrawing() {
-    const isMyTurn = this.publicState.activePlayerId === this.session.playerId;
-    const isImposter = this.privateState?.isImposter;
-    const word = this.privateState?.secretWord;
-    const category = this.privateState?.category || this.publicState.categoryName;
-    const myColor = this.privateState?.playerColor || '#ec4899';
-
-    this.container.innerHTML = `
-      <div class="controller-screen">
-        <header class="controller-header">
-          <div class="user-pill">${this.session.avatar} ${this.session.playerName}</div>
-          <div class="room-pill">Round ${this.publicState.currentRound}/${this.publicState.totalRounds}</div>
-        </header>
-
-        <div class="controller-body">
-          <!-- Secret Word Card -->
-          <div class="secret-card-wrapper">
-            <div class="secret-card ${isImposter ? 'card-spy' : 'card-location'} ${this.isCardRevealed ? 'revealed' : 'hidden'}" id="cardToggle">
-              ${this.isCardRevealed ? `
-                <div class="card-content">
-                  <div class="card-badge">${isImposter ? '🚨 FAKE ARTIST ASSIGNMENT' : '🎨 SECRET DRAWING WORD'}</div>
-                  <h1 class="card-title">${isImposter ? 'YOU ARE THE FAKE ARTIST!' : word}</h1>
-                  <p class="card-desc">
-                    ${isImposter 
-                      ? `Category: <strong>${category}</strong>. You do NOT know the word! Pretend you know it and draw one convincing line!`
-                      : `Category: <strong>${category}</strong>. Draw 1 stroke that proves you know it without giving it away to the fake!`
-                    }
-                  </p>
-                  <button class="btn-hide-curtain" id="btnCurtain">🙈 Hide Secret</button>
-                </div>
-              ` : `
-                <div class="curtain-content">
-                  <span class="eye-icon">🔒</span>
-                  <h3>Secret Hidden</h3>
-                  <p>Tap to reveal your word</p>
-                </div>
-              `}
-            </div>
-          </div>
-
-          <!-- Drawing Pad Area -->
-          ${isMyTurn ? `
-            <div class="glass-card" style="padding:14px; text-align:center;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h3 style="color:${myColor}; font-size:16px;">✨ YOUR TURN TO DRAW!</h3>
-                <span style="font-size:12px; color:var(--text-secondary);">Draw 1 continuous line</span>
-              </div>
-
-              <div style="background:#fff; border-radius:12px; overflow:hidden; touch-action:none; position:relative;">
-                <canvas id="mobileCanvas" width="320" height="260" style="width:100%; height:260px; display:block;"></canvas>
-              </div>
-
-              <button class="btn-primary" id="btnDoneStroke" style="margin-top:12px; background:${myColor};">
-                ✓ Finish My Line & Pass Turn
-              </button>
-            </div>
-          ` : `
-            <div class="glass-card" style="text-align:center; padding:30px 20px;">
-              <div class="radar-scan"></div>
-              <h3 style="margin-top:14px;">Waiting for ${this.publicState.activePlayerName} to draw...</h3>
-              <p style="color:var(--text-muted); font-size:13px; margin-top:6px;">Look at the main screen to watch their stroke!</p>
-            </div>
-          `}
-        </div>
-      </div>
-    `;
-
+  bindCard() {
     document.getElementById('cardToggle')?.addEventListener('click', () => {
       this.isCardRevealed = !this.isCardRevealed;
       this.render();
     });
-
-    if (isMyTurn) {
-      this.initMobileCanvas(myColor);
-      document.getElementById('btnDoneStroke')?.addEventListener('click', () => {
-        this.session.sendAction('STROKE_END');
-      });
-    }
   }
 
-  initMobileCanvas(strokeColor) {
+  renderDrawing() {
+    const s = this.publicState;
+    const isMyTurn = s.activePlayerId === this.session.playerId;
+    const myColor = this.privateState.playerColor;
+
+    this.shell(`Line ${s.currentRound}/${s.totalRounds}`, `
+      ${this.wordCard()}
+      <div class="glass-card canvas-card ${isMyTurn ? 'my-turn' : ''}" style="--accent:${myColor};">
+        <div class="canvas-head">
+          ${isMyTurn ? `<strong style="color:${myColor};">✏️ YOUR TURN: one continuous line</strong>` : `<span>⏳ ${escapeHtml(s.activePlayerName)} is drawing...</span>`}
+        </div>
+        <div class="phone-canvas-wrap">
+          <canvas id="mobileCanvas" width="800" height="600"></canvas>
+        </div>
+        ${isMyTurn ? `
+          <div class="draw-actions">
+            <button class="btn-secondary" id="btnRedo" ${this.myStroke ? '' : 'disabled'}>↺ Redo</button>
+            <button class="btn-primary" id="btnSubmitStroke" ${this.strokeDone ? '' : 'disabled'} style="background:${myColor};">✓ Submit Line</button>
+          </div>
+        ` : ''}
+      </div>
+    `);
+    this.bindCard();
+    this.paintCanvas();
+    if (isMyTurn) this.attachDrawing(myColor);
+  }
+
+  paintCanvas() {
     const canvas = document.getElementById('mobileCanvas');
     if (!canvas) return;
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const strokes = [...(this.publicState.strokes || [])];
+    if (this.myStroke) strokes.push({ color: this.privateState.playerColor, points: this.myStroke });
+    drawStrokes(ctx, strokes, canvas.width, canvas.height, { lineWidth: 8 });
+  }
 
-    // Handle high DPI
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+  attachDrawing(color) {
+    const canvas = document.getElementById('mobileCanvas');
+    if (!canvas) return;
+    let drawing = false;
+    let pending = [];
+    let start = false;
+    let scheduled = false;
 
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const getPos = (e) => {
+    const flush = () => {
+      scheduled = false;
+      if (!pending.length) return;
+      this.session.sendAction('STROKE_POINTS', { start, points: pending });
+      pending = [];
+      start = false;
+    };
+    const queue = (pt, isStart = false) => {
+      if (isStart) start = true;
+      pending.push(pt);
+      if (!scheduled) {
+        scheduled = true;
+        requestAnimationFrame(flush);
+      }
+    };
+    const pos = (e) => {
       const r = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: (clientX - r.left) / r.width,
-        y: (clientY - r.top) / r.height
-      };
+      const x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      const y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+      return [Math.round(x * 1000) / 1000, Math.round(y * 1000) / 1000];
     };
 
-    const startDraw = (e) => {
+    canvas.addEventListener('pointerdown', (e) => {
+      if (this.strokeDone) return; // exactly one line per turn; use Redo to try again
       e.preventDefault();
-      this.isDrawing = true;
-      const pt = getPos(e);
-      this.ctx.strokeStyle = strokeColor;
-      this.ctx.lineWidth = 4;
-      this.ctx.lineCap = 'round';
-      this.ctx.beginPath();
-      this.ctx.moveTo(pt.x * canvas.width, pt.y * canvas.height);
-      this.session.sendAction('STROKE_START', { point: pt });
-    };
-
-    const moveDraw = (e) => {
-      if (!this.isDrawing) return;
+      canvas.setPointerCapture?.(e.pointerId);
+      drawing = true;
+      const pt = pos(e);
+      this.myStroke = [pt];
+      queue(pt, true);
+      this.paintCanvas();
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!drawing) return;
       e.preventDefault();
-      const pt = getPos(e);
-      this.ctx.lineTo(pt.x * canvas.width, pt.y * canvas.height);
-      this.ctx.stroke();
-      this.session.sendAction('STROKE_MOVE', { point: pt });
+      const pt = pos(e);
+      const last = this.myStroke[this.myStroke.length - 1];
+      if (Math.abs(pt[0] - last[0]) + Math.abs(pt[1] - last[1]) < 0.004) return;
+      this.myStroke.push(pt);
+      queue(pt);
+      const ctx = canvas.getContext('2d');
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(last[0] * canvas.width, last[1] * canvas.height);
+      ctx.lineTo(pt[0] * canvas.width, pt[1] * canvas.height);
+      ctx.stroke();
+    });
+    const end = () => {
+      if (!drawing) return;
+      drawing = false;
+      this.strokeDone = true;
+      vibrate([20]);
+      document.getElementById('btnSubmitStroke')?.removeAttribute('disabled');
+      document.getElementById('btnRedo')?.removeAttribute('disabled');
     };
+    canvas.addEventListener('pointerup', end);
+    canvas.addEventListener('pointercancel', end);
 
-    const endDraw = (e) => {
-      if (!this.isDrawing) return;
-      e.preventDefault();
-      this.isDrawing = false;
-    };
-
-    canvas.addEventListener('touchstart', startDraw, { passive: false });
-    canvas.addEventListener('touchmove', moveDraw, { passive: false });
-    canvas.addEventListener('touchend', endDraw, { passive: false });
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', moveDraw);
-    canvas.addEventListener('mouseup', endDraw);
+    document.getElementById('btnRedo')?.addEventListener('click', () => {
+      this.myStroke = null;
+      this.strokeDone = false;
+      this.session.sendAction('STROKE_CANCEL');
+      this.render();
+    });
+    document.getElementById('btnSubmitStroke')?.addEventListener('click', () => {
+      if (!this.strokeDone) return;
+      flush();
+      vibrate([40]);
+      this.session.sendAction('STROKE_SUBMIT');
+      document.getElementById('btnSubmitStroke').disabled = true;
+    });
   }
 
   renderVoting() {
-    const players = (this.publicState?.players || []).filter(p => p.id !== this.session.playerId);
-    const myVote = this.publicState?.votes?.[this.session.playerId];
-
-    this.container.innerHTML = `
-      <div class="controller-screen">
-        <header class="controller-header">
-          <div class="user-pill">${this.session.avatar} ${this.session.playerName}</div>
-        </header>
-
-        <div class="controller-body">
-          <div class="glass-card">
-            <h2>🕵️‍♂️ Who is the Fake Artist?</h2>
-            <p style="color:var(--text-secondary); margin-bottom:16px;">
-              Vote for the player who seemed clueless about the secret word!
-            </p>
-
-            ${myVote ? `
-              <div class="vote-confirmed">
-                <span class="check">✓</span>
-                <h3>Vote Locked In!</h3>
-                <p>Waiting for other players...</p>
-              </div>
-            ` : `
-              <div class="suspect-picker-grid">
-                ${players.map(p => `
-                  <button class="suspect-select-btn" data-player-id="${p.id}">
-                    <span class="avatar">${p.avatar}</span>
-                    <span class="name">${p.name}</span>
-                    <span style="width:10px; height:10px; border-radius:50%; background:${p.color};"></span>
-                  </button>
-                `).join('')}
-              </div>
-            `}
+    const s = this.publicState;
+    const voted = (s.votedIds || []).includes(this.session.playerId);
+    const players = (s.players || []).filter(p => p.id !== this.session.playerId);
+    this.shell('🗳️ Vote', `
+      <div class="glass-card">
+        <h2>Who is the Fake Artist?</h2>
+        ${voted ? `<div class="vote-confirmed"><span class="check">✓</span><h3>Vote locked in</h3><p>Waiting for the others...</p></div>` : `
+          <div class="vote-grid">
+            ${players.map(p => `
+              <button class="suspect-select-btn" data-player-id="${escapeHtml(p.id)}" style="border-left:5px solid ${p.color};">
+                <span class="avatar">${p.avatar}</span><span class="name">${escapeHtml(p.name)}</span>
+              </button>
+            `).join('')}
           </div>
-        </div>
+        `}
       </div>
-    `;
-
-    document.querySelectorAll('.suspect-select-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const suspectId = btn.dataset.playerId;
-        this.session.sendAction('CAST_VOTE', { suspectId });
-      });
-    });
+      ${this.wordCard()}
+    `);
+    this.bindCard();
+    this.container.querySelectorAll('[data-player-id]').forEach(btn => btn.addEventListener('click', () => {
+      vibrate([40]);
+      this.session.sendAction('CAST_VOTE', { suspectId: btn.dataset.playerId });
+      this.container.querySelectorAll('[data-player-id]').forEach(b => { b.disabled = true; });
+    }));
   }
 
   renderImposterGuess() {
-    const isImposter = this.privateState?.isImposter;
-
-    this.container.innerHTML = `
-      <div class="controller-screen">
-        <div class="controller-body">
-          <div class="glass-card">
-            <h2>🎯 Fake Artist Was Caught!</h2>
-            ${isImposter ? `
-              <p style="color:#f59e0b; margin-bottom:16px;">
-                You were unmasked! But if you can guess the secret word, you still <strong>WIN</strong>!
-              </p>
-              <form id="guessForm">
-                <input type="text" id="txtGuess" placeholder="Type your guess..." class="input-text" style="margin-bottom:12px;" required />
-                <button type="submit" class="btn-primary">Submit Word Guess 🚀</button>
-              </form>
-            ` : `
-              <p style="color:var(--text-secondary); padding:20px 0;">
-                The Fake Artist is making their final guess on their phone. Look at the TV!
-              </p>
-            `}
-          </div>
+    const isImposter = this.privateState.isImposter;
+    const options = this.privateState.guessOptions || [];
+    this.shell('🎯 Final guess', isImposter ? `
+      <div class="glass-card spy-guess-card">
+        <h2>You were caught!</h2>
+        <p class="highlight-prompt">Pick the secret word to steal the win:</p>
+        <div class="guess-locations-grid">
+          ${options.map((w, i) => `<button class="guess-loc-btn" data-idx="${i}">${escapeHtml(w)}</button>`).join('')}
         </div>
       </div>
-    `;
-
-    document.getElementById('guessForm')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const guess = document.getElementById('txtGuess').value.trim();
-      this.session.sendAction('SUBMIT_GUESS', { guess });
-    });
+    ` : `
+      <div class="glass-card lobby-wait-card"><div class="big-emoji">🎯</div><h2>Fake Artist caught!</h2><p class="subtitle">They're making a final guess. Fingers crossed...</p></div>
+    `);
+    this.container.querySelectorAll('.guess-loc-btn').forEach(btn => btn.addEventListener('click', async () => {
+      const word = options[Number(btn.dataset.idx)];
+      if (await confirmDialog(`Final answer: "${word}"?`, { confirmLabel: 'Lock it in', tone: 'ok' })) {
+        this.session.sendAction('SUBMIT_GUESS', { guess: word });
+      }
+    }));
   }
 
   renderRoundOver() {
-    const outcome = this.publicState?.roundOutcome;
-
-    this.container.innerHTML = `
-      <div class="controller-screen">
-        <div class="controller-body">
-          <div class="glass-card round-over-mobile">
-            <h2>Round Finished!</h2>
-            <div class="summary-box">
-              <p>Secret Word: <strong>${outcome?.secretWord}</strong></p>
-              <p>Fake Artist: <strong>${outcome?.imposterName}</strong></p>
-            </div>
-            <p class="subtitle" style="margin-top:16px;">Look at the main screen for results!</p>
-          </div>
+    const o = this.publicState.roundOutcome;
+    const isImposter = this.privateState.isImposter;
+    const fakeWon = o && o.outcome !== 'ARTISTS_WIN' && o.outcome !== 'ABANDONED';
+    const won = isImposter ? fakeWon : o?.outcome === 'ARTISTS_WIN';
+    this.shell('', `
+      <div class="glass-card round-over-mobile">
+        <div class="big-emoji">${won ? '🏆' : '😵'}</div>
+        <h2>${won ? 'You win this round!' : 'Round lost'}</h2>
+        <div class="summary-box">
+          <p>Word: <strong>${escapeHtml(o?.secretWord || '')}</strong></p>
+          <p>Fake Artist: <strong>${escapeHtml(o?.imposterName || '')}</strong></p>
         </div>
       </div>
-    `;
+    `);
   }
 }

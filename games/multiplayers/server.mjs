@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -21,7 +21,11 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
-const server = http.createServer((req, res) => {
+export function createServer() {
+  return http.createServer(handleRequest);
+}
+
+function handleRequest(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -38,7 +42,7 @@ const server = http.createServer((req, res) => {
   if (reqPath === '/api/info' || reqPath === '/games/multiplayers/api/info') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     const ips = getLocalIPs();
-    res.end(JSON.stringify({ localIp: ips[0] || 'localhost', port: PORT }));
+    res.end(JSON.stringify({ localIp: ips[0] || 'localhost', port: req.socket.localPort || PORT }));
     return;
   }
 
@@ -53,7 +57,7 @@ const server = http.createServer((req, res) => {
   const filePath = path.join(__dirname, reqPath);
 
   // Security check: ensure path is within __dirname
-  if (!filePath.startsWith(__dirname)) {
+  if (filePath !== __dirname && !filePath.startsWith(__dirname + path.sep)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('403 Forbidden');
     return;
@@ -74,7 +78,7 @@ const server = http.createServer((req, res) => {
 
     serveFile(filePath, res);
   });
-});
+}
 
 function serveFile(filePath, res) {
   const ext = path.extname(filePath).toLowerCase();
@@ -105,7 +109,16 @@ function getLocalIPs() {
   return addresses;
 }
 
-server.listen(PORT, '0.0.0.0', () => {
+/** Start the server; resolves with the bound port (use port 0 for a random free port). */
+export function startServer(port = PORT, host = '0.0.0.0') {
+  const server = createServer();
+  return new Promise((resolve) => {
+    server.listen(port, host, () => resolve({ server, port: server.address().port }));
+  });
+}
+
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === __filename;
+if (isMain) startServer().then(() => {
   const localIPs = getLocalIPs();
   console.log(`\n==================================================`);
   console.log(`🎭 Netplay-Party Server Running!`);

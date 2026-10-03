@@ -1,394 +1,467 @@
-import { playRoundStart, playVictory, playBuzzer, playTick } from '../../../utils/audio.js';
+import { playRoundStart, playVictory, playBuzzer, playTick, playCountdown } from '../../../utils/audio.js';
+import { escapeHtml, ChallengerQueue, Disposer } from '../../../utils/ui.js';
 
-const PONG_WIDTH = 700;
-const PONG_HEIGHT = 400;
-const PADDLE_WIDTH = 14;
-const PADDLE_HEIGHT = 90;
-const BALL_SIZE = 12;
-const BALL_SPEED = 320;
-const PADDLE_SPEED = 380;
+const W = 960;
+const H = 540;
+const PADDLE_W = 16;
+const PADDLE_H = 110;
+const PADDLE_X = 44;
+const BALL = 16;
+const SERVE_SPEED = 430;
+const MAX_SPEED = 1050;
+const PADDLE_SPEED = 560;
+const AI_SPEED = 360;
+export const AI_ID = 'AI_BOT';
+const LEFT_COLOR = '#06b6d4';
+const RIGHT_COLOR = '#ec4899';
 
 export class PongHost {
   constructor(session, container, onReturnToHub) {
     this.session = session;
     this.container = container;
     this.onReturnToHub = onReturnToHub;
+    this.disposer = new Disposer();
 
     this.phase = 'SETUP'; // 'SETUP' | 'PLAYING' | 'GAME_OVER'
+    this.queue = new ChallengerQueue();
     this.player1Id = null;
     this.player2Id = null;
-
-    this.leftPaddle = PONG_HEIGHT / 2 - PADDLE_HEIGHT / 2;
-    this.rightPaddle = PONG_HEIGHT / 2 - PADDLE_HEIGHT / 2;
-
-    this.ballX = PONG_WIDTH / 2;
-    this.ballY = PONG_HEIGHT / 2;
-    this.ballVx = BALL_SPEED;
-    this.ballVy = 0;
-
-    this.leftScore = 0;
-    this.rightScore = 0;
     this.targetScore = 7;
+    this.wins = {};
+    this.resetPositions();
 
-    this.playerInputs = {}; // id -> { dir: -1 | 0 | 1, pos: number }
-    this.loopRunning = false;
-    this.lastTime = 0;
+    this.playerInputs = {}; // id -> { pos } (0..1) or { dir }
+    this.keys = { left: 0, right: 0 };
+    this.frame = null;
+    this.serveAt = 0;
+    this.countdownShown = null;
+    this.flash = 0;
 
     this.setupNetworkHandlers();
   }
 
+  resetPositions() {
+    this.leftPaddle = H / 2 - PADDLE_H / 2;
+    this.rightPaddle = H / 2 - PADDLE_H / 2;
+    this.leftScore = 0;
+    this.rightScore = 0;
+    this.ballX = W / 2 - BALL / 2;
+    this.ballY = H / 2 - BALL / 2;
+    this.ballVx = 0;
+    this.ballVy = 0;
+  }
+
   setupNetworkHandlers() {
     this.session.on('playerAction', (playerId, action, payload) => {
-      if (action === 'PADDLE_INPUT') {
-        this.playerInputs[playerId] = payload;
+      if (action !== 'PADDLE_INPUT') return;
+      if (playerId !== this.player1Id && playerId !== this.player2Id) return;
+      const pos = Number(payload.pos);
+      const dir = Number(payload.dir);
+      this.playerInputs[playerId] = Number.isFinite(pos)
+        ? { pos: Math.max(0, Math.min(1, pos)) }
+        : { dir: Math.max(-1, Math.min(1, dir || 0)) };
+    });
+
+    this.session.on('rosterChange', () => {
+      this.queue.sync(this.session.getPlayers().map(p => p.id));
+      if (this.phase === 'SETUP') this.render();
+      this.syncState();
+    });
+
+    // A dropped phone shouldn't lose points while it reconnects: freeze the ball.
+    this.session.on('playerDisconnect', (player) => {
+      if (this.phase === 'PLAYING' && (player.id === this.player1Id || player.id === this.player2Id)) this.paused = true;
+    });
+    this.session.on('playerReconnect', (player) => {
+      if (this.phase === 'PLAYING' && this.paused && (player.id === this.player1Id || player.id === this.player2Id)) {
+        this.paused = false;
+        this.serve(Math.random() < 0.5 ? 1 : -1, 2000);
       }
     });
 
-    // Also support keyboard on Host laptop
-    window.addEventListener('keydown', this.handleKeyDown.bind(this));
-    window.addEventListener('keyup', this.handleKeyUp.bind(this));
+    this.session.on('playerLeave', (player) => {
+      if (this.phase !== 'PLAYING') return;
+      if (player.id === this.player1Id) this.endMatch('RIGHT', true);
+      else if (player.id === this.player2Id) this.endMatch('LEFT', true);
+    });
+
+    // Keyboard on the host laptop (handy for testing): W/S left paddle, arrows right paddle.
+    const key = (down) => (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'w') this.keys.left = down ? -1 : (this.keys.left === -1 ? 0 : this.keys.left);
+      else if (k === 's') this.keys.left = down ? 1 : (this.keys.left === 1 ? 0 : this.keys.left);
+      else if (e.key === 'ArrowUp') this.keys.right = down ? -1 : (this.keys.right === -1 ? 0 : this.keys.right);
+      else if (e.key === 'ArrowDown') this.keys.right = down ? 1 : (this.keys.right === 1 ? 0 : this.keys.right);
+      else return;
+      if (this.phase === 'PLAYING') e.preventDefault();
+    };
+    this.disposer.listen(window, 'keydown', key(true));
+    this.disposer.listen(window, 'keyup', key(false));
   }
 
-  handleKeyDown(e) {
-    if (this.phase !== 'PLAYING') return;
-    if (e.key === 'w' || e.key === 'W') this.hostLeftDir = -1;
-    if (e.key === 's' || e.key === 'S') this.hostLeftDir = 1;
-    if (e.key === 'ArrowUp') this.hostRightDir = -1;
-    if (e.key === 'ArrowDown') this.hostRightDir = 1;
+  destroy() {
+    this.stopLoop();
+    this.disposer.dispose();
   }
 
-  handleKeyUp(e) {
-    if (e.key === 'w' || e.key === 'W' || e.key === 's' || e.key === 'S') this.hostLeftDir = 0;
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') this.hostRightDir = 0;
+  nameOf(id) {
+    if (id === AI_ID) return '🤖 AI Bot';
+    return this.session.clients.get(id)?.name || 'Player';
   }
 
-  startNewGame() {
-    const players = Array.from(this.session.clients.values());
-    if (players.length < 1) {
-      alert('At least 1 player required to test Pong!');
+  avatarOf(id) {
+    if (id === AI_ID) return '🤖';
+    return this.session.clients.get(id)?.avatar || '👤';
+  }
+
+  startMatch(seats = null) {
+    this.queue.sync(this.session.getPlayers().map(p => p.id));
+    const valid = (id) => id === AI_ID || this.session.clients.has(id);
+    let [p1, p2] = seats && seats.every(valid) ? seats : this.queue.pair();
+    if (!p1) return;
+    this.player1Id = p1;
+    this.player2Id = p2 || AI_ID;
+    this.playerInputs = {};
+    this.resetPositions();
+    this.winnerSide = null;
+    this.forfeit = false;
+    this.paused = false;
+    this.phase = 'PLAYING';
+
+    playRoundStart();
+    this.syncState();
+    this.render();
+    this.serve(Math.random() < 0.5 ? 1 : -1, 3000);
+    this.startLoop();
+  }
+
+  serve(dir, delayMs = 1200) {
+    this.ballX = W / 2 - BALL / 2;
+    this.ballY = H / 2 - BALL / 2;
+    this.ballVx = 0;
+    this.ballVy = 0;
+    this.serveDir = dir;
+    this.serveAt = performance.now() + delayMs;
+    this.countdownShown = null;
+  }
+
+  startLoop() {
+    this.stopLoop();
+    this.lastTime = performance.now();
+    const loop = (t) => {
+      if (this.phase !== 'PLAYING') return;
+      const dt = Math.min((t - this.lastTime) / 1000, 0.05);
+      this.lastTime = t;
+      this.update(dt, t);
+      this.draw(t);
+      this.frame = requestAnimationFrame(loop);
+    };
+    this.frame = requestAnimationFrame(loop);
+  }
+
+  stopLoop() {
+    if (this.frame) cancelAnimationFrame(this.frame);
+    this.frame = null;
+  }
+
+  movePaddle(current, input, keyDir, dt) {
+    if (input && input.pos != null) {
+      const target = input.pos * (H - PADDLE_H);
+      // Ease toward the finger so network jitter doesn't teleport the paddle.
+      return current + (target - current) * Math.min(1, dt * 22);
+    }
+    const dir = (input?.dir || 0) + keyDir;
+    return current + Math.max(-1, Math.min(1, dir)) * PADDLE_SPEED * dt;
+  }
+
+  update(dt, now) {
+    if (this.paused) return;
+    this.leftPaddle = this.movePaddle(this.leftPaddle, this.playerInputs[this.player1Id], this.keys.left, dt);
+    if (this.player2Id === AI_ID) {
+      const center = this.rightPaddle + PADDLE_H / 2;
+      const target = this.ballVx > 0 ? this.ballY + BALL / 2 : H / 2;
+      const delta = target - center;
+      this.rightPaddle += Math.sign(delta) * Math.min(Math.abs(delta), AI_SPEED * dt);
+      this.rightPaddle += this.keys.right * PADDLE_SPEED * dt;
+    } else {
+      this.rightPaddle = this.movePaddle(this.rightPaddle, this.playerInputs[this.player2Id], this.keys.right, dt);
+    }
+    this.leftPaddle = Math.max(0, Math.min(H - PADDLE_H, this.leftPaddle));
+    this.rightPaddle = Math.max(0, Math.min(H - PADDLE_H, this.rightPaddle));
+
+    if (this.serveAt) {
+      const remaining = Math.ceil((this.serveAt - now) / 1000);
+      if (remaining !== this.countdownShown && remaining > 0 && remaining <= 3) {
+        this.countdownShown = remaining;
+        playCountdown(false);
+      }
+      if (now >= this.serveAt) {
+        this.serveAt = 0;
+        playCountdown(true);
+        const angle = (Math.random() - 0.5) * 0.9;
+        this.ballVx = SERVE_SPEED * this.serveDir;
+        this.ballVy = SERVE_SPEED * Math.sin(angle);
+      }
       return;
     }
 
-    this.player1Id = players[0].id;
-    this.player2Id = players.length >= 2 ? players[1].id : 'HOST_OR_AI';
-
-    this.leftScore = 0;
-    this.rightScore = 0;
-    this.resetBall(1);
-
-    this.phase = 'PLAYING';
-    this.loopRunning = true;
-    this.lastTime = performance.now();
-
-    playRoundStart();
-    this.dispatchPlayerRoles();
-    this.render();
-    requestAnimationFrame(this.gameLoop.bind(this));
-  }
-
-  resetBall(dir = 1) {
-    this.ballX = PONG_WIDTH / 2;
-    this.ballY = PONG_HEIGHT / 2;
-    const angle = (Math.random() - 0.5) * 0.8;
-    this.ballVx = BALL_SPEED * dir;
-    this.ballVy = BALL_SPEED * Math.sin(angle);
-  }
-
-  dispatchPlayerRoles() {
-    const p1 = this.session.clients.get(this.player1Id);
-    const p2 = this.session.clients.get(this.player2Id);
-
-    if (p1) {
-      this.session.sendPrivateState(p1.id, {
-        game: 'pong',
-        side: 'LEFT',
-        opponentName: p2?.name || 'Player 2 / AI',
-        color: '#06b6d4'
-      });
-    }
-    if (p2) {
-      this.session.sendPrivateState(p2.id, {
-        game: 'pong',
-        side: 'RIGHT',
-        opponentName: p1?.name || 'Player 1',
-        color: '#ec4899'
-      });
-    }
-  }
-
-  gameLoop(timestamp) {
-    if (!this.loopRunning || this.phase !== 'PLAYING') return;
-
-    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
-    this.lastTime = timestamp;
-
-    this.updatePhysics(dt);
-    this.drawCanvas();
-
-    requestAnimationFrame(this.gameLoop.bind(this));
-  }
-
-  updatePhysics(dt) {
-    // 1. Move Paddles
-    const p1Input = this.playerInputs[this.player1Id];
-    const p2Input = this.playerInputs[this.player2Id];
-
-    // Left Paddle
-    if (p1Input && p1Input.pos != null) {
-      this.leftPaddle = p1Input.pos * (PONG_HEIGHT - PADDLE_HEIGHT);
-    } else {
-      const dir1 = (p1Input?.dir || 0) + (this.hostLeftDir || 0);
-      this.leftPaddle += dir1 * PADDLE_SPEED * dt;
-    }
-
-    // Right Paddle (Player 2 or simple tracking AI if solo)
-    if (p2Input && p2Input.pos != null) {
-      this.rightPaddle = p2Input.pos * (PONG_HEIGHT - PADDLE_HEIGHT);
-    } else if (p2Input) {
-      const dir2 = (p2Input?.dir || 0) + (this.hostRightDir || 0);
-      this.rightPaddle += dir2 * PADDLE_SPEED * dt;
-    } else {
-      // AI tracking if solo
-      const center = this.rightPaddle + PADDLE_HEIGHT / 2;
-      if (this.ballY > center + 10) this.rightPaddle += PADDLE_SPEED * 0.7 * dt;
-      else if (this.ballY < center - 10) this.rightPaddle -= PADDLE_SPEED * 0.7 * dt;
-    }
-
-    // Clamp paddles
-    this.leftPaddle = Math.max(0, Math.min(PONG_HEIGHT - PADDLE_HEIGHT, this.leftPaddle));
-    this.rightPaddle = Math.max(0, Math.min(PONG_HEIGHT - PADDLE_HEIGHT, this.rightPaddle));
-
-    // 2. Move Ball
     this.ballX += this.ballVx * dt;
     this.ballY += this.ballVy * dt;
 
-    // Top / Bottom Wall Bounces
     if (this.ballY <= 0) {
       this.ballY = 0;
       this.ballVy = Math.abs(this.ballVy);
-      playTick(600);
-    } else if (this.ballY >= PONG_HEIGHT - BALL_SIZE) {
-      this.ballY = PONG_HEIGHT - BALL_SIZE;
+      playTick(500);
+    } else if (this.ballY >= H - BALL) {
+      this.ballY = H - BALL;
       this.ballVy = -Math.abs(this.ballVy);
-      playTick(600);
+      playTick(500);
     }
 
-    // 3. Paddle Collisions
-    const leftPaddleX = 40;
-    const rightPaddleX = PONG_WIDTH - 40 - PADDLE_WIDTH;
-
-    // Left Paddle Collision
-    if (
-      this.ballX <= leftPaddleX + PADDLE_WIDTH &&
-      this.ballX + BALL_SIZE >= leftPaddleX &&
-      this.ballY + BALL_SIZE >= this.leftPaddle &&
-      this.ballY <= this.leftPaddle + PADDLE_HEIGHT &&
-      this.ballVx < 0
-    ) {
-      this.ballX = leftPaddleX + PADDLE_WIDTH;
-      this.ballVx = -this.ballVx * 1.05; // slight speed increase
-      const hitOffset = (this.ballY + BALL_SIZE / 2 - (this.leftPaddle + PADDLE_HEIGHT / 2)) / (PADDLE_HEIGHT / 2);
-      this.ballVy = Math.abs(this.ballVx) * hitOffset * 0.9;
-      playTick(900);
+    const leftFace = PADDLE_X + PADDLE_W;
+    const rightFace = W - PADDLE_X - PADDLE_W;
+    if (this.ballVx < 0 && this.ballX <= leftFace && this.ballX + BALL >= PADDLE_X &&
+        this.ballY + BALL >= this.leftPaddle && this.ballY <= this.leftPaddle + PADDLE_H) {
+      this.ballX = leftFace;
+      this.bounce(this.leftPaddle, 1);
+    } else if (this.ballVx > 0 && this.ballX + BALL >= rightFace && this.ballX <= W - PADDLE_X &&
+        this.ballY + BALL >= this.rightPaddle && this.ballY <= this.rightPaddle + PADDLE_H) {
+      this.ballX = rightFace - BALL;
+      this.bounce(this.rightPaddle, -1);
     }
 
-    // Right Paddle Collision
-    if (
-      this.ballX + BALL_SIZE >= rightPaddleX &&
-      this.ballX <= rightPaddleX + PADDLE_WIDTH &&
-      this.ballY + BALL_SIZE >= this.rightPaddle &&
-      this.ballY <= this.rightPaddle + PADDLE_HEIGHT &&
-      this.ballVx > 0
-    ) {
-      this.ballX = rightPaddleX - BALL_SIZE;
-      this.ballVx = -this.ballVx * 1.05;
-      const hitOffset = (this.ballY + BALL_SIZE / 2 - (this.rightPaddle + PADDLE_HEIGHT / 2)) / (PADDLE_HEIGHT / 2);
-      this.ballVy = Math.abs(this.ballVx) * hitOffset * 0.9;
-      playTick(900);
-    }
+    if (this.ballX + BALL < 0) this.point('RIGHT');
+    else if (this.ballX > W) this.point('LEFT');
+  }
 
-    // 4. Scoring
-    if (this.ballX < 0) {
-      this.rightScore++;
-      playBuzzer();
-      this.checkWinner();
-      if (this.phase === 'PLAYING') this.resetBall(1);
-    } else if (this.ballX > PONG_WIDTH) {
-      this.leftScore++;
-      playBuzzer();
-      this.checkWinner();
-      if (this.phase === 'PLAYING') this.resetBall(-1);
+  bounce(paddleY, dir) {
+    const speed = Math.min(MAX_SPEED, Math.hypot(this.ballVx, this.ballVy) * 1.06);
+    const offset = (this.ballY + BALL / 2 - (paddleY + PADDLE_H / 2)) / (PADDLE_H / 2);
+    const angle = Math.max(-1, Math.min(1, offset)) * 1.0; // up to ~57 degrees
+    this.ballVx = Math.cos(angle) * speed * dir;
+    this.ballVy = Math.sin(angle) * speed;
+    this.flash = 1;
+    playTick(900);
+  }
+
+  point(side) {
+    if (side === 'LEFT') this.leftScore++;
+    else this.rightScore++;
+    playBuzzer();
+    if (this.leftScore >= this.targetScore) this.endMatch('LEFT');
+    else if (this.rightScore >= this.targetScore) this.endMatch('RIGHT');
+    else {
+      this.syncState();
+      this.serve(side === 'LEFT' ? 1 : -1); // loser of the point receives
     }
   }
 
-  checkWinner() {
-    const p1 = this.session.clients.get(this.player1Id);
-    const p2 = this.session.clients.get(this.player2Id);
-
-    if (this.leftScore >= this.targetScore) {
-      this.phase = 'GAME_OVER';
-      this.loopRunning = false;
-      this.winnerName = p1?.name || 'Player 1';
-      playVictory();
-      this.render();
-    } else if (this.rightScore >= this.targetScore) {
-      this.phase = 'GAME_OVER';
-      this.loopRunning = false;
-      this.winnerName = p2?.name || (this.player2Id === 'HOST_OR_AI' ? 'AI Bot' : 'Player 2');
-      playVictory();
-      this.render();
-    }
+  endMatch(side, forfeit = false) {
+    this.phase = 'GAME_OVER';
+    this.stopLoop();
+    this.winnerSide = side;
+    this.forfeit = forfeit;
+    const winnerId = side === 'LEFT' ? this.player1Id : this.player2Id;
+    if (winnerId !== AI_ID) this.wins[winnerId] = (this.wins[winnerId] || 0) + 1;
+    playVictory();
+    this.syncState();
+    this.render();
   }
 
-  drawCanvas() {
+  nextChallenger() {
+    const winnerId = this.winnerSide === 'LEFT' ? this.player1Id : this.player2Id;
+    const loserId = this.winnerSide === 'LEFT' ? this.player2Id : this.player1Id;
+    if (winnerId !== AI_ID && loserId !== AI_ID) this.queue.winnerStays(winnerId, loserId);
+    this.startMatch();
+  }
+
+  syncState() {
+    this.queue.sync(this.session.getPlayers().map(p => p.id));
+    const waiting = this.queue.order.filter(id => id !== this.player1Id && id !== this.player2Id);
+    this.session.broadcastPublicState({
+      game: 'pong',
+      phase: this.phase,
+      p1Id: this.player1Id,
+      p2Id: this.player2Id,
+      p1Name: this.nameOf(this.player1Id),
+      p2Name: this.nameOf(this.player2Id),
+      leftScore: this.leftScore,
+      rightScore: this.rightScore,
+      targetScore: this.targetScore,
+      winnerSide: this.winnerSide,
+      queue: (this.phase === 'SETUP' ? this.queue.order : waiting).map(id => ({ id, name: this.nameOf(id) }))
+    });
+  }
+
+  draw(now) {
     const canvas = document.getElementById('pongCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Background with retro grid
     ctx.fillStyle = '#060913';
-    ctx.fillRect(0, 0, PONG_WIDTH, PONG_HEIGHT);
+    ctx.fillRect(0, 0, W, H);
 
-    // Center Dashed Line
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
     ctx.lineWidth = 4;
-    ctx.setLineDash([12, 12]);
+    ctx.setLineDash([14, 14]);
     ctx.beginPath();
-    ctx.moveTo(PONG_WIDTH / 2, 0);
-    ctx.lineTo(PONG_WIDTH / 2, PONG_HEIGHT);
+    ctx.moveTo(W / 2, 0);
+    ctx.lineTo(W / 2, H);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Left Paddle (Cyan)
-    ctx.fillStyle = '#06b6d4';
-    ctx.shadowColor = '#06b6d4';
-    ctx.shadowBlur = 12;
-    ctx.fillRect(40, this.leftPaddle, PADDLE_WIDTH, PADDLE_HEIGHT);
+    ctx.font = '800 84px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(6,182,212,0.35)';
+    ctx.fillText(String(this.leftScore), W * 0.32, 28);
+    ctx.fillStyle = 'rgba(236,72,153,0.35)';
+    ctx.fillText(String(this.rightScore), W * 0.68, 28);
 
-    // Right Paddle (Pink)
-    ctx.fillStyle = '#ec4899';
-    ctx.shadowColor = '#ec4899';
-    ctx.shadowBlur = 12;
-    ctx.fillRect(PONG_WIDTH - 40 - PADDLE_WIDTH, this.rightPaddle, PADDLE_WIDTH, PADDLE_HEIGHT);
+    const paddle = (x, y, color) => {
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.roundRect(x, y, PADDLE_W, PADDLE_H, 8);
+      ctx.fill();
+    };
+    paddle(PADDLE_X, this.leftPaddle, LEFT_COLOR);
+    paddle(W - PADDLE_X - PADDLE_W, this.rightPaddle, RIGHT_COLOR);
 
-    // Ball (Glowing White/Amber)
+    this.flash = Math.max(0, this.flash - 0.08);
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = '#f59e0b';
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 16 + this.flash * 30;
     ctx.beginPath();
-    ctx.arc(this.ballX + BALL_SIZE / 2, this.ballY + BALL_SIZE / 2, BALL_SIZE / 2, 0, Math.PI * 2);
+    ctx.arc(this.ballX + BALL / 2, this.ballY + BALL / 2, BALL / 2, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Scores
-    ctx.font = '800 48px Outfit, sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.textAlign = 'center';
-    ctx.fillText(this.leftScore.toString(), PONG_WIDTH * 0.35, 60);
-    ctx.fillText(this.rightScore.toString(), PONG_WIDTH * 0.65, 60);
+    if (this.paused) {
+      ctx.font = '800 44px Outfit, sans-serif';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fillText('⏸ Waiting for a player to reconnect...', W / 2, H / 2);
+    } else if (this.serveAt) {
+      const remaining = Math.max(1, Math.ceil((this.serveAt - now) / 1000));
+      ctx.font = '900 120px Outfit, sans-serif';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fillText(String(remaining), W / 2, H / 2);
+    }
   }
 
   render() {
     if (!this.container) return;
+    if (this.phase === 'SETUP') this.renderSetup();
+    else if (this.phase === 'PLAYING') this.renderPlaying();
+    else this.renderGameOver();
+  }
 
-    const p1 = this.session.clients.get(this.player1Id);
-    const p2 = this.session.clients.get(this.player2Id);
-    const p2DisplayName = p2?.name || (this.player2Id === 'HOST_OR_AI' ? '🤖 AI Bot (Solo Test)' : 'Waiting for P2');
+  renderSetup() {
+    this.queue.sync(this.session.getPlayers().map(p => p.id));
+    const [a, b] = this.queue.pair();
+    const rest = this.queue.order.slice(2);
 
-    if (this.phase === 'SETUP') {
-      const players = Array.from(this.session.clients.values());
-      this.container.innerHTML = `
-        <div class="host-screen-wrapper">
-          <header class="host-header">
-            <div class="brand-badge"><span class="pulse-dot"></span><span>NETPLAYJS PONG DUEL</span></div>
-            <div class="room-code-display"><span class="code">${this.session.roomCode}</span></div>
-          </header>
+    this.container.innerHTML = `
+      <div class="host-screen-wrapper">
+        <header class="host-header">
+          <div class="brand-badge"><span class="pulse-dot"></span><span>NETPLAY PONG DUEL</span></div>
+          <div class="room-code-display"><span class="label">ROOM</span><span class="code">${escapeHtml(this.session.roomCode)}</span></div>
+        </header>
 
-          <div class="glass-card" style="max-width:800px; margin:0 auto; padding:40px 24px; text-align:center;">
-            <div style="font-size:54px; margin-bottom:12px;">🏓</div>
-            <h2>Fast P2P Real-Time Arcade Pong</h2>
-            <p style="color:var(--text-secondary); margin:12px auto 24px; max-width:550px; line-height:1.5;">
-              Direct from <strong>NetplayJS</strong>! 2 players control paddles using their smartphones as touch gamepads. First to 7 points wins!
-            </p>
+        <div class="glass-card setup-card">
+          <div class="setup-icon">🏓</div>
+          <h2>Real-time arcade Pong</h2>
+          <p class="setup-desc">Slide your thumb on your phone to move your paddle. <strong>Winner stays on</strong> and faces the next challenger in line. Solo? Play the AI bot.</p>
 
-            <div style="display:flex; justify-content:center; gap:24px; margin-bottom:28px;">
-              <div class="player-chip" style="border:2px solid #06b6d4; padding:14px 20px;">
-                <span class="avatar">${players[0]?.avatar || '👤'}</span>
-                <div>
-                  <strong style="color:#06b6d4;">PLAYER 1 (Cyan)</strong><br/>
-                  <span>${players[0]?.name || 'Waiting...'}</span>
-                </div>
-              </div>
-              <div class="player-chip" style="border:2px solid #ec4899; padding:14px 20px;">
-                <span class="avatar">${players[1]?.avatar || '🤖'}</span>
-                <div>
-                  <strong style="color:#ec4899;">PLAYER 2 (Pink)</strong><br/>
-                  <span>${players[1]?.name || 'AI Bot (Solo Mode)'}</span>
-                </div>
-              </div>
+          <div class="versus-row">
+            <div class="player-chip big" style="border-color:${LEFT_COLOR};">
+              <span class="avatar">${a ? this.avatarOf(a) : '⏳'}</span>
+              <div><small style="color:${LEFT_COLOR};">LEFT PADDLE</small><br/><strong>${a ? escapeHtml(this.nameOf(a)) : 'Waiting for a player'}</strong></div>
             </div>
-
-            <div style="display:flex; justify-content:center; gap:12px;">
-              <button class="btn-primary-large" id="btnStartPong" style="max-width:280px;">🚀 Launch Pong Duel</button>
-              <button class="btn-secondary" id="btnBackDeck">Back to Party Deck</button>
+            <span class="vs">VS</span>
+            <div class="player-chip big" style="border-color:${RIGHT_COLOR};">
+              <span class="avatar">${b ? this.avatarOf(b) : '🤖'}</span>
+              <div><small style="color:${RIGHT_COLOR};">RIGHT PADDLE</small><br/><strong>${b ? escapeHtml(this.nameOf(b)) : 'AI Bot (solo practice)'}</strong></div>
             </div>
           </div>
-        </div>
-      `;
+          ${rest.length ? `<p class="queue-line">Next up: ${rest.map(id => escapeHtml(this.nameOf(id))).join(' → ')}</p>` : ''}
 
-      document.getElementById('btnStartPong')?.addEventListener('click', () => this.startNewGame());
-      document.getElementById('btnBackDeck')?.addEventListener('click', () => {
-        if (this.onReturnToHub) this.onReturnToHub();
-      });
-    } else if (this.phase === 'PLAYING') {
-      this.container.innerHTML = `
-        <div class="host-screen-wrapper">
-          <header class="host-header" style="padding:10px 24px;">
-            <div style="display:flex; align-items:center; gap:16px;">
-              <span style="color:#06b6d4; font-weight:800;">${p1?.avatar || '👤'} ${p1?.name || 'P1'}</span>
-              <span style="color:var(--text-muted); font-size:12px;">VS</span>
-              <span style="color:#ec4899; font-weight:800;">${p2DisplayName}</span>
-            </div>
-            <div class="round-indicator">FIRST TO ${this.targetScore} PTS</div>
-            <div class="room-code-mini"><button class="btn-icon" id="btnQuitPong">Exit</button></div>
-          </header>
-
-          <div style="display:flex; justify-content:center; margin-top:10px;">
-            <canvas id="pongCanvas" width="${PONG_WIDTH}" height="${PONG_HEIGHT}" style="border-radius:18px; box-shadow:0 12px 40px rgba(0,0,0,0.8); max-width:100%; border:2px solid rgba(255,255,255,0.1);"></canvas>
-          </div>
-          <p style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:10px;">
-            Controls: Players slide finger on phone touch screen. (Desktop: W/S or Up/Down keys)
-          </p>
-        </div>
-      `;
-
-      document.getElementById('btnQuitPong')?.addEventListener('click', () => {
-        this.loopRunning = false;
-        if (this.onReturnToHub) this.onReturnToHub();
-      });
-    } else if (this.phase === 'GAME_OVER') {
-      this.container.innerHTML = `
-        <div class="host-screen-wrapper">
-          <div class="glass-card" style="max-width:700px; margin:40px auto; padding:40px 24px; text-align:center;">
-            <div style="font-size:54px; margin-bottom:12px;">🏆</div>
-            <h1 style="font-family:var(--font-heading); font-size:40px; color:var(--accent-cyan); margin-bottom:12px;">
-              ${this.winnerName} WINS!
-            </h1>
-            <p style="font-size:22px; color:#e2e8f0; margin-bottom:28px;">
-              Final Score: <strong>${this.leftScore} - ${this.rightScore}</strong>
-            </p>
-            <div style="display:flex; justify-content:center; gap:12px;">
-              <button class="btn-primary" id="btnRestartPong">Play Rematch</button>
-              <button class="btn-secondary" id="btnHubPong">Back to Party Deck</button>
+          <div class="form-group inline-group">
+            <label>First to:</label>
+            <div class="timer-chips">
+              ${[5, 7, 11].map(n => `<button class="chip-btn ${this.targetScore === n ? 'active' : ''}" data-target="${n}">${n} pts</button>`).join('')}
             </div>
           </div>
-        </div>
-      `;
 
-      document.getElementById('btnRestartPong')?.addEventListener('click', () => this.startNewGame());
-      document.getElementById('btnHubPong')?.addEventListener('click', () => {
-        if (this.onReturnToHub) this.onReturnToHub();
+          <div class="setup-actions">
+            <button class="btn-primary-large" id="btnStartPong" ${a ? '' : 'disabled'}>🚀 Launch Pong Duel</button>
+            <button class="btn-secondary" id="btnBackDeck">Back to Lobby</button>
+          </div>
+          <p class="hint-text">Keyboard on this screen: W/S (left), ↑/↓ (right)</p>
+        </div>
+      </div>
+    `;
+
+    this.container.querySelectorAll('[data-target]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.targetScore = Number(btn.dataset.target);
+        this.render();
       });
-    }
+    });
+    document.getElementById('btnStartPong')?.addEventListener('click', () => this.startMatch());
+    document.getElementById('btnBackDeck')?.addEventListener('click', () => this.onReturnToHub?.());
+  }
+
+  renderPlaying() {
+    this.container.innerHTML = `
+      <div class="host-screen-wrapper">
+        <header class="host-header compact">
+          <div class="versus-mini">
+            <span style="color:${LEFT_COLOR};">${this.avatarOf(this.player1Id)} ${escapeHtml(this.nameOf(this.player1Id))}</span>
+            <span class="vs">VS</span>
+            <span style="color:${RIGHT_COLOR};">${escapeHtml(this.nameOf(this.player2Id))}</span>
+          </div>
+          <div class="round-indicator">FIRST TO ${this.targetScore}</div>
+          <button class="btn-icon" id="btnQuitPong">Exit</button>
+        </header>
+        <div class="arena-stage">
+          <canvas id="pongCanvas" class="arena-canvas" width="${W}" height="${H}"></canvas>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnQuitPong')?.addEventListener('click', () => {
+      this.stopLoop();
+      this.onReturnToHub?.();
+    });
+  }
+
+  renderGameOver() {
+    const winnerId = this.winnerSide === 'LEFT' ? this.player1Id : this.player2Id;
+    const waiting = this.queue.order.filter(id => id !== this.player1Id && id !== this.player2Id);
+    const humanMatch = this.player1Id !== AI_ID && this.player2Id !== AI_ID;
+    const color = this.winnerSide === 'LEFT' ? LEFT_COLOR : RIGHT_COLOR;
+
+    this.container.innerHTML = `
+      <div class="host-screen-wrapper">
+        <div class="glass-card setup-card">
+          <div class="setup-icon">🏆</div>
+          <h1 class="winner-title" style="color:${color};">${escapeHtml(this.nameOf(winnerId))} WINS!</h1>
+          <p class="final-score">${this.leftScore} – ${this.rightScore}${this.forfeit ? ' · opponent left' : ''}</p>
+          ${winnerId !== AI_ID && this.wins[winnerId] > 1 ? `<p class="muted">🔥 ${this.wins[winnerId]} wins this session</p>` : ''}
+          <div class="setup-actions">
+            ${humanMatch && waiting.length ? `<button class="btn-primary" id="btnNextPong">👑 Winner Stays: vs ${escapeHtml(this.nameOf(waiting[0]))}</button>` : ''}
+            <button class="${humanMatch && waiting.length ? 'btn-secondary' : 'btn-primary'}" id="btnRestartPong">🔁 Rematch</button>
+            <button class="btn-secondary" id="btnHubPong">Back to Lobby</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('btnNextPong')?.addEventListener('click', () => this.nextChallenger());
+    document.getElementById('btnRestartPong')?.addEventListener('click', () => this.startMatch([this.player1Id, this.player2Id]));
+    document.getElementById('btnHubPong')?.addEventListener('click', () => this.onReturnToHub?.());
   }
 }

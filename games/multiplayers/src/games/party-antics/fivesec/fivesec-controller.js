@@ -1,71 +1,107 @@
 import { vibrate } from '../../../utils/wake-lock.js';
+import { escapeHtml, controllerHeader } from '../../../utils/ui.js';
 
 export class FiveSecController {
   constructor(session, container) {
     this.session = session;
     this.container = container;
-
     this.publicState = null;
-    this.setupNetworkHandlers();
-  }
 
-  setupNetworkHandlers() {
     this.session.on('stateUpdate', (state) => {
+      const prev = this.publicState;
       this.publicState = state;
+      if (state.phase === 'COUNTDOWN' && prev?.phase === 'COUNTDOWN' && this.container.querySelector('#phoneTimer')) {
+        this.container.querySelector('#phoneTimer').textContent = String(state.timerRemaining);
+        if (state.activeBuzzerPlayerId === this.session.playerId) vibrate([20]);
+        return;
+      }
+      if (state.phase === 'BUZZER_WAIT' && prev?.phase !== 'BUZZER_WAIT') vibrate([40]);
       this.render();
     });
   }
 
   render() {
-    if (!this.container || !this.publicState) return;
+    if (!this.container) return;
+    const s = this.publicState;
+    const me = (s?.players || []).find(p => p.id === this.session.playerId);
+    const myScore = me ? `${me.score} pts` : '5-SEC RULE';
 
-    const isWaiting = this.publicState.phase === 'BUZZER_WAIT';
-    const isMe = this.publicState.activeBuzzerPlayerId === this.session.playerId;
+    if (!s || s.phase === 'SETUP') {
+      this.shell(myScore, `
+        <div class="glass-card lobby-wait-card">
+          <h2>⚡ 5-Second Rule</h2>
+          <p class="subtitle">Get your thumb ready. When the buzzer lights up, smash it before anyone else!</p>
+        </div>`);
+      return;
+    }
 
-    this.container.innerHTML = `
-      <div class="controller-screen">
-        <header class="controller-header">
-          <div class="user-pill">${this.session.avatar} ${this.session.playerName}</div>
-          <div class="room-pill">5-Sec Rule</div>
-        </header>
+    if (s.phase === 'GAME_OVER') {
+      const won = s.winnerId === this.session.playerId;
+      const rank = s.players.findIndex(p => p.id === this.session.playerId) + 1;
+      this.shell(myScore, `
+        <div class="glass-card lobby-wait-card">
+          <div class="big-emoji">${won ? '🏆' : '🎉'}</div>
+          <h2>${won ? 'You win!' : `You finished #${rank}`}</h2>
+        </div>`);
+      return;
+    }
 
-        <div class="controller-body" style="justify-content:center; align-items:center;">
-          <div class="glass-card" style="width:100%; text-align:center; padding:24px 16px;">
-            <p style="font-size:16px; font-weight:700; color:var(--text-secondary); margin-bottom:12px;">
-              "${this.publicState.prompt}"
-            </p>
+    const isMe = s.activeBuzzerPlayerId === this.session.playerId;
+    let body;
+    if (s.phase === 'READING') {
+      body = `
+        <button class="btn-giant-buzzer armed-wait" disabled><span>⏳</span><span class="buzzer-label">GET READY</span></button>
+        <p class="hint-text">Read the prompt...</p>`;
+    } else if (s.phase === 'BUZZER_WAIT') {
+      body = `
+        <button class="btn-giant-buzzer" id="btnBuzzer"><span>⚡</span><span class="buzzer-label">BUZZ!</span></button>
+        <p class="hint-text">First tap wins the turn</p>`;
+    } else if (s.phase === 'COUNTDOWN') {
+      body = isMe ? `
+        <div class="buzz-result me">
+          <div class="big-emoji">🎯</div>
+          <h2>YOU'RE UP!</h2>
+          <div class="timer-digits huge" id="phoneTimer">${s.timerRemaining}</div>
+          <p>Shout 3 answers out loud!</p>
+        </div>` : `
+        <div class="buzz-result">
+          <div class="big-emoji">🔒</div>
+          <h3>${escapeHtml(s.activeBuzzerPlayerName || 'Someone')} buzzed first</h3>
+          <div class="timer-digits huge" id="phoneTimer">${s.timerRemaining}</div>
+          <p class="muted">Listen carefully: did they get all 3?</p>
+        </div>`;
+    } else {
+      body = `
+        <div class="buzz-result">
+          <div class="big-emoji">⚖️</div>
+          <h3>${isMe ? 'Judging your answer...' : `Judging ${escapeHtml(s.activeBuzzerPlayerName || '')}`}</h3>
+        </div>`;
+    }
 
-            ${isWaiting ? `
-              <div style="margin:24px 0;">
-                <button class="btn-giant-buzzer" id="btnBuzzer">
-                  <span>⚡</span>
-                  <span class="buzzer-label">BUZZ IN!</span>
-                </button>
-              </div>
-              <p style="color:var(--text-muted); font-size:13px;">First person to tap gets 5 seconds to answer!</p>
-            ` : isMe ? `
-              <div style="padding:20px 0; animation:pulseGreen 1s infinite alternate;">
-                <div style="font-size:54px; margin-bottom:8px;">🎯</div>
-                <h2 style="color:var(--accent-emerald); font-size:24px;">YOU BUZZED IN!</h2>
-                <div class="timer-digits" style="font-size:48px; margin:12px 0;">0${this.publicState.timerRemaining}</div>
-                <p style="font-size:16px; font-weight:700;">SPEAK YOUR 3 ANSWERS OUT LOUD!</p>
-              </div>
-            ` : `
-              <div style="padding:30px 0;">
-                <div style="font-size:42px; margin-bottom:8px;">🔒</div>
-                <h3>${this.publicState.activeBuzzerPlayerName || 'Someone'} buzzed first!</h3>
-                <div class="timer-digits" style="font-size:40px; margin:12px 0;">0${this.publicState.timerRemaining}</div>
-                <p style="color:var(--text-muted); font-size:13px;">Listen to their answers...</p>
-              </div>
-            `}
-          </div>
-        </div>
+    this.shell(myScore, `
+      <div class="glass-card prompt-card">
+        <p class="phone-prompt">${escapeHtml(s.prompt)}</p>
       </div>
-    `;
+      <div class="buzzer-area">${body}</div>
+    `);
 
-    document.getElementById('btnBuzzer')?.addEventListener('click', () => {
-      vibrate([100]);
+    const btn = document.getElementById('btnBuzzer');
+    btn?.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.classList.add('pressed');
+      vibrate([120]);
       this.session.sendAction('BUZZ_IN');
     });
+  }
+
+  shell(right, inner) {
+    this.container.innerHTML = `
+      <div class="controller-screen">
+        ${controllerHeader(this.session, right)}
+        <div class="controller-body">${inner}</div>
+      </div>
+    `;
   }
 }

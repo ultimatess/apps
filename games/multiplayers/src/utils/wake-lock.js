@@ -3,31 +3,35 @@
  */
 
 let wakeLockSentinel = null;
+let wanted = false;
+let visibilityHooked = false;
 
-export async function requestWakeLock() {
-  if ('wakeLock' in navigator) {
-    try {
-      wakeLockSentinel = await navigator.wakeLock.request('screen');
-      console.log('[WakeLock] Screen wake lock acquired');
-      wakeLockSentinel.addEventListener('release', () => {
-        console.log('[WakeLock] Screen wake lock released');
-        wakeLockSentinel = null;
-      });
-      // Re-acquire on visibility change
-      document.addEventListener('visibilitychange', async () => {
-        if (wakeLockSentinel === null && document.visibilityState === 'visible') {
-          try {
-            wakeLockSentinel = await navigator.wakeLock.request('screen');
-          } catch (e) {}
-        }
-      });
-    } catch (err) {
-      console.warn('[WakeLock] Could not acquire wake lock:', err.message);
-    }
+async function acquire() {
+  if (!('wakeLock' in navigator) || wakeLockSentinel) return;
+  try {
+    wakeLockSentinel = await navigator.wakeLock.request('screen');
+    wakeLockSentinel.addEventListener('release', () => {
+      wakeLockSentinel = null;
+    });
+  } catch (err) {
+    // Not fatal: low battery mode or no user gesture yet.
   }
 }
 
+export async function requestWakeLock() {
+  wanted = true;
+  if (!visibilityHooked && typeof document !== 'undefined') {
+    visibilityHooked = true;
+    // The browser drops the lock whenever the tab is hidden; take it back on return.
+    document.addEventListener('visibilitychange', () => {
+      if (wanted && document.visibilityState === 'visible') acquire();
+    });
+  }
+  await acquire();
+}
+
 export function releaseWakeLock() {
+  wanted = false;
   if (wakeLockSentinel) {
     wakeLockSentinel.release();
     wakeLockSentinel = null;
@@ -35,7 +39,7 @@ export function releaseWakeLock() {
 }
 
 export function vibrate(pattern = [50]) {
-  if ('vibrate' in navigator) {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     try {
       navigator.vibrate(pattern);
     } catch (e) {}

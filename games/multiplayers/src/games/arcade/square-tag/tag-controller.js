@@ -1,119 +1,165 @@
 import { vibrate } from '../../../utils/wake-lock.js';
+import { controllerHeader } from '../../../utils/ui.js';
 
 export class SquareTagController {
   constructor(session, container) {
     this.session = session;
     this.container = container;
+    this.publicState = null;
+    this.input = { x: 0, y: 0, boost: false };
+    this.sendScheduled = false;
 
-    this.color = '#06b6d4';
-    this.dx = 0;
-    this.dy = 0;
-    this.isBoost = false;
-
-    this.setupNetworkHandlers();
-  }
-
-  setupNetworkHandlers() {
-    this.session.on('privatePayload', (data) => {
-      if (data.game === 'square-tag') {
-        this.color = data.color || '#06b6d4';
+    this.session.on('stateUpdate', (state) => {
+      const prevPhase = this.publicState?.phase;
+      this.publicState = state;
+      const me = this.me();
+      const active = me && (state.phase === 'PLAYING' || state.phase === 'COUNTDOWN');
+      if (active && (prevPhase === 'PLAYING' || prevPhase === 'COUNTDOWN') && this.container.querySelector('#joyBase')) {
+        this.updateStatus();
+      } else {
         this.render();
       }
     });
   }
 
-  sendMove(dx, dy, boost = false) {
-    this.dx = dx;
-    this.dy = dy;
-    this.isBoost = boost;
-    this.session.sendAction('MOVE_INPUT', { dx, dy, boost });
+  me() {
+    return (this.publicState?.players || []).find(p => p.id === this.session.playerId) || null;
+  }
+
+  queueSend() {
+    if (this.sendScheduled) return;
+    this.sendScheduled = true;
+    requestAnimationFrame(() => {
+      this.sendScheduled = false;
+      this.session.sendAction('MOVE_INPUT', this.input);
+    });
   }
 
   render() {
     if (!this.container) return;
+    const s = this.publicState;
+    const me = this.me();
+
+    if (!s || s.phase === 'SETUP' || !me) {
+      const inLobby = (s?.lobby || []).find(p => p.id === this.session.playerId);
+      this.container.innerHTML = `
+        <div class="controller-screen">
+          ${controllerHeader(this.session)}
+          <div class="controller-body">
+            <div class="glass-card lobby-wait-card">
+              <h2>🟦 Square Arena Clash</h2>
+              <p class="subtitle">${s && s.phase !== 'SETUP' ? 'The arena is full this round. Watch the TV, you are in next time!' : inLobby ? `You're the <strong style="color:${inLobby.color}">colored square</strong>. Get ready to grab stars!` : 'Waiting for the host to launch the arena...'}</p>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (s.phase === 'GAME_OVER') {
+      const ranked = [...s.players].sort((a, b) => b.score - a.score);
+      const rank = ranked.findIndex(p => p.id === me.id) + 1;
+      this.container.innerHTML = `
+        <div class="controller-screen">
+          ${controllerHeader(this.session)}
+          <div class="controller-body">
+            <div class="glass-card lobby-wait-card">
+              <div class="big-emoji">${rank === 1 ? '🏆' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '🎮'}</div>
+              <h2>${rank === 1 ? 'You won the arena!' : `You finished #${rank}`}</h2>
+              <p class="subtitle">${me.score} points</p>
+            </div>
+          </div>
+        </div>
+      `;
+      if (rank === 1) vibrate([100, 50, 100, 50, 200]);
+      return;
+    }
 
     this.container.innerHTML = `
-      <div class="controller-screen">
-        <header class="controller-header">
-          <div class="user-pill">${this.session.avatar} ${this.session.playerName}</div>
-          <div class="room-pill" style="border-color:${this.color}; color:${this.color};">
-            ARENA FIGHTER
+      <div class="controller-screen no-scroll">
+        ${controllerHeader(this.session, `<span id="tagStatus"></span>`, `border-color:${me.color}; color:${me.color};`)}
+        <div class="gamepad-layout" style="--accent:${me.color};">
+          <div class="joy-zone" id="joyZone">
+            <div class="joy-base" id="joyBase"><div class="joy-knob" id="joyKnob"></div></div>
+            <span class="zone-label">MOVE</span>
           </div>
-        </header>
-
-        <div class="controller-body" style="padding:10px 0; justify-content:space-between;">
-          <div style="text-align:center;">
-            <h3 style="color:${this.color};">🕹️ VIRTUAL GAMEPAD</h3>
-            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Use D-pad to steer your square on the TV</p>
-          </div>
-
-          <!-- Virtual D-Pad -->
-          <div class="dpad-container" style="display:grid; grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(3, 80px); gap: 10px; margin: 20px auto;">
-            <div></div>
-            <button class="dpad-btn" id="dpadUp" style="background:${this.color};">▲</button>
-            <div></div>
-
-            <button class="dpad-btn" id="dpadLeft" style="background:${this.color};">◀</button>
-            <div style="background:rgba(255,255,255,0.06); border-radius:12px;"></div>
-            <button class="dpad-btn" id="dpadRight" style="background:${this.color};">▶</button>
-
-            <div></div>
-            <button class="dpad-btn" id="dpadDown" style="background:${this.color};">▼</button>
-            <div></div>
-          </div>
-
-          <!-- Turbo Boost Button -->
-          <div style="width:100%; padding:0 20px;">
-            <button class="btn-primary" id="btnTurboBoost" style="background:linear-gradient(135deg, #f59e0b, #d97706); padding:18px; font-size:18px; border-radius:16px;">
-              ⚡ TURBO BOOST
-            </button>
-          </div>
+          <button class="turbo-btn" id="btnTurbo" aria-label="Turbo boost">⚡<span>TURBO</span></button>
         </div>
       </div>
     `;
-
-    this.attachDpadEvents();
+    this.updateStatus();
+    this.attachControls();
   }
 
-  attachDpadEvents() {
-    const bindBtn = (id, dx, dy) => {
-      const el = document.getElementById(id);
-      if (!el) return;
+  updateStatus() {
+    const s = this.publicState;
+    const me = this.me();
+    const el = document.getElementById('tagStatus');
+    if (!el || !me) return;
+    el.textContent = s.phase === 'COUNTDOWN' ? 'GET READY' : `${me.score} pts · #${me.rank} · ${s.timerRemaining}s`;
+  }
 
-      const start = (e) => {
-        e.preventDefault();
-        vibrate([20]);
-        this.sendMove(dx, dy, this.isBoost);
-      };
-      const end = (e) => {
-        e.preventDefault();
-        this.sendMove(0, 0, this.isBoost);
-      };
+  attachControls() {
+    const zone = document.getElementById('joyZone');
+    const base = document.getElementById('joyBase');
+    const knob = document.getElementById('joyKnob');
+    const turbo = document.getElementById('btnTurbo');
+    if (!zone || !base || !knob || !turbo) return;
 
-      el.addEventListener('touchstart', start, { passive: false });
-      el.addEventListener('touchend', end, { passive: false });
-      el.addEventListener('mousedown', start);
-      el.addEventListener('mouseup', end);
+    let joyPointer = null;
+    let origin = null;
+    const radius = () => base.offsetWidth / 2;
+
+    const setStick = (x, y) => {
+      const r = radius();
+      knob.style.transform = `translate(${x * r * 0.6}px, ${y * r * 0.6}px)`;
+      // Small dead zone so a resting thumb doesn't drift.
+      const len = Math.hypot(x, y);
+      this.input.x = len < 0.15 ? 0 : Math.round(x * 100) / 100;
+      this.input.y = len < 0.15 ? 0 : Math.round(y * 100) / 100;
+      this.queueSend();
     };
 
-    bindBtn('dpadUp', 0, -1);
-    bindBtn('dpadDown', 0, 1);
-    bindBtn('dpadLeft', -1, 0);
-    bindBtn('dpadRight', 1, 0);
+    zone.addEventListener('pointerdown', (e) => {
+      if (joyPointer !== null) return;
+      e.preventDefault();
+      joyPointer = e.pointerId;
+      zone.setPointerCapture?.(e.pointerId);
+      const rect = base.getBoundingClientRect();
+      origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      vibrate([10]);
+      move(e);
+    });
+    const move = (e) => {
+      if (e.pointerId !== joyPointer) return;
+      e.preventDefault();
+      const r = radius();
+      let dx = (e.clientX - origin.x) / r;
+      let dy = (e.clientY - origin.y) / r;
+      const len = Math.hypot(dx, dy);
+      if (len > 1) { dx /= len; dy /= len; }
+      setStick(dx, dy);
+    };
+    const end = (e) => {
+      if (e.pointerId !== joyPointer) return;
+      joyPointer = null;
+      setStick(0, 0);
+    };
+    zone.addEventListener('pointermove', move);
+    zone.addEventListener('pointerup', end);
+    zone.addEventListener('pointercancel', end);
 
-    const boostBtn = document.getElementById('btnTurboBoost');
-    if (boostBtn) {
-      boostBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        vibrate([40]);
-        this.isBoost = true;
-        this.sendMove(this.dx, this.dy, true);
-      });
-      boostBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        this.isBoost = false;
-        this.sendMove(this.dx, this.dy, false);
-      });
-    }
+    const boost = (on) => (e) => {
+      e.preventDefault();
+      if (this.input.boost === on) return;
+      this.input.boost = on;
+      turbo.classList.toggle('active', on);
+      if (on) vibrate([30]);
+      this.queueSend();
+    };
+    turbo.addEventListener('pointerdown', (e) => { turbo.setPointerCapture?.(e.pointerId); boost(true)(e); });
+    turbo.addEventListener('pointerup', boost(false));
+    turbo.addEventListener('pointercancel', boost(false));
+    turbo.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 }

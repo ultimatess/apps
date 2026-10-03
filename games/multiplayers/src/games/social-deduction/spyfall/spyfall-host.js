@@ -1,102 +1,114 @@
 import { SPYFALL_CATEGORIES } from '../../../data/locations.js';
-import { renderQRCodeToCanvas } from '../../../netplay/qrcode.js';
-import { getJoinUrl } from '../../../netplay/room-code.js';
 import { playTick, playGong, playRoundStart, playVictory, playBuzzer } from '../../../utils/audio.js';
+import { escapeHtml, shuffle, confirmDialog, Disposer } from '../../../utils/ui.js';
+
+const ACCUSATION_SECONDS = 45;
+const SPY_GUESS_SECONDS = 40;
 
 export class SpyfallHost {
-  constructor(session, container) {
+  constructor(session, container, onReturnToHub) {
     this.session = session;
     this.container = container;
+    this.onReturnToHub = onReturnToHub;
+    this.disposer = new Disposer();
+    this.roundDisposer = new Disposer();
 
-    // Master Game State
     this.phase = 'LOBBY'; // 'LOBBY' | 'PLAYING' | 'ACCUSATION' | 'SPY_GUESS' | 'ROUND_OVER'
-    this.selectedCategoryIndex = 0; // default to first (Tamil Cinema) or customizable
-    this.roundDuration = 360; // 6 minutes in seconds
+    this.selectedCategoryIndex = 0;
+    this.roundDuration = 360;
     this.timerRemaining = 360;
-    this.timerInterval = null;
     this.timerActive = false;
 
     this.roundNumber = 0;
     this.secretLocation = null;
     this.currentLocationsList = [];
     this.spyIds = [];
-    this.scores = {}; // playerId -> score
+    this.scores = {};
     this.usedLocations = new Set();
 
     this.accusation = null;
+    this.accusationsUsed = new Set();
     this.firstQuestioner = null;
+    this.spyGuess = null;
 
-    this.setupNetworkHandlers();
+    this.session.on('rosterChange', () => {
+      if (this.phase === 'LOBBY' || this.phase === 'PLAYING') this.render();
+      if (this.phase === 'ACCUSATION') {
+        this.render();
+        this.checkAccusationVotesComplete();
+      }
+      this.syncState();
+    });
+
+    this.session.on('playerAction', (playerId, action, payload) => this.handlePlayerAction(playerId, action, payload));
+
+    this.session.on('playerLeave', () => {
+      const inRound = ['PLAYING', 'ACCUSATION', 'SPY_GUESS'].includes(this.phase);
+      if (inRound && this.spyIds.every(id => !this.session.clients.has(id))) this.endRound('ABANDONED');
+    });
   }
 
-  setupNetworkHandlers() {
-    this.session.on('playerJoin', (player) => {
-      if (!this.scores[player.id]) this.scores[player.id] = 0;
-      this.render();
-      this.syncState();
-    });
-
-    this.session.on('playerLeave', (player) => {
-      this.render();
-      this.syncState();
-    });
-
-    this.session.on('playerAction', (playerId, action, payload) => {
-      this.handlePlayerAction(playerId, action, payload);
-    });
+  destroy() {
+    this.roundDisposer.dispose();
+    this.disposer.dispose();
   }
 
   handlePlayerAction(playerId, action, payload) {
-    console.log(`[Host] Action from ${playerId}:`, action, payload);
-
+    // Only players dealt into this round can accuse or vote.
+    if (!this.dealtIds?.has(playerId)) return;
     if (action === 'CALL_ACCUSATION' && this.phase === 'PLAYING') {
       const suspectId = payload.suspectId;
-      if (!suspectId || suspectId === playerId) return;
+      if (!suspectId || suspectId === playerId || !this.dealtIds.has(suspectId) || !this.session.clients.has(suspectId)) return;
+      if (this.accusationsUsed.has(playerId)) return;
       this.initiateAccusation(playerId, suspectId);
     } else if (action === 'VOTE_ACCUSATION' && this.phase === 'ACCUSATION') {
-      if (!this.accusation) return;
-      this.accusation.votes[playerId] = payload.vote; // 'GUILTY' or 'INNOCENT'
+      if (!this.accusation || playerId === this.accusation.suspectId) return;
+      if (payload.vote !== 'GUILTY' && payload.vote !== 'INNOCENT') return;
+      this.accusation.votes[playerId] = payload.vote;
       this.syncState();
       this.render();
       this.checkAccusationVotesComplete();
-    } else if (action === 'SPY_GUESS' && this.phase === 'SPY_GUESS') {
-      if (this.spyIds.includes(playerId)) {
-        this.resolveSpyGuess(payload.location);
-      }
+    } else if (action === 'SPY_REVEAL' && this.phase === 'PLAYING' && this.spyIds.includes(playerId)) {
+      // The spy stops the clock to steal the win by naming the location.
+      this.startSpyGuess(playerId, true);
+    } else if (action === 'SPY_GUESS' && this.phase === 'SPY_GUESS' && playerId === this.spyGuess?.spyId) {
+      this.resolveSpyGuess(String(payload.location || ''));
     }
   }
 
-  startNewGame() {
-    const players = Array.from(this.session.clients.values());
-    if (players.length < 1) {
-      alert('At least 1 player required to test!');
-      return;
-    }
+  get category() {
+    return SPYFALL_CATEGORIES[this.selectedCategoryIndex] || SPYFALL_CATEGORIES[0];
+  }
 
+  startNewGame() {
+    const players = this.session.getPlayers();
+    if (players.length < 1) return;
+
+    this.roundDisposer.dispose();
+    this.roundDisposer = new Disposer();
     this.roundNumber++;
-    this.determineLocationAndSpies();
+    this.determineLocationAndSpies(players);
     this.timerRemaining = this.roundDuration;
     this.timerActive = true;
     this.phase = 'PLAYING';
     this.accusation = null;
-
-    // Pick random first questioner
+    this.accusationsUsed = new Set();
+    this.spyGuess = null;
+    this.roundOutcome = null;
+    this.lastAcquittal = null;
     this.firstQuestioner = players[Math.floor(Math.random() * players.length)];
 
     playRoundStart();
     this.startTimer();
-    this.dispatchRoles();
+    this.dispatchRoles(players);
     this.syncState();
     this.render();
   }
 
-  determineLocationAndSpies() {
-    const players = Array.from(this.session.clients.values());
-    const cat = SPYFALL_CATEGORIES[this.selectedCategoryIndex] || SPYFALL_CATEGORIES[0];
-    const availableLocs = cat.locations;
+  determineLocationAndSpies(players) {
+    const availableLocs = this.category.locations;
     this.currentLocationsList = [...availableLocs];
 
-    // Pick location avoiding immediate repeats
     let pool = availableLocs.filter(loc => !this.usedLocations.has(loc));
     if (pool.length === 0) {
       this.usedLocations.clear();
@@ -105,126 +117,100 @@ export class SpyfallHost {
     this.secretLocation = pool[Math.floor(Math.random() * pool.length)];
     this.usedLocations.add(this.secretLocation);
 
-    // Pick 1 Spy (or 2 if >= 7 players)
-    const spyCount = players.length >= 7 ? 2 : 1;
-    const shuffled = [...players].sort(() => 0.5 - Math.random());
-    this.spyIds = shuffled.slice(0, spyCount).map(p => p.id);
+    const spyCount = players.length >= 8 ? 2 : 1;
+    this.spyIds = shuffle(players).slice(0, spyCount).map(p => p.id);
   }
 
-  dispatchRoles() {
-    const cat = SPYFALL_CATEGORIES[this.selectedCategoryIndex] || SPYFALL_CATEGORIES[0];
-    const players = Array.from(this.session.clients.values());
-
+  dispatchRoles(players) {
+    this.dealtIds = new Set(players.map(p => p.id));
     players.forEach(p => {
       const isSpy = this.spyIds.includes(p.id);
       this.session.sendPrivateState(p.id, {
+        game: 'spyfall',
+        round: this.roundNumber,
         isSpy,
+        spyCount: this.spyIds.length,
         secretLocation: isSpy ? null : this.secretLocation,
-        category: cat.category,
-        allLocations: this.currentLocationsList,
-        players: players.map(pl => ({ id: pl.id, name: pl.name, avatar: pl.avatar }))
+        category: this.category.category,
+        allLocations: this.currentLocationsList
       });
     });
   }
 
   startTimer() {
-    if (this.timerInterval) clearInterval(this.timerInterval);
-    this.timerInterval = setInterval(() => {
-      if (this.timerActive && this.timerRemaining > 0) {
-        this.timerRemaining--;
-        if (this.timerRemaining <= 10 && this.timerRemaining > 0) {
-          playTick(1000 + (10 - this.timerRemaining) * 80);
-        }
-        if (this.timerRemaining === 0) {
-          this.handleTimerExpired();
-        }
-        // Update timer on screen every second
-        const timerEl = document.getElementById('hostTimerDisplay');
-        if (timerEl) timerEl.textContent = this.formatTime(this.timerRemaining);
-        // Periodic sync to clients
-        if (this.timerRemaining % 3 === 0) this.syncState();
+    this.roundDisposer.interval(() => {
+      if (!this.timerActive || this.timerRemaining <= 0) return;
+      this.timerRemaining--;
+      if (this.timerRemaining <= 10 && this.timerRemaining > 0) playTick(1000 + (10 - this.timerRemaining) * 80);
+      const timerEl = document.getElementById('hostTimerDisplay');
+      if (timerEl) {
+        timerEl.textContent = this.formatTime(this.timerRemaining);
+        timerEl.classList.toggle('danger', this.timerRemaining <= 30);
       }
+      if (this.timerRemaining === 0) {
+        this.timerActive = false;
+        playBuzzer();
+        this.endRound('TIME_EXPIRED');
+        return;
+      }
+      if (this.timerRemaining % 5 === 0) this.syncState();
     }, 1000);
-  }
-
-  handleTimerExpired() {
-    this.timerActive = false;
-    playBuzzer();
-    // Round time up -> group must vote on who the spy is
-    this.endRound('TIME_EXPIRED', null);
   }
 
   initiateAccusation(accuserId, suspectId) {
     this.timerActive = false;
+    this.accusationsUsed.add(accuserId);
     playGong();
 
-    const accuser = this.session.clients.get(accuserId) || { name: 'Player' };
-    const suspect = this.session.clients.get(suspectId) || { name: 'Suspect' };
+    const accuser = this.session.clients.get(accuserId);
+    const suspect = this.session.clients.get(suspectId);
 
     this.phase = 'ACCUSATION';
     this.accusation = {
       accuserId,
-      accuserName: accuser.name,
+      accuserName: accuser?.name || 'Player',
       suspectId,
-      suspectName: suspect.name,
-      votes: { [accuserId]: 'GUILTY' }, // accuser votes guilty automatically
-      timer: 45
+      suspectName: suspect?.name || 'Suspect',
+      votes: { [accuserId]: 'GUILTY' },
+      timer: ACCUSATION_SECONDS
     };
 
     this.syncState();
     this.render();
+    this.checkAccusationVotesComplete();
+    if (this.phase !== 'ACCUSATION') return;
 
-    // Accusation timeout countdown
-    if (this.accusationInterval) clearInterval(this.accusationInterval);
-    this.accusationInterval = setInterval(() => {
-      if (this.phase === 'ACCUSATION' && this.accusation) {
-        this.accusation.timer--;
-        const accTimerEl = document.getElementById('accusationTimer');
-        if (accTimerEl) accTimerEl.textContent = `${this.accusation.timer}s`;
-        if (this.accusation.timer <= 0) {
-          clearInterval(this.accusationInterval);
-          this.resolveAccusation();
-        }
-      }
+    this.accusationTimer = this.roundDisposer.interval(() => {
+      if (this.phase !== 'ACCUSATION' || !this.accusation) return;
+      this.accusation.timer--;
+      const el = document.getElementById('accusationTimer');
+      if (el) el.textContent = `${this.accusation.timer}s`;
+      if (this.accusation.timer <= 0) this.resolveAccusation();
     }, 1000);
   }
 
   checkAccusationVotesComplete() {
-    if (!this.accusation) return;
-    const players = Array.from(this.session.clients.values());
-    const voters = players.filter(p => p.id !== this.accusation.suspectId);
-    const voteCount = Object.keys(this.accusation.votes).length;
-
-    if (voteCount >= voters.length) {
-      if (this.accusationInterval) clearInterval(this.accusationInterval);
-      this.resolveAccusation();
-    }
+    if (!this.accusation || this.phase !== 'ACCUSATION') return;
+    const voters = this.session.getPlayers().filter(p => p.id !== this.accusation.suspectId && p.connected && this.dealtIds.has(p.id));
+    if (voters.every(p => this.accusation.votes[p.id])) this.resolveAccusation();
   }
 
   resolveAccusation() {
-    if (!this.accusation) return;
+    if (!this.accusation || this.phase !== 'ACCUSATION') return;
+    clearInterval(this.accusationTimer);
     const votes = Object.values(this.accusation.votes);
-    const guiltyVotes = votes.filter(v => v === 'GUILTY').length;
-    const innocentVotes = votes.filter(v => v === 'INNOCENT').length;
-
+    const guilty = votes.filter(v => v === 'GUILTY').length;
+    const innocent = votes.filter(v => v === 'INNOCENT').length;
     const suspectIsSpy = this.spyIds.includes(this.accusation.suspectId);
 
-    if (guiltyVotes > innocentVotes) {
-      // Majority voted GUILTY!
+    if (guilty > innocent) {
       if (suspectIsSpy) {
-        // Suspect IS the Spy! Spy gets chance to guess location
-        this.phase = 'SPY_GUESS';
-        this.syncState();
-        this.render();
+        this.startSpyGuess(this.accusation.suspectId, false);
       } else {
-        // Suspect was INNOCENT! Spy wins
-        this.endRound('INNOCENT_ACCUSED', {
-          accuser: this.accusation.accuserName,
-          suspect: this.accusation.suspectName
-        });
+        this.endRound('INNOCENT_ACCUSED');
       }
     } else {
-      // Accusation failed -> Resume game with small penalty
+      this.lastAcquittal = `${this.accusation.suspectName} was acquitted (${guilty}–${innocent}). The clock is running again!`;
       this.phase = 'PLAYING';
       this.timerActive = true;
       this.accusation = null;
@@ -233,65 +219,79 @@ export class SpyfallHost {
     }
   }
 
+  startSpyGuess(spyId, voluntary) {
+    this.timerActive = false;
+    this.phase = 'SPY_GUESS';
+    this.spyGuess = {
+      spyId,
+      spyName: this.session.clients.get(spyId)?.name || 'The Spy',
+      voluntary,
+      timer: SPY_GUESS_SECONDS
+    };
+    playGong();
+    this.syncState();
+    this.render();
+    this.roundDisposer.interval(() => {
+      if (this.phase !== 'SPY_GUESS') return;
+      this.spyGuess.timer--;
+      const el = document.getElementById('spyGuessTimer');
+      if (el) el.textContent = `${this.spyGuess.timer}s`;
+      if (this.spyGuess.timer <= 0) this.resolveSpyGuess('');
+    }, 1000);
+  }
+
   resolveSpyGuess(guessedLocation) {
+    if (this.phase !== 'SPY_GUESS') return;
     const isCorrect = guessedLocation.toLowerCase().trim() === this.secretLocation.toLowerCase().trim();
-    if (isCorrect) {
-      this.endRound('SPY_GUESSED_LOCATION', { guess: guessedLocation });
-    } else {
-      this.endRound('SPY_CAUGHT', { guess: guessedLocation });
-    }
+    this.endRound(isCorrect ? 'SPY_GUESSED_LOCATION' : 'SPY_CAUGHT', { guess: guessedLocation || null, voluntary: this.spyGuess?.voluntary });
   }
 
   endRound(outcome, details = {}) {
     this.phase = 'ROUND_OVER';
     this.timerActive = false;
-    clearInterval(this.timerInterval);
+    this.roundDisposer.dispose();
+    this.roundDisposer = new Disposer();
 
-    const players = Array.from(this.session.clients.values());
+    const players = this.session.getPlayers();
     const spyNames = this.spyIds.map(id => this.session.clients.get(id)?.name || 'Spy');
+    const add = (id, n) => { this.scores[id] = (this.scores[id] || 0) + n; };
 
     if (outcome === 'SPY_CAUGHT') {
-      // Town wins!
-      players.forEach(p => {
-        if (!this.spyIds.includes(p.id)) this.scores[p.id] = (this.scores[p.id] || 0) + 1;
-      });
-      if (this.accusation && this.accusation.accuserId) {
-        this.scores[this.accusation.accuserId] = (this.scores[this.accusation.accuserId] || 0) + 1; // bonus for accuser
-      }
-      playVictory();
-    } else if (outcome === 'SPY_GUESSED_LOCATION' || outcome === 'INNOCENT_ACCUSED' || outcome === 'TIME_EXPIRED') {
-      // Spy wins!
-      this.spyIds.forEach(id => {
-        this.scores[id] = (this.scores[id] || 0) + 3;
-      });
-      playVictory();
+      players.forEach(p => { if (!this.spyIds.includes(p.id)) add(p.id, 1); });
+      if (this.accusation?.accuserId && !details.voluntary) add(this.accusation.accuserId, 1);
+    } else if (outcome === 'SPY_GUESSED_LOCATION') {
+      this.spyIds.forEach(id => add(id, details.voluntary ? 4 : 3));
+    } else if (outcome !== 'ABANDONED') {
+      this.spyIds.forEach(id => add(id, 2));
     }
+    if (outcome !== 'ABANDONED') playVictory();
 
-    this.roundOutcome = { outcome, details, spyNames, secretLocation: this.secretLocation };
+    this.roundOutcome = { outcome, details, spyNames, secretLocation: this.secretLocation, accusation: this.accusation };
     this.syncState();
     this.render();
   }
 
   syncState() {
-    const players = Array.from(this.session.clients.values()).map(p => ({
+    const players = this.session.getPlayers().map(p => ({
       id: p.id,
       name: p.name,
       avatar: p.avatar,
       score: this.scores[p.id] || 0,
-      latency: p.latency || 0
+      connected: p.connected
     }));
 
-    const cat = SPYFALL_CATEGORIES[this.selectedCategoryIndex] || SPYFALL_CATEGORIES[0];
-
     this.session.broadcastPublicState({
+      game: 'spyfall',
       phase: this.phase,
       roundNumber: this.roundNumber,
-      categoryName: cat.category,
+      categoryName: this.category.category,
       timerRemaining: this.timerRemaining,
       timerActive: this.timerActive,
-      players: players,
+      players,
       allLocations: this.currentLocationsList,
       accusation: this.accusation,
+      accusationsUsed: [...this.accusationsUsed],
+      spyGuess: this.spyGuess ? { spyId: this.spyGuess.spyId, spyName: this.spyGuess.spyName, voluntary: this.spyGuess.voluntary } : null,
       firstQuestioner: this.firstQuestioner ? this.firstQuestioner.name : null,
       roundOutcome: this.phase === 'ROUND_OVER' ? this.roundOutcome : null
     });
@@ -305,214 +305,124 @@ export class SpyfallHost {
 
   render() {
     if (!this.container) return;
-
-    if (this.phase === 'LOBBY') {
-      this.renderLobby();
-    } else if (this.phase === 'PLAYING') {
-      this.renderPlaying();
-    } else if (this.phase === 'ACCUSATION') {
-      this.renderAccusation();
-    } else if (this.phase === 'SPY_GUESS') {
-      this.renderSpyGuess();
-    } else if (this.phase === 'ROUND_OVER') {
-      this.renderRoundOver();
-    }
+    if (this.phase === 'LOBBY') this.renderLobby();
+    else if (this.phase === 'PLAYING') this.renderPlaying();
+    else if (this.phase === 'ACCUSATION') this.renderAccusation();
+    else if (this.phase === 'SPY_GUESS') this.renderSpyGuess();
+    else if (this.phase === 'ROUND_OVER') this.renderRoundOver();
   }
 
   renderLobby() {
-    const joinUrl = getJoinUrl(this.session.roomCode);
-    const players = Array.from(this.session.clients.values());
+    const players = this.session.getPlayers();
+    const ready = players.length >= 3;
 
     this.container.innerHTML = `
       <div class="host-screen-wrapper">
         <header class="host-header">
-          <div class="brand-badge">
-            <span class="pulse-dot"></span>
-            <span>NETPLAY SPYFALL</span>
-          </div>
-          <div class="room-code-display">
-            <span class="label">ROOM CODE</span>
-            <span class="code" id="lblRoomCode">${this.session.roomCode}</span>
-          </div>
+          <div class="brand-badge"><span class="pulse-dot"></span><span>NETPLAY SPYFALL</span></div>
+          <div class="room-code-display"><span class="label">ROOM</span><span class="code">${escapeHtml(this.session.roomCode)}</span></div>
         </header>
 
-        <div class="lobby-grid">
-          <!-- Left Column: Join Instructions & QR Code -->
-          <div class="glass-card qr-card">
-            <h3><i class="icon">📱</i> Scan to Join from Phone</h3>
-            <p class="subtitle">Open mobile camera or visit <br><strong>${window.location.host}${window.location.pathname}</strong></p>
-            <div class="qr-canvas-wrapper">
-              <canvas id="qrCanvas"></canvas>
-            </div>
-            <div class="join-link-box">
-              <input type="text" readonly value="${joinUrl}" id="txtJoinLink" />
-              <button class="btn-copy" id="btnCopyLink">Copy</button>
-            </div>
-          </div>
-
-          <!-- Middle Column: Connected Players -->
-          <div class="glass-card players-card">
-            <div class="card-header">
-              <h3><i class="icon">👥</i> Players in Room (<span id="playerCount">${players.length}</span>)</h3>
-              <span class="badge ${players.length >= 3 ? 'badge-success' : 'badge-warning'}">
-                ${players.length >= 3 ? 'Ready to Play' : 'Waiting for Players (min 3)'}
-              </span>
-            </div>
-            <div class="players-roster" id="rosterList">
-              ${players.length === 0 ? `
-                <div class="empty-roster">
-                  <div class="radar-scan"></div>
-                  <p>Waiting for players to scan QR code...</p>
-                </div>
-              ` : players.map(p => `
-                <div class="player-chip">
-                  <span class="avatar">${p.avatar}</span>
-                  <span class="name">${p.name}</span>
-                  <span class="ping-badge">${p.latency || 15}ms</span>
-                </div>
-              `).join('')}
+        <div class="lobby-grid two-col">
+          <div class="glass-card">
+            <h3>🕵️ How to play</h3>
+            <ul class="rules-list">
+              <li>📱 Everyone's phone shows the secret <strong>location</strong>, except the <strong>Spy</strong></li>
+              <li>❓ Take turns asking each other questions about the place</li>
+              <li>🚨 Suspicious answer? Call an accusation from your phone (once per round)</li>
+              <li>🎯 The Spy wins by surviving the clock, or by naming the location at any time</li>
+            </ul>
+            <h3 class="section-title">👥 Players (${players.length})</h3>
+            <div class="players-roster">
+              ${players.map(p => `<div class="player-chip"><span class="avatar">${p.avatar}</span><span class="name">${escapeHtml(p.name)}</span>${this.scores[p.id] ? `<strong class="pts">${this.scores[p.id]}</strong>` : ''}</div>`).join('') || '<p class="muted">Waiting for players...</p>'}
             </div>
           </div>
 
-          <!-- Right Column: Settings & Launch -->
           <div class="glass-card settings-card">
-            <h3><i class="icon">⚙️</i> Game Setup</h3>
-
+            <h3>⚙️ Game Setup</h3>
             <div class="form-group">
-              <label>Location Pack (${SPYFALL_CATEGORIES.length} Packs Available):</label>
+              <label for="selCategory">Location Pack (${SPYFALL_CATEGORIES.length} packs)</label>
               <select id="selCategory" class="custom-select">
                 ${SPYFALL_CATEGORIES.map((cat, idx) => `
-                  <option value="${idx}" ${idx === this.selectedCategoryIndex ? 'selected' : ''}>
-                    ${cat.featured ? '⭐ ' : ''}${cat.category} (${cat.locations.length} locs)
-                  </option>
+                  <option value="${idx}" ${idx === this.selectedCategoryIndex ? 'selected' : ''}>${cat.featured ? '⭐ ' : ''}${escapeHtml(cat.category)} (${cat.locations.length})</option>
                 `).join('')}
               </select>
             </div>
-
             <div class="form-group">
-              <label>Round Timer:</label>
+              <label>Round Timer</label>
               <div class="timer-chips">
-                <button class="chip-btn ${this.roundDuration === 300 ? 'active' : ''}" data-time="300">5 Mins</button>
-                <button class="chip-btn ${this.roundDuration === 360 ? 'active' : ''}" data-time="360">6 Mins</button>
-                <button class="chip-btn ${this.roundDuration === 480 ? 'active' : ''}" data-time="480">8 Mins</button>
+                ${[[300, '5 min'], [360, '6 min'], [480, '8 min']].map(([t, l]) => `<button class="chip-btn ${this.roundDuration === t ? 'active' : ''}" data-time="${t}">${l}</button>`).join('')}
               </div>
             </div>
-
-            <button class="btn-launch-game ${players.length >= 1 ? 'ready' : 'disabled'}" id="btnLaunchGame">
-              <span>🚀 Launch Spyfall</span>
+            <button class="btn-launch-game ${ready ? 'ready' : 'disabled'}" id="btnLaunchGame" ${players.length ? '' : 'disabled'}>
+              <span>🚀 Deal Secret Cards</span>
             </button>
+            ${ready ? '' : `<p class="hint-text">Best with 3+ players (${Math.max(0, 3 - players.length)} more needed)</p>`}
+            <button class="btn-secondary" id="btnBackDeck">Back to Lobby</button>
           </div>
         </div>
       </div>
     `;
 
-    // Render Canvas QR Code
-    const qrCanvas = document.getElementById('qrCanvas');
-    if (qrCanvas) {
-      renderQRCodeToCanvas(qrCanvas, joinUrl, {
-        size: 190,
-        padding: 10,
-        darkColor: '#090d16',
-        lightColor: '#ffffff'
-      });
-    }
-
-    // Attach Event Listeners
-    document.getElementById('btnCopyLink')?.addEventListener('click', () => {
-      navigator.clipboard.writeText(joinUrl);
-      const btn = document.getElementById('btnCopyLink');
-      btn.textContent = 'Copied!';
-      setTimeout(() => btn.textContent = 'Copy', 2000);
-    });
-
     document.getElementById('selCategory')?.addEventListener('change', (e) => {
-      this.selectedCategoryIndex = parseInt(e.target.value);
+      this.selectedCategoryIndex = parseInt(e.target.value, 10);
     });
-
-    document.querySelectorAll('.chip-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        this.roundDuration = parseInt(e.target.dataset.time);
+    this.container.querySelectorAll('.chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.roundDuration = parseInt(btn.dataset.time, 10);
+        this.render();
       });
     });
-
-    document.getElementById('btnLaunchGame')?.addEventListener('click', () => {
-      this.startNewGame();
-    });
+    document.getElementById('btnLaunchGame')?.addEventListener('click', () => this.startNewGame());
+    document.getElementById('btnBackDeck')?.addEventListener('click', () => this.onReturnToHub?.());
   }
 
   renderPlaying() {
-    const cat = SPYFALL_CATEGORIES[this.selectedCategoryIndex] || SPYFALL_CATEGORIES[0];
-    const players = Array.from(this.session.clients.values());
+    const players = this.session.getPlayers();
 
     this.container.innerHTML = `
       <div class="host-screen-wrapper">
         <header class="host-header in-game-header">
           <div class="brand-badge">
-            <span class="badge-cat">${cat.category}</span>
+            <span class="badge-cat">${escapeHtml(this.category.category)}</span>
             <span class="round-indicator">ROUND ${this.roundNumber}</span>
           </div>
-
           <div class="central-timer">
-            <div class="timer-box">
-              <span class="timer-digits" id="hostTimerDisplay">${this.formatTime(this.timerRemaining)}</span>
-            </div>
+            <div class="timer-box"><span class="timer-digits ${this.timerRemaining <= 30 ? 'danger' : ''}" id="hostTimerDisplay">${this.formatTime(this.timerRemaining)}</span></div>
             <div class="timer-controls">
-              <button class="btn-icon" id="btnToggleTimer" title="${this.timerActive ? 'Pause' : 'Resume'}">
-                ${this.timerActive ? '⏸️' : '▶️'}
-              </button>
+              <button class="btn-icon" id="btnToggleTimer" title="${this.timerActive ? 'Pause' : 'Resume'}">${this.timerActive ? '⏸️' : '▶️'}</button>
               <button class="btn-icon" id="btnAddTime" title="+1 Minute">+1m</button>
             </div>
           </div>
-
-          <div class="room-code-mini">
-            Room: <strong>${this.session.roomCode}</strong>
-          </div>
+          <button class="btn-icon" id="btnHostEndEarly">End Round</button>
         </header>
 
+        ${this.lastAcquittal ? `<div class="last-result ok">⚖️ ${escapeHtml(this.lastAcquittal)}</div>` : ''}
+
         <div class="playing-layout">
-          <!-- Central Board: All Locations in Play -->
           <div class="glass-card locations-board">
             <div class="board-header">
-              <h3><i class="icon">🗺️</i> Possible Locations Board (Reference for Room)</h3>
-              <p class="hint">The Spy does not know which location is real!</p>
+              <h3>🗺️ Possible Locations</h3>
+              <p class="hint">One of these is real. The Spy doesn't know which!</p>
             </div>
             <div class="locations-grid">
-              ${this.currentLocationsList.map(loc => `
-                <div class="location-tile">
-                  <span class="loc-name">${loc}</span>
-                </div>
-              `).join('')}
+              ${this.currentLocationsList.map(loc => `<div class="location-tile"><span class="loc-name">${escapeHtml(loc)}</span></div>`).join('')}
             </div>
           </div>
 
-          <!-- Right Sidebar: Players & Question Tracker -->
           <div class="glass-card game-sidebar">
-            <div class="card-header">
-              <h3><i class="icon">🕵️‍♂️</i> Suspect Roster</h3>
-            </div>
+            ${this.firstQuestioner ? `<div class="questioner-banner"><span class="starter-label">🎲 First question:</span> <strong>${escapeHtml(this.firstQuestioner.name)}</strong></div>` : ''}
+            <h3>🕵️ Suspects</h3>
             <div class="sidebar-players">
               ${players.map(p => `
-                <div class="suspect-chip">
+                <div class="suspect-chip ${p.connected ? '' : 'offline'}">
                   <span class="avatar">${p.avatar}</span>
                   <div class="suspect-info">
-                    <span class="name">${p.name}</span>
-                    <span class="score">${this.scores[p.id] || 0} pts</span>
+                    <span class="name">${escapeHtml(p.name)}</span>
+                    <span class="score">${this.scores[p.id] || 0} pts ${this.accusationsUsed.has(p.id) ? '· accused already' : ''}</span>
                   </div>
                 </div>
               `).join('')}
-            </div>
-
-            ${this.firstQuestioner ? `
-              <div class="questioner-banner">
-                <span class="starter-label">🎲 First Question:</span>
-                <strong>${this.firstQuestioner.name}</strong> asks first!
-              </div>
-            ` : ''}
-
-            <div class="host-actions">
-              <button class="btn-secondary" id="btnHostEndEarly">End Round Early</button>
             </div>
           </div>
         </div>
@@ -524,56 +434,44 @@ export class SpyfallHost {
       this.render();
       this.syncState();
     });
-
     document.getElementById('btnAddTime')?.addEventListener('click', () => {
       this.timerRemaining += 60;
       this.syncState();
       this.render();
     });
-
-    document.getElementById('btnHostEndEarly')?.addEventListener('click', () => {
-      if (confirm('End this round now?')) {
-        this.endRound('TIME_EXPIRED');
+    document.getElementById('btnHostEndEarly')?.addEventListener('click', async () => {
+      if (await confirmDialog('End this round now? The Spy wins if nobody has been caught.', { confirmLabel: 'End Round' })) {
+        if (this.phase === 'PLAYING') this.endRound('TIME_EXPIRED');
       }
     });
   }
 
   renderAccusation() {
-    const players = Array.from(this.session.clients.values());
-    const voters = players.filter(p => p.id !== this.accusation.suspectId);
+    const voters = this.session.getPlayers().filter(p => p.id !== this.accusation.suspectId);
     const votes = this.accusation.votes;
 
     this.container.innerHTML = `
       <div class="host-screen-wrapper accusation-spotlight">
         <div class="spotlight-header">
-          <div class="siren-banner">🚨 EMERGENCY ACCUSATION TRIAL 🚨</div>
+          <div class="siren-banner">🚨 ACCUSATION TRIAL 🚨</div>
           <div class="trial-timer" id="accusationTimer">${this.accusation.timer}s</div>
         </div>
-
         <div class="trial-central-card glass-card">
           <div class="accuser-statement">
-            <span class="highlight-accuser">${this.accusation.accuserName}</span>
-            <span class="accuses-text">has formally accused</span>
-            <span class="highlight-suspect">${this.accusation.suspectName}</span>
-            <span class="accuses-text">of being the <strong>SECRET SPY!</strong></span>
+            <span class="highlight-accuser">${escapeHtml(this.accusation.accuserName)}</span>
+            <span class="accuses-text">accuses</span>
+            <span class="highlight-suspect">${escapeHtml(this.accusation.suspectName)}</span>
+            <span class="accuses-text">of being the <strong>SPY!</strong></span>
           </div>
-
-          <p class="trial-instructions">
-            All players: Cast your vote on your phone right now! <br/>
-            (Is <strong>${this.accusation.suspectName}</strong> GUILTY or INNOCENT?)
-          </p>
-
+          <p class="trial-instructions">${escapeHtml(this.accusation.suspectName)}, defend yourself! Everyone else: vote on your phone. Majority decides.</p>
           <div class="live-votes-grid">
-            ${voters.map(v => {
-              const hasVoted = votes[v.id] != null;
-              return `
-                <div class="voter-badge ${hasVoted ? 'voted' : 'pending'}">
-                  <span class="avatar">${v.avatar}</span>
-                  <span class="name">${v.name}</span>
-                  <span class="status-icon">${hasVoted ? '✓ Locked In' : '⏳ Thinking...'}</span>
-                </div>
-              `;
-            }).join('')}
+            ${voters.map(v => `
+              <div class="voter-badge ${votes[v.id] ? 'voted' : 'pending'}">
+                <span class="avatar">${v.avatar}</span>
+                <span class="name">${escapeHtml(v.name)}</span>
+                <span class="status-icon">${votes[v.id] ? '✓ Voted' : '⏳ Thinking...'}</span>
+              </div>
+            `).join('')}
           </div>
         </div>
       </div>
@@ -581,87 +479,82 @@ export class SpyfallHost {
   }
 
   renderSpyGuess() {
+    const g = this.spyGuess;
     this.container.innerHTML = `
       <div class="host-screen-wrapper accusation-spotlight">
         <div class="spotlight-header">
-          <div class="siren-banner" style="background:#f59e0b;">🎯 SPY WAS UNMASKED! 🎯</div>
+          <div class="siren-banner amber">🎯 ${g.voluntary ? 'THE SPY REVEALS THEMSELF!' : 'SPY UNMASKED!'} 🎯</div>
+          <div class="trial-timer" id="spyGuessTimer">${g.timer}s</div>
         </div>
-
         <div class="trial-central-card glass-card">
-          <h2 style="color:#f59e0b; font-size:28px; margin-bottom:12px;">The Spy has been caught!</h2>
-          <p style="font-size:18px; color:#e2e8f0; line-height:1.6; margin-bottom:24px;">
-            The accused suspect <strong>${this.accusation.suspectName}</strong> is indeed the SPY! <br/>
-            However, the Spy now has a chance to <strong>STEAL THE VICTORY</strong> by guessing the secret location on their phone!
-          </p>
+          <h2 class="amber-text">${escapeHtml(g.spyName)} is the Spy!</h2>
+          <p class="trial-instructions">${g.voluntary
+            ? 'They stopped the clock to steal the win. If they name the secret location correctly, the Spy wins big!'
+            : 'Caught! But they can still steal the victory by naming the secret location on their phone.'}</p>
           <div class="radar-scan"></div>
-          <p style="color:#94a3b8; font-style:italic;">Awaiting Spy's final guess...</p>
+          <p class="muted">Waiting for the Spy's guess...</p>
         </div>
       </div>
     `;
   }
 
   renderRoundOver() {
-    const outcome = this.roundOutcome;
-    const isTownWin = outcome.outcome === 'SPY_CAUGHT';
-
-    const rankedPlayers = Array.from(this.session.clients.values())
+    const o = this.roundOutcome;
+    const isTownWin = o.outcome === 'SPY_CAUGHT';
+    const ranked = this.session.getPlayers()
       .map(p => ({ ...p, score: this.scores[p.id] || 0 }))
       .sort((a, b) => b.score - a.score);
+    const subtitle = {
+      SPY_CAUGHT: o.details?.guess ? `The Spy guessed "${o.details.guess}" and was wrong!` : 'The Spy was caught and could not name the location!',
+      SPY_GUESSED_LOCATION: `The Spy named the secret location: ${o.secretLocation}!`,
+      INNOCENT_ACCUSED: `${o.accusation?.suspectName || 'An innocent player'} was convicted, but they were innocent!`,
+      TIME_EXPIRED: 'Time ran out before the town found the Spy!',
+      ABANDONED: 'The Spy left the room, so this round is void. No points awarded.'
+    }[o.outcome];
 
     this.container.innerHTML = `
       <div class="host-screen-wrapper">
         <div class="round-over-card glass-card">
           <div class="victory-header ${isTownWin ? 'town-win' : 'spy-win'}">
-            <h1>${isTownWin ? '🏆 TOWN WINS!' : '🕵️‍♂️ THE SPY WINS!'}</h1>
-            <p class="outcome-subtitle">
-              ${outcome.outcome === 'SPY_CAUGHT' ? `The town unmasked the Spy and the Spy failed to guess the secret location!` : ''}
-              ${outcome.outcome === 'SPY_GUESSED_LOCATION' ? `The Spy correctly guessed the secret location: <strong>${outcome.secretLocation}</strong>!` : ''}
-              ${outcome.outcome === 'INNOCENT_ACCUSED' ? `An innocent townsperson was convicted! The Spy went completely undetected!` : ''}
-              ${outcome.outcome === 'TIME_EXPIRED' ? `Time ran out before the town could uncover the Spy!` : ''}
-            </p>
+            <h1>${o.outcome === 'ABANDONED' ? '⏹ ROUND VOID' : isTownWin ? '🏆 TOWN WINS!' : '🕵️‍♂️ THE SPY WINS!'}</h1>
+            <p class="outcome-subtitle">${escapeHtml(subtitle)}</p>
           </div>
-
           <div class="reveal-box">
-            <div class="reveal-item">
-              <span class="label">SECRET LOCATION:</span>
-              <span class="value loc">${outcome.secretLocation}</span>
-            </div>
-            <div class="reveal-item">
-              <span class="label">SECRET SPY:</span>
-              <span class="value spy">${outcome.spyNames.join(', ')}</span>
-            </div>
+            <div class="reveal-item"><span class="label">SECRET LOCATION</span><span class="value loc">${escapeHtml(o.secretLocation)}</span></div>
+            <div class="reveal-item"><span class="label">THE SPY</span><span class="value spy">${o.spyNames.map(escapeHtml).join(', ')}</span></div>
           </div>
-
           <div class="scoreboard-section">
             <h3>Leaderboard</h3>
             <div class="leaderboard-grid">
-              ${rankedPlayers.map((p, idx) => `
+              ${ranked.map((p, idx) => `
                 <div class="score-card rank-${idx + 1}">
                   <span class="rank-pos">#${idx + 1}</span>
                   <span class="avatar">${p.avatar}</span>
-                  <span class="player-name">${p.name}</span>
+                  <span class="player-name">${escapeHtml(p.name)}</span>
                   <span class="player-pts">${p.score} pts</span>
                 </div>
               `).join('')}
             </div>
           </div>
-
           <div class="round-over-actions">
-            <button class="btn-primary" id="btnNextRound">Play Next Round (Rotate Spy & Location)</button>
-            <button class="btn-secondary" id="btnReturnLobby">Return to Lobby</button>
+            <button class="btn-primary" id="btnNextRound">▶ Next Round (new Spy & location)</button>
+            <button class="btn-secondary" id="btnReturnLobby">Change Settings</button>
+            <button class="btn-secondary" id="btnBackDeck">Back to Lobby</button>
           </div>
         </div>
       </div>
     `;
 
     document.getElementById('btnNextRound')?.addEventListener('click', () => {
+      this.lastAcquittal = null;
       this.startNewGame();
     });
-
     document.getElementById('btnReturnLobby')?.addEventListener('click', () => {
       this.phase = 'LOBBY';
+      this.lastAcquittal = null;
       this.render();
       this.syncState();
     });
+    document.getElementById('btnBackDeck')?.addEventListener('click', () => this.onReturnToHub?.());
   }
 }

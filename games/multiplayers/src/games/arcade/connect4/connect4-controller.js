@@ -1,86 +1,111 @@
 import { vibrate } from '../../../utils/wake-lock.js';
+import { escapeHtml, controllerHeader } from '../../../utils/ui.js';
+
+const COLORS = { 1: '#ef4444', 2: '#facc15' };
 
 export class Connect4Controller {
   constructor(session, container) {
     this.session = session;
     this.container = container;
-
-    this.playerNum = 1;
-    this.color = '#ef4444';
     this.publicState = null;
-
-    this.setupNetworkHandlers();
-  }
-
-  setupNetworkHandlers() {
-    this.session.on('privatePayload', (data) => {
-      if (data.game === 'connect4') {
-        this.playerNum = data.playerNum;
-        this.color = data.color || '#ef4444';
-        this.render();
-      }
-    });
+    this.lastTurnKey = null;
 
     this.session.on('stateUpdate', (state) => {
-      if (state.game === 'connect4') {
-        this.publicState = state;
-        this.render();
+      this.publicState = state;
+      const seat = this.mySeat();
+      const turnKey = `${state.lastMove?.n || 0}-${state.currentTurn}`;
+      if (state.phase === 'PLAYING' && seat && state.currentTurn === seat && turnKey !== this.lastTurnKey) {
+        vibrate([60, 40, 60]); // nudge: your move
       }
+      this.lastTurnKey = turnKey;
+      this.render();
     });
+  }
+
+  mySeat() {
+    const s = this.publicState;
+    if (!s) return 0;
+    if (s.p1Id === this.session.playerId) return 1;
+    if (s.p2Id === this.session.playerId) return 2;
+    return 0;
   }
 
   render() {
     if (!this.container) return;
+    const s = this.publicState;
+    const seat = this.mySeat();
 
-    const isMyTurn = this.publicState?.currentTurn === this.playerNum;
-    const isGameOver = this.publicState?.phase === 'GAME_OVER';
+    if (!s || s.phase === 'SETUP' || !seat) {
+      this.renderWaiting(seat);
+      return;
+    }
+
+    const isMyTurn = s.phase === 'PLAYING' && s.currentTurn === seat;
+    const color = COLORS[seat];
+    const opponent = seat === 1 ? s.p2Name : s.p1Name;
+    let status;
+    if (s.phase === 'GAME_OVER') {
+      status = s.winner === 'DRAW' ? "🤝 It's a draw!" : s.winner === seat ? '🏆 YOU WIN!' : `😵 ${escapeHtml(opponent)} wins`;
+    } else {
+      status = isMyTurn ? '✨ YOUR TURN: tap a column' : `⏳ ${escapeHtml(opponent)} is thinking...`;
+    }
 
     this.container.innerHTML = `
       <div class="controller-screen">
-        <header class="controller-header">
-          <div class="user-pill">${this.session.avatar} ${this.session.playerName}</div>
-          <div class="room-pill" style="border-color:${this.color}; color:${this.color};">
-            PLAYER ${this.playerNum} (${this.playerNum === 1 ? 'RED' : 'YELLOW'})
-          </div>
-        </header>
-
-        <div class="controller-body" style="padding:10px 0; justify-content:space-between;">
-          <div style="text-align:center;">
-            <h3 style="color:${this.color};">🔴 CONNECT 4 CONTROLLER</h3>
-            <p style="font-size:14px; margin-top:6px;">
-              ${isGameOver ? 'Match Finished!' : isMyTurn ? '✨ YOUR TURN! Tap a column to drop disc' : 'Waiting for opponent to move...'}
-            </p>
-          </div>
-
-          <!-- Column Selection Buttons -->
-          <div style="display:flex; flex-direction:column; gap:8px; width:100%; margin:20px 0;">
-            <span style="font-size:12px; color:var(--text-muted); text-align:center;">SELECT COLUMN TO DROP (1 - 7):</span>
-            <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:6px;">
-              ${[0, 1, 2, 3, 4, 5, 6].map(col => `
-                <button class="c4-col-btn ${isMyTurn ? 'active' : 'disabled'}" data-col="${col}" style="${isMyTurn ? `background:${this.color};` : ''}">
-                  ${col + 1}
+        ${controllerHeader(this.session, seat === 1 ? '🔴 RED' : '🟡 YELLOW', `border-color:${color}; color:${color};`)}
+        <div class="controller-body">
+          <div class="turn-banner ${isMyTurn ? 'my-turn' : ''}" style="--accent:${color};">${status}</div>
+          <div class="c4-pad ${isMyTurn ? 'active' : ''}">
+            ${Array.from({ length: 7 }, (_, col) => {
+              const full = s.board[0][col] !== 0;
+              return `
+                <button class="c4-pad-col" data-col="${col}" ${!isMyTurn || full ? 'disabled' : ''} aria-label="Drop in column ${col + 1}">
+                  ${s.board.map(row => `<span class="c4-pad-cell ${row[col] ? `p${row[col]}` : ''}"></span>`).join('')}
+                  <span class="c4-pad-arrow" style="color:${color};">${full ? '✕' : '▲'}</span>
                 </button>
-              `).join('')}
-            </div>
+              `;
+            }).join('')}
           </div>
-
-          <div class="glass-card" style="text-align:center; padding:16px;">
-            <p style="font-size:13px; color:var(--text-secondary);">
-              Connect 4 discs horizontally, vertically, or diagonally on the TV to win!
-            </p>
-          </div>
+          <p class="hint-text">vs ${escapeHtml(opponent)} · Watch the TV for the full board</p>
         </div>
       </div>
     `;
 
-    if (isMyTurn && !isGameOver) {
-      document.querySelectorAll('.c4-col-btn').forEach(btn => {
+    if (isMyTurn) {
+      this.container.querySelectorAll('.c4-pad-col:not([disabled])').forEach(btn => {
         btn.addEventListener('click', () => {
           vibrate([40]);
-          const col = parseInt(btn.dataset.col);
-          this.session.sendAction('DROP_COL', { col });
+          this.container.querySelectorAll('.c4-pad-col').forEach(b => { b.disabled = true; });
+          this.session.sendAction('DROP_COL', { col: Number(btn.dataset.col) });
         });
       });
     }
+  }
+
+  renderWaiting(seat) {
+    const s = this.publicState;
+    const queue = s?.queue || [];
+    const pos = queue.findIndex(q => q.id === this.session.playerId);
+    let title = '🔴🟡 Connect 4';
+    let message = 'The host is setting up the match. Watch the TV!';
+    if (s && s.phase !== 'SETUP' && !seat) {
+      title = '👀 Spectating';
+      message = pos >= 0 ? `You're #${pos + 1} in line. Winner stays on, so get ready!` : 'Watch the match on the TV.';
+    } else if (s?.phase === 'SETUP' && pos >= 0) {
+      message = pos < 2 ? `You're playing ${pos === 0 ? 'RED (first move)' : 'YELLOW'} in the first match!` : `You're #${pos - 1} in the challenger line.`;
+    }
+
+    this.container.innerHTML = `
+      <div class="controller-screen">
+        ${controllerHeader(this.session)}
+        <div class="controller-body">
+          <div class="glass-card lobby-wait-card">
+            <h2>${title}</h2>
+            <p class="subtitle">${message}</p>
+            ${s && s.phase !== 'SETUP' ? `<p class="hint-text">${escapeHtml(s.p1Name)} 🔴 vs 🟡 ${escapeHtml(s.p2Name)}</p>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
   }
 }

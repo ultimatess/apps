@@ -2,43 +2,53 @@ export const MAFIA_ROLES = [
   {
     "name": "Mafia",
     "team": "mafia",
-    "icon": "skull",
-    "desc": "Wake up secretly at night with fellow Mafia to eliminate a townsperson."
+    "icon": "🔪",
+    "desc": "Each night, agree with your fellow Mafia on one person to eliminate. Blend in by day."
   },
   {
     "name": "Doctor",
     "team": "town",
-    "icon": "heart-pulse",
-    "desc": "Wake up each night and choose one person to protect from elimination."
+    "icon": "💉",
+    "desc": "Each night, protect one person (yourself included) from the Mafia. Not the same person twice in a row."
   },
   {
     "name": "Detective",
     "team": "town",
-    "icon": "search",
-    "desc": "Investigate one player each night to learn if they belong to the Mafia."
+    "icon": "🔍",
+    "desc": "Each night, investigate one player to learn whether they are Mafia."
   },
   {
     "name": "Townsperson",
     "team": "town",
-    "icon": "user",
-    "desc": "Discuss clues during the day and vote to identify and eliminate suspected Mafia."
+    "icon": "🧑‍🌾",
+    "desc": "Find the Mafia through discussion and vote them out by day."
   },
   {
     "name": "Jester",
     "team": "solo",
-    "icon": "laugh",
-    "desc": "Chaotic trickster! Your sole objective is to deceive the town into voting you out!"
+    "icon": "🃏",
+    "desc": "You win alone if the town votes to eliminate YOU. Act suspicious, but not too suspicious!"
   },
   {
     "name": "Vigilante",
     "team": "town",
-    "icon": "crosshair",
-    "desc": "A town justice-seeker who carries a single bullet to eliminate a suspect at night."
-  },
-  {
-    "name": "Bodyguard",
-    "team": "town",
-    "icon": "shield",
-    "desc": "Guards a player each night; if the target is attacked, the bodyguard dies in their place."
+    "icon": "🎯",
+    "desc": "You have one bullet for the whole game. Use it at night on someone you are sure is Mafia."
   }
 ];
+
+export function roleInfo(name) {
+  return MAFIA_ROLES.find(r => r.name === name) || MAFIA_ROLES[3];
+}
+
+/** Role list for a table of n players (n >= 3). */
+export function buildRoleDeck(n) {
+  const mafiaCount = n >= 12 ? 3 : n >= 7 ? 2 : 1;
+  const deck = Array(mafiaCount).fill('Mafia');
+  deck.push('Doctor');
+  if (n >= 4) deck.push('Detective');
+  if (n >= 7) deck.push('Jester');
+  if (n >= 9) deck.push('Vigilante');
+  while (deck.length < n) deck.push('Townsperson');
+  return deck.slice(0, n);
+}
