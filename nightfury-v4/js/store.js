@@ -174,7 +174,7 @@ export function createStore(storage = globalThis.localStorage) {
       let count = 0;
       for (const c of Array.isArray(v3c) ? v3c.slice().reverse() : []) {
         if (!c || typeof c.text !== "string" || !c.text.trim()) continue;
-        api.saveItem({ kind: "text", text: c.text, label: c.text, color: c.color ?? "#ffffff", effect: c.style === "static" ? "static" : "scroll", speed: c.speed ?? 6, size: "big", paint: "solid" });
+        api.saveItem({ kind: "text", text: c.text, label: c.text, color: c.color ?? "#ffffff", effect: c.style === "static" ? "static" : "scroll", size: "big", paint: "solid" });
         count++;
       }
       if (v3s && typeof v3s === "object") {
@@ -183,6 +183,7 @@ export function createStore(storage = globalThis.localStorage) {
         copy("brightness", "brightness", Number.isFinite);
         copy("unit", "unit", (v) => v === "kmh" || v === "mph");
         copy("limitKmh", "limitKmh", Number.isFinite);
+        copy("speed", "speed", (v) => Number.isInteger(v) && v >= 1 && v <= 10);
         copy("holdKey", "holdKey", (v) => ["5s", "10s", "30s", "sticky"].includes(v));
         copy("brakeLight", "autoBrake", (v) => typeof v === "boolean");
         copy("brakeSensitivity", "brakeSensitivity", (v) => ["low", "medium", "high"].includes(v));

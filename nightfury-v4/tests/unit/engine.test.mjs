@@ -6,6 +6,7 @@ import { createScenes } from "../../js/scene.js";
 import { DriveModel } from "../../js/drive.js";
 import { pixelOnlyRasterizer } from "../../js/text.js";
 import { FRAME_MS, brakeFrame, speedHud, turnFrame } from "../../js/graphics.js";
+import { mapScrollSpeed } from "../../js/protocol.js";
 import { DEFAULT_SETTINGS } from "../../js/store.js";
 
 function setup(over = {}) {
@@ -263,4 +264,49 @@ test("night dim caps brightness between 19:00 and 06:00 only", () => {
   assert.equal(effectiveBrightness(s, new Date(2026, 0, 1, 5)), 30);
   assert.equal(effectiveBrightness({ ...s, brightness: 20 }, new Date(2026, 0, 1, 22)), 20);
   assert.equal(effectiveBrightness({ ...s, nightDim: false }, new Date(2026, 0, 1, 22)), 85);
+});
+
+test("message speed is one setting: it overrides a scene's own speed and a change re-sends the scroll", async () => {
+  const { S, engine, pushes, settle } = setup({ hud: "off", speed: 9 });
+  engine.show(text("KEEP YOUR DISTANCE PLEASE", { speed: 2 }), 0);
+  engine.tick(0);
+  await settle();
+  engine.tick(100);
+  assert.equal(pushes.length, 1);
+  assert.equal(pushes[0].speed, mapScrollSpeed(9), "the setting wins over the scene's own speed");
+  for (let t = 200; t < 1000; t += 100) engine.tick(t);
+  assert.equal(pushes.length, 1, "nothing more while the speed is unchanged");
+  S.speed = 3;
+  engine.tick(1000);
+  assert.equal(pushes.length, 2, "the new rate goes out at once");
+  assert.equal(pushes[1].type, "scroll");
+  assert.equal(pushes[1].speed, mapScrollSpeed(3));
+  assert.equal(pushes[1].raster.key(), pushes[0].raster.key(), "same message");
+  assert.equal(engine.sceneStart, 1000, "the scene restarts with the new rate");
+  engine.tick(1100);
+  assert.equal(pushes.length, 2);
+});
+
+test("message speed: a still message is not re-sent, a word-by-word one changes pace", async () => {
+  const { S, engine, pushes, scenes, settle } = setup({ hud: "off" });
+  engine.show(text("THANKS"), 0);
+  engine.tick(0);
+  await settle();
+  engine.tick(100);
+  S.speed = 10;
+  engine.tick(200);
+  S.speed = 1;
+  engine.tick(300);
+  assert.equal(pushes.length, 1, "a still has nothing to speed up");
+
+  const words = text("KEEP YOUR DISTANCE", { effect: "words" });
+  const frameAt = (ms) => scenes.render(words, ms).key();
+  S.speed = 6;
+  const [keep, your] = [frameAt(0), frameAt(1000)];
+  assert.notEqual(keep, your);
+  S.speed = 1;
+  assert.equal(frameAt(1000), keep, "at the slowest speed the first word is still up after a second");
+  assert.equal(frameAt(1900), your);
+  S.speed = 10;
+  assert.equal(frameAt(600), your, "at the fastest the second word is already up");
 });

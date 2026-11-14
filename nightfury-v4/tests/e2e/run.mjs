@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { launch } from "./cdp.mjs";
 import { serve } from "../../scripts/serve.mjs";
 import { createMockBluetooth } from "../mock-bluetooth.mjs";
-import { CMD, chunksToBitmap, decodePacket, rgbToHex, splitPackets } from "../../js/protocol.js";
+import { CMD, chunksToBitmap, decodePacket, mapScrollSpeed, rgbToHex, splitPackets } from "../../js/protocol.js";
 import { Frame, quantize } from "../../js/frame.js";
 import { FRAME_MS, brakeFrame, gridFrame, speedHud, turnFrame } from "../../js/graphics.js";
 import { layoutText, pixelOnlyRasterizer } from "../../js/text.js";
@@ -197,6 +197,40 @@ try {
     const n = await page.eval(`document.querySelectorAll("#libGrid .item").length`);
     assert(n >= 1 && n <= 3, `search results ${n}`);
     await page.eval(`(() => { const s = document.getElementById("libSearch"); s.value = ""; s.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+  });
+
+  await step("message speed: the slider re-sends a scrolling message at the new rate, leaves a still alone, and is mirrored on every tab", async () => {
+    const isScroll = (p) => p.cmd === CMD.TEXT && p.anim === 1 && p.crcOk;
+    const setSpeed = (view, v) => page.eval(`(() => { const el = document.querySelector('${view} input[data-speed]'); el.value = ${v}; el.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+    eq(await page.eval(`document.querySelectorAll("input[data-speed]").length`), 4, "sliders: library, studio, shows, settings");
+    await page.click('#libChips [data-group="meme"]');
+    let from = await mark();
+    await page.click('#libGrid .item[data-id="meme.orama"] .hit');
+    const a = await waitPacket(from, isScroll, "scroll packet");
+    eq(a.speed, mapScrollSpeed(6), "normal speed on the wire");
+    from = await mark();
+    await setSpeed("#view-library", 9);
+    const b = await waitPacket(from, isScroll, "scroll re-sent after the slider moved");
+    eq(b.speed, mapScrollSpeed(9), "faster on the wire");
+    eq(b.chunks.length, a.chunks.length, "same message");
+    eq(await page.eval(`[...document.querySelectorAll("input[data-speed]")].map((el) => el.value).join()`), "9,9,9,9", "every slider follows");
+    eq(await page.eval(`[...document.querySelectorAll("[data-speed-val]")].map((el) => el.textContent).join()`), "9,9,9,9", "every readout follows");
+    eq(await page.eval(`JSON.parse(localStorage.getItem("nightfury.v4.settings")).speed`), 9, "saved");
+    await shot("02b-speed");
+
+    await page.click('#libChips [data-group="road"]');
+    from = await mark();
+    await page.click('#libGrid .item[data-id="road.thanks"] .hit');
+    await waitPacket(from, isFrame, "still message");
+    from = await mark();
+    await tab("studio");
+    await setSpeed("#view-studio", 2);
+    await sleep(500);
+    eq((await packetsSince(from)).packets.filter((p) => p.cmd === CMD.TEXT).length, 0, "a still message is not re-sent");
+    eq(await page.eval("NF.ctx.S.speed"), 2, "the Studio slider is the same setting");
+    await setSpeed("#view-studio", 6);
+    await tab("library");
+    await page.click('#libChips [data-group="road"]');
   });
 
   await step("HUD: multi-colour speed frame is exact, rate-limited, and returns after a message hold", async () => {
@@ -483,17 +517,23 @@ try {
     await page.click("#settingsBtn");
     await page.click('#settings [data-setting="unit"] [data-v="mph"]');
     await page.eval(`(() => { const i = document.getElementById("limitInput"); i.value = "50"; i.dispatchEvent(new Event("change", { bubbles: true })); })()`);
+    await page.eval(`(() => { const el = document.querySelector('#settings input[data-speed]'); el.value = 8; el.dispatchEvent(new Event("input", { bubbles: true })); })()`);
     await sleep(250);
     await shot("10-settings");
+    const stacked = await page.eval(`[...document.querySelectorAll("#settings .seg, #settings .num")].filter((el) => { const mid = [...el.children].map((c) => { const r = c.getBoundingClientRect(); return r.top + r.height / 2; }); return Math.max(...mid) - Math.min(...mid) > 8; }).length`);
+    eq(stacked, 0, "settings controls laid out in one row each");
+    const tall = await page.eval(`Math.max(...[...document.querySelectorAll("#settings .field-row")].map((r) => r.getBoundingClientRect().height))`);
+    assert(tall <= 90, `settings rows should be compact (tallest is ${tall}px)`);
     await page.eval("document.getElementById('settings').close()");
     await page.click('#hudSeg [data-v="signals"]');
-    eq(await page.eval("[NF.store.settings.unit, NF.store.settings.limitKmh, NF.store.settings.hud]"), ["mph", 80, "signals"], "settings");
+    eq(await page.eval("[NF.store.settings.unit, NF.store.settings.limitKmh, NF.store.settings.hud, NF.store.settings.speed]"), ["mph", 80, "signals", 8], "settings");
     await page.reload();
     await page.waitFor("!!window.NF && !!NF.scene", { label: "reboot" });
     assert(!(await page.eval("document.getElementById('welcome').open")), "welcome not shown again");
     eq(await page.eval("[NF.store.settings.unit, NF.store.settings.limitKmh, NF.store.settings.hud]"), ["mph", 80, "signals"], "settings after reload");
     eq(await page.eval("NF.store.items.length"), 2, "saved items after reload");
     eq(await text("speedUnit"), "mph", "unit label");
+    eq(await page.eval(`[NF.store.settings.speed, ...[...document.querySelectorAll("input[data-speed]")].map((el) => el.value)].join()`), "8,8,8,8,8", "message speed after reload");
     await tab("library");
     await page.click('#libChips [data-group="mine"]');
     eq(await page.eval(`document.querySelectorAll("#libGrid .item").length`), 2, "Mine shows saved items");

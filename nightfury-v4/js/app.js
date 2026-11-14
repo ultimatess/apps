@@ -15,7 +15,7 @@ import { createSensors } from "./sensors.js";
 import { createStore } from "./store.js";
 import { createLibrary, itemLabel, itemScene } from "./library.js";
 import { MODES, buildProgramme } from "./modes.js";
-import { scrollDurationMs } from "./text.js";
+import { clampSpeed, paceOf, scrollDurationMs } from "./text.js";
 import { createTicker } from "./ticker.js";
 import { $, bindSheet, createFeedback, h, icon, openMenu, openSheet, paintRange, toast } from "./ui/dom.js";
 import { createLedView, createThumbs } from "./ui/led.js";
@@ -93,7 +93,30 @@ function beatMs(scene) {
   if (scene.kind !== "text") return 2400;
   const l = scenes.textLayout(scene);
   if (l.kind === "scroll") return Math.round(scrollDurationMs(l) * 1.1) + 400;
-  return Number.isFinite(l.loopMs) ? l.loopMs : 2600;
+  return Number.isFinite(l.loopMs) ? l.loopMs : Math.round(2600 * paceOf(S.speed));
+}
+
+const modeProgramme = (mode, seed) => buildProgramme(mode, { lang: S.modeLang, style: S.modeStyle, seed, measure: beatMs, pace: paceOf(S.speed) });
+
+/** A running mode's beat lengths come from the message speed: rebuild them in place when it changes. */
+function retimeMode() {
+  const cur = engine.player.show;
+  if (!cur?.mode) return;
+  const pos = engine.player.position(now());
+  const next = modeProgramme(cur.mode, cur.seed);
+  if (!next?.items.length) return;
+  engine.player.show = next;
+  engine.player.seek(pos?.index ?? 0, now());
+}
+
+/** Message speed (1..10): scroll rate, word-by-word pace and mode pacing, for every message. */
+function setSpeed(value) {
+  const speed = clampSpeed(value);
+  if (speed === S.speed) return;
+  store.set({ speed });
+  retimeMode();
+  engine.tick(now());
+  bus.emit("settings", "speed");
 }
 
 /** Start (or, when it is already running, stop) a mode: Thirukkural, mini stories, comedy. */
@@ -106,7 +129,7 @@ function playMode(mode, { toggle = true } = {}) {
     state.activeId = null;
     toast(`${MODES[mode].name} stopped`);
   } else {
-    const programme = buildProgramme(mode, { lang: S.modeLang, style: S.modeStyle, seed: (Date.now() % 100000) + 1, measure: beatMs });
+    const programme = modeProgramme(mode, (Date.now() % 100000) + 1);
     if (!programme?.items.length) return toast("Nothing to show in this language");
     engine.playShow(programme, now());
     state.activeId = id;
@@ -323,7 +346,7 @@ function showTab(tab) {
 
 const ctx = {
   store, S, lib, engine, panel, transport, scenes, rasterizer, sensors, sensorStatus, drive, fb, thumbs, bus, log, logLines, state, now,
-  send, sendScene, clearMessage, brake, signal, connect, keepAwake, itemMenu, showTab, pushBrightness, playMode,
+  send, sendScene, clearMessage, brake, signal, connect, keepAwake, itemMenu, showTab, pushBrightness, playMode, setSpeed,
   /** Thumbnail canvas for a scene (animated while visible). */
   thumb(scene, cls = "thumb") {
     const canvas = h("canvas", { class: cls, "aria-hidden": "true" });
@@ -417,6 +440,16 @@ function bind() {
   });
   bus.on("settings", showBright);
   showBright();
+
+  // Message speed: one setting, with a slider wherever messages are picked.
+  const speedInputs = [...document.querySelectorAll("input[data-speed]")];
+  const showSpeed = () => {
+    for (const el of speedInputs) { el.value = S.speed; paintRange(el); }
+    document.querySelectorAll("[data-speed-val]").forEach((el) => { el.textContent = S.speed; });
+  };
+  for (const el of speedInputs) el.addEventListener("input", () => setSpeed(el.value));
+  bus.on("settings", (key) => { showSpeed(); if (key === "all") { retimeMode(); engine.tick(now()); } });
+  showSpeed();
 
   window.addEventListener("pointerdown", () => fb.arm(), { once: true });
 

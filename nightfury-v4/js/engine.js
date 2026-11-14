@@ -139,7 +139,14 @@ export class Engine {
       stoppedMode: S.stoppedMode,
     });
 
-    const key = sceneKey(scene);
+    // Message speed is part of a moving text scene's identity: changing it restarts the
+    // scene, so the panel gets the new scroll rate at once.
+    // (A still message has nothing to speed up, so it is left alone.)
+    let key = sceneKey(scene);
+    if (scene.kind === "text") {
+      const plan = this.scenes.plan(scene);
+      if (plan.mode === "scroll" || plan.animated) key += `|v${this.scenes.speed(scene)}`;
+    }
     const changed = key !== this.key;
     if (changed) {
       this.key = key;

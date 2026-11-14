@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { describeLayout, layoutFrameAt, layoutText, pixelOnlyRasterizer as R, scrollFrameAt } from "../../js/text.js";
+import { clampSpeed, describeLayout, layoutFrameAt, layoutText, paceOf, pixelOnlyRasterizer as R, scrollDurationMs, scrollFrameAt } from "../../js/text.js";
 import { quantize } from "../../js/frame.js";
 import { Bitmap } from "../../js/bitmap.js";
 
@@ -101,4 +101,32 @@ test("scroll preview enters from the right and leaves on the left", () => {
 test("empty text is a blank still", () => {
   const l = layoutText(spec({ text: "   " }), R);
   assert.equal(l.frames[0].litCount(), 0);
+});
+
+test("speed: 6 is normal, slower stretches and faster shortens every frame, never below 300 ms", () => {
+  assert.equal(paceOf(6), 1);
+  assert.equal(paceOf(1), 2);
+  assert.equal(paceOf(10), 0.6);
+  assert.equal(paceOf(undefined), 1, "no speed means normal");
+  for (let s = 1; s < 10; s++) assert.ok(paceOf(s) > paceOf(s + 1), `pace falls from ${s} to ${s + 1}`);
+  assert.deepEqual([0, -3, 99, "4", 6.4, null].map(clampSpeed), [6, 1, 10, 4, 6, 6]);
+
+  const at = (speed) => layoutText(spec({ text: "KEEP YOUR DISTANCE", effect: "words", speed }), R).durations;
+  assert.deepEqual(at(6), [920, 920, 1240, 450], "normal pace is unchanged");
+  assert.deepEqual(at(1), [1840, 1840, 2480, 900]);
+  assert.deepEqual(at(10), [552, 552, 744, 300], "the pause is held at the 300 ms floor");
+  assert.deepEqual(layoutText(spec({ effect: "blink", speed: 10 }), R).durations, [360, 300]);
+  assert.deepEqual(layoutText(spec({ effect: "blink", speed: 2 }), R).durations, [1080, 540]);
+  const pages = (speed) => layoutText(spec({ text: "ONE TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE TEN", size: "small", speed }), R).durations[0];
+  assert.equal(pages(6), 2600);
+  assert.equal(pages(3), 4160);
+});
+
+test("speed: scrolling carries the clamped speed, and a faster one finishes sooner", () => {
+  const long = (speed) => layoutText(spec({ text: "KEEP YOUR DISTANCE PLEASE", speed }), R);
+  assert.equal(long(3).speed, 3);
+  assert.equal(long(40).speed, 10);
+  assert.equal(long(undefined).speed, 6);
+  assert.ok(scrollDurationMs(long(9)) < scrollDurationMs(long(6)));
+  assert.ok(scrollDurationMs(long(2)) > 2.5 * scrollDurationMs(long(6)));
 });

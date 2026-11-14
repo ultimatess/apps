@@ -170,7 +170,7 @@ const TVK = [
 
 const C = { amber: "#ff9000", cyan: "#00d0ff", lime: "#a3e635", white: "#ffffff", pink: "#ff2d6f", yellow: "#ffd000", green: "#00e060", red: "#ff1a1a", purple: "#a855f7" };
 
-const text = (t, color, extra = {}) => ({ kind: "text", text: t, color, color2: "#ffffff", paint: "solid", effect: "auto", size: "big", speed: 6, ...extra });
+const text = (t, color, extra = {}) => ({ kind: "text", text: t, color, color2: "#ffffff", paint: "solid", effect: "auto", size: "big", ...extra });
 
 export const MODES = {
   kural: {
@@ -237,14 +237,15 @@ export function estimateMs(scene) {
  *   style    "scroll" (a line is static when it fits, otherwise scrolls) | "words" (one word at a time)
  *   seed     shuffle seed; 0 = original order
  *   measure  (scene) -> ms the scene needs on the panel (the app measures the real layout)
+ *   pace     multiplier on the fixed beats (title cards, eyes); the message speed sets it
  */
-export function buildProgramme(mode, { lang = "both", style = "scroll", seed = 0, measure = estimateMs } = {}) {
+export function buildProgramme(mode, { lang = "both", style = "scroll", seed = 0, measure = estimateMs, pace = 1 } = {}) {
   const meta = MODES[mode];
   if (!meta) return null;
   const body = style === "words" ? "words" : "auto";
   const items = [];
   let unit = 0;
-  const beat = (scene, label, ms) => items.push({ scene, label, unit, secs: Math.max(1.5, Math.round((ms ?? measure(scene)) / 100) / 10) });
+  const beat = (scene, label, ms) => items.push({ scene, label, unit, secs: Math.max(1.5, Math.round((ms != null ? ms * pace : measure(scene)) / 100) / 10) });
   const eyes = (mood, color) => ({ kind: "eyes", mode: `living_${mood}`, color, react: false });
   const ta = lang === "ta" || lang === "both";
   const en = lang === "en" || lang === "both";
@@ -294,7 +295,7 @@ export function buildProgramme(mode, { lang = "both", style = "scroll", seed = 0
       unit++;
     }
   }
-  return { id: `mode.${mode}`, name: meta.name, mode, units: unit, items };
+  return { id: `mode.${mode}`, name: meta.name, mode, seed, units: unit, items };
 }
 
 /** Index of the first beat of the unit after the one at `index` (wraps). */

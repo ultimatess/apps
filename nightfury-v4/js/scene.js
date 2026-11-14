@@ -12,7 +12,7 @@ import { Frame, unpackFrame } from "./frame.js";
 import { LED, FRAME_MS, brakeFrame, clockFrame, hazardFrame, speedHud, stoppedFrame, turnFrame } from "./graphics.js";
 import { eyesBitmap, EYE_PACK } from "./eyes.js";
 import { FX, FX_STEP_MS, fxFrame } from "./fx.js";
-import { layoutFrameAt, layoutText, scrollFrameAt } from "./text.js";
+import { clampSpeed, layoutFrameAt, layoutText, scrollFrameAt } from "./text.js";
 
 export const COLORS = {
   cyan: "#06b6d4",
@@ -37,12 +37,16 @@ export function createScenes({ rasterize, epoch = () => 0, options = () => ({}) 
 
   const motion = () => options().motion ?? "all"; // off | signals | all
 
+  /** Message speed is one setting for every text scene; a scene's own `speed` is only a fallback. */
+  const speed = (scene) => clampSpeed(options().speed ?? scene?.speed);
+
   function textLayout(scene) {
     const allowMotion = motion() !== "off";
-    const key = `${epoch()}|${allowMotion}|${options().pixelFont !== false}|${textKey(scene)}`;
+    const spec = { ...scene, speed: speed(scene) };
+    const key = `${epoch()}|${allowMotion}|${options().pixelFont !== false}|${textKey(spec)}`;
     let l = layouts.get(key);
     if (!l) {
-      l = layoutText(scene, rasterize, { allowMotion });
+      l = layoutText(spec, rasterize, { allowMotion });
       if (layouts.size > 80) layouts.clear();
       layouts.set(key, l);
     }
@@ -119,11 +123,11 @@ export function createScenes({ rasterize, epoch = () => 0, options = () => ({}) 
     }
   }
 
-  return { render, plan, textLayout };
+  return { render, plan, textLayout, speed };
 }
 
 function textKey(s) {
-  return `${s.text}|${s.color}|${s.color2 ?? ""}|${s.paint ?? "solid"}|${s.effect ?? "auto"}|${s.size ?? "big"}|${s.speed ?? 6}`;
+  return `${s.text}|${s.color}|${s.color2 ?? ""}|${s.paint ?? "solid"}|${s.effect ?? "auto"}|${s.size ?? "big"}|${s.speed ?? ""}`;
 }
 
 /** Identity of a scene: when it changes, the scene restarts (animation clock, hardware push). */

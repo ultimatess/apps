@@ -115,6 +115,11 @@
           <input id="libSearch" type="search" placeholder="Search messages, eyes and art" autocomplete="off" aria-label="Search the library">
         </label>
         <div class="chips" id="libChips" role="group" aria-label="Library groups"></div>
+        <label class="slider speed-row speed-bar">
+          <span class="label">Message speed</span>
+          <input type="range" min="1" max="10" step="1" value="6" data-speed aria-label="Message speed, 1 slowest to 10 fastest">
+          <output data-speed-val>6</output>
+        </label>
         <div class="grid" id="libGrid"></div>
         <p class="empty" id="libEmpty" hidden></p>
       </section>
@@ -145,10 +150,10 @@
             <span class="label">Second colour (every other word)</span>
             <div class="palette" id="palette2"></div>
           </div>
-          <label class="slider" id="speedRow">
-            <span class="label">Scroll speed</span>
-            <input id="scrollSpeed" type="range" min="1" max="10" value="6">
-            <output id="speedVal">6</output>
+          <label class="slider speed-row">
+            <span class="label">Speed</span>
+            <input type="range" min="1" max="10" step="1" value="6" data-speed aria-label="Message speed, 1 slowest to 10 fastest">
+            <output data-speed-val>6</output>
           </label>
           <div class="field-row">
             <span><b>Voice language</b></span>
@@ -228,6 +233,11 @@
             <span><b>Style</b><small>Scroll each line, or flash one big word at a time</small></span>
             <span class="seg" id="modeStyle" role="group" aria-label="Mode style"><button data-v="scroll">Scroll</button><button data-v="words">Words</button></span>
           </div>
+          <label class="slider speed-row">
+            <span class="label">Speed</span>
+            <input type="range" min="1" max="10" step="1" value="6" data-speed aria-label="Message speed, 1 slowest to 10 fastest">
+            <output data-speed-val>6</output>
+          </label>
         </div>
         <p class="lede">A show cycles through library items. Shows and modes play whenever the HUD is not using the panel, and a tapped message interrupts them briefly.</p>
         <div id="showList" class="show-list"></div>
@@ -388,6 +398,12 @@
         <div class="field-row">Show a tapped message for
           <span class="seg" data-setting="holdKey"><button type="button" data-v="5s">5s</button><button type="button" data-v="10s">10s</button><button type="button" data-v="20s">20s</button><button type="button" data-v="30s">30s</button><button type="button" data-v="sticky">Pin</button></span>
         </div>
+        <label class="slider speed-row">
+          <span class="label">Message speed</span>
+          <input type="range" min="1" max="10" step="1" value="6" data-speed aria-label="Message speed, 1 slowest to 10 fastest">
+          <output data-speed-val>6</output>
+        </label>
+        <p class="hint">How fast text scrolls, flashes word by word, and how quickly modes move on. Applies to every message.</p>
         <div class="field-row">When stopped (Full HUD)
           <span class="seg" data-setting="stoppedMode"><button type="button" data-v="content">Content</button><button type="button" data-v="stopped">STOPPED</button><button type="button" data-v="clock">Clock</button></span>
         </div>

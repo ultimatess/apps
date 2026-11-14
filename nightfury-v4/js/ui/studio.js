@@ -1,6 +1,6 @@
 // Studio tab: the text composer and the pixel editor. Whatever is being edited is
 // shown on the stage as a DRAFT (preview only) until it is sent.
-import { $, bindSeg, h, icon, markSeg, openSheet, paintRange, toast } from "./dom.js";
+import { $, bindSeg, h, icon, markSeg, openSheet, toast } from "./dom.js";
 import { drawThumb } from "./led.js";
 import { COLS, ROWS } from "../protocol.js";
 import { Frame, packFrame, unpackFrame } from "../frame.js";
@@ -22,7 +22,7 @@ export function mountStudio(ctx) {
 
   const textScene = () => ({
     kind: "text", text: $("composeInput").value.trim(), color: S.color, color2: S.color2,
-    paint: S.paint, effect: S.effect, size: S.size, speed: S.speed,
+    paint: S.paint, effect: S.effect, size: S.size,
   });
 
   function palette(el, key) {
@@ -47,9 +47,6 @@ export function mountStudio(ctx) {
     for (const [id, key] of [["palette", "color"], ["palette2", "color2"]]) {
       $(id).querySelectorAll(".swatch[data-color]").forEach((s) => s.classList.toggle("on", s.dataset.color === S[key]));
     }
-    $("scrollSpeed").value = S.speed;
-    $("speedVal").textContent = S.speed;
-    paintRange($("scrollSpeed"));
     $("saveMsgLabel").textContent = editingText ? "Update" : "Save";
 
     const scene = textScene();
@@ -57,12 +54,10 @@ export function mountStudio(ctx) {
     if (!scene.text) {
       hint.textContent = "Type something to see it on the panel above.";
       hint.classList.remove("warn");
-      $("speedRow").hidden = S.effect !== "scroll";
     } else {
       const layout = scenes.textLayout(scene);
       const d = describeLayout(layout);
       const scrolls = layout.kind === "scroll";
-      $("speedRow").hidden = !scrolls;
       const forced = scrolls && ["static", "blink", "words"].includes(S.effect);
       const smallSkipped = S.size === "small" && !isPixelFontText(scene.text);
       hint.textContent = forced ? `Too wide for ${S.effect}: it will scroll instead (${layout.raster.width}px)`
@@ -445,7 +440,7 @@ export function mountStudio(ctx) {
       setMode("pixel");
     } else {
       $("composeInput").value = item.text ?? "";
-      store.set({ color: item.color ?? S.color, color2: item.color2 ?? S.color2, paint: item.paint ?? "solid", effect: item.effect ?? "auto", size: item.size ?? "big", speed: item.speed ?? 6 });
+      store.set({ color: item.color ?? S.color, color2: item.color2 ?? S.color2, paint: item.paint ?? "solid", effect: item.effect ?? "auto", size: item.size ?? "big" });
       editingText = item.builtin ? null : item.id;
       setMode("text");
     }
@@ -460,7 +455,6 @@ export function mountStudio(ctx) {
   bindSeg($("sizeSeg"), (v) => { fb.tap(); store.set({ size: v }); syncText(); });
   bindSeg($("paintSeg"), (v) => { fb.tap(); store.set({ paint: v }); syncText(); });
   bindSeg($("voiceLang"), (v) => { fb.tap(); store.set({ voiceLang: v }); });
-  $("scrollSpeed").addEventListener("input", (e) => { store.set({ speed: parseInt(e.target.value, 10) }); syncText(); });
   $("sendMsgBtn").addEventListener("click", sendText);
   $("saveMsgBtn").addEventListener("click", saveText);
   $("micBtn").addEventListener("click", dictate);

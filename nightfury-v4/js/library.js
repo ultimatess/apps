@@ -45,7 +45,7 @@ const meme = [
 
 const textItem = (group) => ([id, text, hint, color, effect, label, size, paint]) => ({
   id: `${group}.${id}`, group, kind: "text", builtin: true,
-  text, label: label ?? text, hint, color, effect, size: size ?? "big", paint: paint ?? "solid", speed: 6,
+  text, label: label ?? text, hint, color, effect, size: size ?? "big", paint: paint ?? "solid",
 });
 
 export const BUILTIN_ITEMS = [
@@ -88,7 +88,7 @@ export function itemScene(item) {
     case "text":
       return {
         kind: "text", text: item.text, color: item.color ?? "#ffffff", color2: item.color2 ?? "#ffffff",
-        paint: item.paint ?? "solid", effect: item.effect ?? "auto", size: item.size ?? "big", speed: item.speed ?? 6,
+        paint: item.paint ?? "solid", effect: item.effect ?? "auto", size: item.size ?? "big",
       };
     case "eyes": return { kind: "eyes", mode: item.mode, color: item.color ?? "#ffffff", react: !!item.react };
     case "fx": return { kind: "fx", id: item.fx };

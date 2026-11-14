@@ -13,6 +13,19 @@ import { isPixelFontText, measure, renderText } from "./font5x7.js";
 
 const WORD_GAP = 6;
 const PAGE_MS = 2600;
+const MIN_FRAME_MS = 300; // the panel stream cannot show anything shorter
+
+/** Message speed as the UI knows it: 1 (slowest) .. 10 (fastest), 6 = normal. */
+export const clampSpeed = (v) => Math.max(1, Math.min(10, Math.round(Number(v)) || 6));
+
+/**
+ * Speed as a multiplier on how long each frame stays (words, blink, pages, mode beats):
+ * 2x at the slowest, 1x at 6, 0.6x at the fastest. Scrolling uses the speed directly.
+ */
+export function paceOf(speed) {
+  const s = clampSpeed(speed);
+  return s >= 6 ? 1 - (s - 6) * 0.1 : 1 + (6 - s) * 0.2;
+}
 
 export const EFFECTS = ["auto", "static", "scroll", "words", "blink"];
 export const PAINTS = ["solid", "rainbow", "duo"];
@@ -113,12 +126,17 @@ function smallPages(spec) {
  * Layout result:
  *   { kind: "frames", frames, durations, loopMs }   static (one frame), words, blink, pages
  *   { kind: "scroll", raster, speed }               firmware scroll
+ * `spec.speed` (1..10) sets the scroll rate and the pace of every multi-frame layout.
  * `allowMotion=false` (panel animation off) never returns multi-frame layouts.
  */
 export function layoutText(spec, rasterize, { allowMotion = true } = {}) {
   const text = String(spec.text ?? "");
   const effect = EFFECTS.includes(spec.effect) ? spec.effect : "auto";
-  const frames = (list, durations) => ({ kind: "frames", frames: list, durations, loopMs: durations.reduce((a, b) => a + b, 0) });
+  const pace = paceOf(spec.speed);
+  const frames = (list, base) => {
+    const durations = base.map((ms) => Math.max(MIN_FRAME_MS, Math.round(ms * pace)));
+    return { kind: "frames", frames: list, durations, loopMs: durations.reduce((a, b) => a + b, 0) };
+  };
   const still = (f) => ({ kind: "frames", frames: [f], durations: [Infinity], loopMs: Infinity });
 
   if (!text.trim()) return still(new Frame());
@@ -135,7 +153,7 @@ export function layoutText(spec, rasterize, { allowMotion = true } = {}) {
   const scroll = () => {
     const raster = bigRaster(spec, rasterize);
     const maxW = MAX_CHUNKS * 8;
-    return { kind: "scroll", raster: raster.width > maxW ? cropFrame(raster, maxW) : raster, speed: spec.speed ?? 6 };
+    return { kind: "scroll", raster: raster.width > maxW ? cropFrame(raster, maxW) : raster, speed: clampSpeed(spec.speed) };
   };
 
   if (effect === "scroll") return scroll();

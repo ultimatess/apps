@@ -79,7 +79,7 @@ test("backup round-trip, and rejecting a foreign file", () => {
 
 test("v3 migration: saved messages and settings come across once", () => {
   const mem = memory({
-    "nightfury.v3.settings": JSON.stringify({ brightness: 60, autoHud: false, unit: "mph", stoppedMode: "message", liveAnimation: false, brakeLight: false, holdKey: "30s", limitKmh: 90 }),
+    "nightfury.v3.settings": JSON.stringify({ brightness: 60, autoHud: false, unit: "mph", stoppedMode: "message", liveAnimation: false, brakeLight: false, holdKey: "30s", limitKmh: 90, speed: 4 }),
     "nightfury.v3.custom": JSON.stringify([{ text: "முதல்", color: "#ff0000", style: "static", speed: 4 }, { text: "SECOND", color: "#00ff00", style: "scroll" }, { nope: 1 }]),
   });
   const s = createStore(mem);
@@ -93,6 +93,8 @@ test("v3 migration: saved messages and settings come across once", () => {
   assert.equal(s.settings.motion, "signals");
   assert.equal(s.settings.autoBrake, false);
   assert.equal(s.settings.holdKey, "30s");
+  assert.equal(s.settings.speed, 4, "v3's scroll speed becomes the message speed");
+  assert.ok(s.items.every((i) => !("speed" in i)), "messages no longer carry their own speed");
   assert.equal(s.migrateV3(), null, "only once");
   assert.equal(createStore(mem).migrateV3(), null, "remembered across reloads");
   assert.equal(createStore(memory()).migrateV3(), null, "nothing to migrate");

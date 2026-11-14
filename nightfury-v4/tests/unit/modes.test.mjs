@@ -166,3 +166,17 @@ test("modes are library items with a cover card, and are pinned by default", () 
     assert.equal(itemScene(item), MODES[id].cover);
   }
 });
+
+test("pace stretches the fixed beats (title cards, eyes) and leaves measured ones to the layout", () => {
+  const normal = buildProgramme("kural", { lang: "ta", seed: 7 });
+  const slow = buildProgramme("kural", { lang: "ta", seed: 7, pace: 2 });
+  const fast = buildProgramme("comedy", { lang: "en", seed: 7, pace: 0.6 });
+  assert.equal(normal.items[0].secs, 2.2);
+  assert.equal(slow.items[0].secs, 4.4, "title card held twice as long");
+  assert.equal(slow.items[1].secs, normal.items[1].secs, "measured beats come from the measure function");
+  assert.equal(fast.items[2].secs, 1.5, "eyes beat shortened, held at the 1.5 s floor");
+  assert.equal(slow.seed, 7, "the seed is kept so a running mode can be re-timed in place");
+  assert.deepEqual(slow.items.map((i) => i.label), normal.items.map((i) => i.label), "same seed, same order");
+  const measured = buildProgramme("tvk", { lang: "en", measure: () => 5000, pace: 2 });
+  assert.ok(measured.items.every((i) => i.secs === 5));
+});

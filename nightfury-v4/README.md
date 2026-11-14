@@ -17,8 +17,9 @@ v3 is left untouched. v4 lives in this folder and is published at `/nightfury-v4
    - **Full**: as Signals, plus the speed readout while moving.
 4. The **◀ ▶** buttons are a manual indicator stalk. A signal cancels itself once the turn is finished (or after the timeout); **Hazard** stays until you turn it off. **Brake light** shows the red slab for three seconds.
 5. Tap anything in the **Library** to show it. It holds the panel for the time set in Settings, then the HUD or the running show returns. **⋯** pins an item to the quick deck, adds it to a show, or opens it in the Studio.
-6. **Drive mode** is the full-screen, large-button view for the car.
-7. No car handy? **Drive › Demo drive** plays a scripted 50-second drive.
+6. **Message speed** (Library, Studio, Shows and Settings: one slider, 1 to 10) sets how fast text scrolls, how quickly word-by-word and blinking text flashes, and how fast modes move on. It applies to every message and changes the one on the panel straight away.
+7. **Drive mode** is the full-screen, large-button view for the car.
+8. No car handy? **Drive › Demo drive** plays a scripted 50-second drive.
 
 Desktop keys: `←` `→` signals, `H` hazard, `B` or space brake, `1`–`8` quick deck, `D` drive mode.
 
@@ -53,6 +54,7 @@ The couplets were checked against the public [tk120404/thirukkural](https://gith
 | Eyes | 4 procedural + 9 imported | Adds 9 living eyes that blink, glance about, look into turns and widen under braking |
 | Text | Scroll or static | Auto / static / scroll / word-by-word / blink; big or two-line; solid / rainbow / duo; live draft preview while typing |
 | Saved messages | De-duplicated by text | Any number of variants; editable in place |
+| Speed | One scroll-speed slider on the main screen | One message-speed slider, shown wherever messages are picked. It also paces word-by-word text, blink and the modes; v3's value is imported |
 | Pixel studio | — | Draw, erase, fill, stamps, pixel text, shift / mirror / invert, undo, multi-frame animation |
 | Shows and modes | — | Playlists of library items; Thirukkural, mini stories, comedy, friends, TVK |
 | Trip computer | — | Distance, moving time, average, top speed, hard brakes, stops, speed sparkline |
@@ -84,9 +86,9 @@ node scripts/serve.mjs 8080   # local preview at http://127.0.0.1:8080/
 ```
 
 1. **Build** checks that every `$("id")` exists in `index.html` with no duplicates, every icon is defined, every relative import resolves to an exported name, every referenced file exists, every `data-setting` is a real setting and every tab has a view. It then stamps `js/version.js` and writes `sw.js`.
-2. **Unit** (`node:test`, 130 tests): protocol and CRC, v3 byte parity, colour frames and quantizing, HUD geometry, eyes, text layout, the director's priority rules, the engine loop on a fake clock, modes, storage and v3 migration, trip computer, GIF encoder (decoded back by an independent reader), and the Bluetooth transport and panel driver against a mock panel.
-3. **Mutation smoke** plants 29 realistic bugs into a temp copy; the unit tests must fail for each one.
-4. **E2E** (23 steps, zero-dependency CDP driver) runs the real app in headless Chrome at phone size with Bluetooth, GPS and DeviceMotion mocked. Every byte written is reassembled into packets and CRC-checked, and frames are compared pixel-for-pixel and colour-for-colour with the pure modules. Screenshots go to `tests/e2e/artifacts/`.
+2. **Unit** (`node:test`, 135 tests): protocol and CRC, v3 byte parity, colour frames and quantizing, HUD geometry, eyes, text layout, the director's priority rules, the engine loop on a fake clock, modes, storage and v3 migration, trip computer, GIF encoder (decoded back by an independent reader), and the Bluetooth transport and panel driver against a mock panel.
+3. **Mutation smoke** plants 34 realistic bugs into a temp copy; the unit tests must fail for each one.
+4. **E2E** (24 steps, zero-dependency CDP driver) runs the real app in headless Chrome at phone size with Bluetooth, GPS and DeviceMotion mocked. Every byte written is reassembled into packets and CRC-checked, and frames are compared pixel-for-pixel and colour-for-colour with the pure modules. Screenshots go to `tests/e2e/artifacts/`.
 
 ## Layout
 

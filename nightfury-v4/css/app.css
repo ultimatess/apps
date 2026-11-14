@@ -214,7 +214,8 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .seg svg { width: 18px; height: 18px; }
 
 .field-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; font-weight: 600; }
-.field-row > span:first-child { display: flex; flex-direction: column; min-width: 0; }
+/* The label column. In the Settings sheet the label is bare text, so the control is the first span: leave it alone. */
+.field-row > span:first-child:not(.seg):not(.num) { display: flex; flex-direction: column; min-width: 0; }
 .field-row small { font-weight: 400; }
 .field-row .seg { flex: none; }
 .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 40px; cursor: pointer; }
@@ -232,6 +233,9 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .slider { display: flex; align-items: center; gap: 12px; }
 .slider .label { margin: 0; flex: none; }
 .slider output { font: 600 12px/1 var(--mono); min-width: 28px; text-align: right; }
+.speed-row { min-height: 40px; cursor: pointer; }
+.speed-row input { flex: 1; min-width: 0; }
+.speed-bar { height: 46px; min-height: 46px; padding: 0 14px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface); }
 .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line-2); border-radius: 10px; flex: none; }
 .stepper button { width: 36px; height: 34px; font-size: 18px; color: var(--muted); }
 .stepper output { min-width: 30px; text-align: center; font: 600 13px/1 var(--mono); }
@@ -408,6 +412,9 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .set-group { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
 .set-group h3 { font: 600 10.5px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
 .set-group .seg { flex: none; }
+/* On a narrow phone a wide control drops under its label instead of squeezing the label into a column. */
+.set-group .field-row { flex-wrap: wrap; row-gap: 6px; }
+.set-group .field-row > .seg, .set-group .field-row > .num { margin-left: auto; }
 .menu { display: flex; flex-direction: column; gap: 2px; }
 .menu button { display: flex; align-items: center; gap: 14px; min-height: 50px; padding: 0 10px; border-radius: 12px; font-size: 15.5px; font-weight: 600; text-align: left; }
 .menu button:active { background: var(--raised); }
