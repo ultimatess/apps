@@ -6,7 +6,8 @@ import { describeNotification, toHex } from "./protocol.js";
 import { BleTransport } from "./ble.js";
 import { IPixelPanel } from "./device.js";
 import { createRasterizer } from "./textraster.js";
-import { createScenes, describeScene, sceneTint } from "./scene.js";
+import { createScenes, describeScene, sceneKey, sceneTint } from "./scene.js";
+import { PanelMemory } from "./memory.js";
 import { DriveModel } from "./drive.js";
 import { Engine, effectiveBrightness } from "./engine.js";
 import { FRAME_MS } from "./graphics.js";
@@ -72,6 +73,24 @@ const engine = new Engine({
   fontsReady: (text) => rasterizer.ready(text),
   epoch: () => rasterizer.epoch,
   trip: new TripMeter(store.trip),
+});
+
+// Your last few messages also go into the panel's own save slots (see memory.js).
+const memory = new PanelMemory({
+  panel, scenes,
+  settings: () => S,
+  load: () => store.panelMemory,
+  save: (m) => store.savePanelMemory(m),
+  fontsReady: (text) => rasterizer.ready(text),
+  log,
+  onWrite(slot, scene) {
+    // The slot write may have put the stored version on screen. If the live scene is
+    // that same still or scroll it already matches; otherwise send the live scene again.
+    const live = engine.scene;
+    const same = live && sceneKey(live) === sceneKey(scene) && !scenes.plan(live).animated;
+    if (!same) { engine.resync(); engine.tick(now()); }
+    bus.emit("memory");
+  },
 });
 
 const sensorStatus = { gps: "off", accuracy: null, motion: "off" };
@@ -146,19 +165,21 @@ function send(item, { quiet = false } = {}) {
   const scene = itemScene(item);
   if (!scene) return;
   if (!quiet) fb.tap();
-  engine.show(scene, now());
+  const shown = engine.show(scene, now());
   state.activeId = item.id ?? null;
   engine.tick(now());
   toast(`${panel.ready ? "Sent" : "Preview"} · ${itemLabel(item)}`);
   bus.emit("active");
+  memory.remember(shown, itemLabel(item));
 }
 
-/** Put an ad-hoc scene (studio draft, test card) on the panel. */
-function sendScene(scene, label) {
+/** Put an ad-hoc scene on the panel. `keep`: also store it in panel memory (Studio sends; test cards do not). */
+function sendScene(scene, label, { keep = false } = {}) {
   fb.tap();
-  engine.show(scene, now());
+  const shown = engine.show(scene, now());
   state.activeId = null;
   engine.tick(now());
+  if (keep) memory.remember(shown, label ?? describeScene(scene));
   if (label) toast(`${panel.ready ? "Sent" : "Preview"} · ${label}`);
   bus.emit("active");
 }
@@ -215,6 +236,7 @@ async function onConnected() {
   state.sentBrightness = level;
   engine.resync();
   panel.startHeartbeat();
+  memory.flush().then((n) => { if (n) bus.emit("memory"); });
 }
 
 function pushBrightness() {
@@ -345,7 +367,7 @@ function showTab(tab) {
 // ------------------------------------------------------------------ context + views
 
 const ctx = {
-  store, S, lib, engine, panel, transport, scenes, rasterizer, sensors, sensorStatus, drive, fb, thumbs, bus, log, logLines, state, now,
+  store, S, lib, engine, panel, transport, scenes, rasterizer, sensors, sensorStatus, drive, fb, thumbs, bus, log, logLines, state, now, memory,
   send, sendScene, clearMessage, brake, signal, connect, keepAwake, itemMenu, showTab, pushBrightness, playMode, setSpeed,
   /** Thumbnail canvas for a scene (animated while visible). */
   thumb(scene, cls = "thumb") {
@@ -509,7 +531,7 @@ async function boot() {
 }
 
 // Debug / test handle (read-mostly).
-window.NF = { state, store, lib, engine, panel, transport, scenes, drive, sensors, thumbs, ticker, ctx, build: BUILD, get scene() { return engine.scene; } };
+window.NF = { state, store, lib, engine, panel, transport, scenes, drive, sensors, thumbs, ticker, ctx, memory, build: BUILD, get scene() { return engine.scene; } };
 
 // Kept for views that want to build a quick confirm sheet.
 ctx.confirm = (title, message, label, run) => openSheet(title, [

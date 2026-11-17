@@ -32,6 +32,7 @@ export const DEFAULT_SETTINGS = {
   resume: true,
   modeLang: "both", // ta | en | both
   modeStyle: "scroll", // scroll | words
+  panelKeep: 3, // messages kept in the panel's own memory: 0 (off) | 3 | 5
   // Text studio draft
   color: "#00d0ff",
   color2: "#ffffff",
@@ -121,6 +122,10 @@ export function createStore(storage = globalThis.localStorage) {
       shows = shows.filter((s) => s.id !== id);
       write("shows", shows);
     },
+
+    /** What this app has put in the panel's save slots (see memory.js). */
+    get panelMemory() { return read("panelMemory", null); },
+    savePanelMemory(m) { write("panelMemory", m); },
 
     get trip() { return read("trip", null); },
     saveTrip(trip) { write("trip", trip); },

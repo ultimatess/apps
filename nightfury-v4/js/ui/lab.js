@@ -179,7 +179,8 @@ export function mountLab(ctx) {
     ["Clock", () => toHex(clockModePacket())],
     ["DIY mode", "05 00 04 01 01"],
     ["Ping", "04 00 05 80"],
-    ["Reset", "04 00 03 80"],
+    ["Wipe memory", "04 00 03 80"],
+    ["Show slot 1", "07 00 08 80 01 00 01"],
   ];
   $("hexPresets").append(...presets.map(([label, hex]) => h("button", {
     class: "btn btn-small",
@@ -208,6 +209,47 @@ export function mountLab(ctx) {
   markSeg($("simTurn"), sim.turn);
   paintRange($("simSpeed"));
   syncOptions();
+
+  // ------------------------------------------------------------------ panel memory
+
+  function renderMemory() {
+    const { memory } = ctx;
+    const keep = memory.keep;
+    const list = memory.records.slice().sort((a, b) => a.slot - b.slot);
+    $("memoryInfo").textContent = keep ? `${list.length} of ${keep} saved` : "Off";
+    $("memoryList").replaceChildren(...list.map((r) => h("div", { class: "show-item", dataset: { slot: r.slot } },
+      r.scene ? ctx.thumb(r.scene, "") : h("canvas", {}),
+      h("span", { class: "name tamil" }, r.label || "Message"),
+      h("span", { class: "ctl" }, h("span", { class: "secs" }, `Slot ${r.slot}`)))));
+    if (!list.length) $("memoryList").append(h("p", { class: "hint" }, keep ? "Nothing saved yet. Send a message while the panel is connected." : "Turn on Settings › Keep on the panel."));
+    ctx.thumbs.sweep();
+  }
+
+  $("memoryClearBtn").addEventListener("click", () => {
+    fb.tap();
+    ctx.confirm("Clear panel memory", "Delete every message this app saved in the panel? It will no longer show them after a restart.", "Clear", async () => {
+      const sent = await ctx.memory.clear();
+      renderMemory();
+      toast(sent ? "Panel memory cleared" : "Cleared here; the panel is emptied when it next connects");
+    });
+  });
+  $("memoryPlayBtn").addEventListener("click", async () => {
+    fb.tap();
+    if (!needPanel()) return;
+    const last = ctx.memory.latest();
+    if (!last) return toast("Nothing saved on the panel yet");
+    // Leave DIY (live) mode, ask for the newest slot, then let go of the panel.
+    await panel.diy(false);
+    await panel.showSlot(last.slot);
+    await panel.queue.idle();
+    panel.stopHeartbeat();
+    transport.disconnect();
+    toast("Disconnected: the panel is on its own now");
+  });
+  bus.on("memory", renderMemory);
+  bus.on("settings", (key) => { if (key === "panelKeep" || key === "all") renderMemory(); });
+  bus.on("tab", (t) => { if (t === "lab") renderMemory(); });
+  renderMemory();
 
   ctx.sceneGif = sceneGif;
   return {

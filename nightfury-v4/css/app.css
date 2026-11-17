@@ -515,3 +515,7 @@ button.item b { padding-right: 2px; }
 .mode-row .play { background: var(--c); color: #000; }
 .mode-row.playing { border-color: var(--c); }
 .mode-row.playing .play { background: var(--raised-2); color: var(--text); }
+
+/* Panel memory list (Lab) */
+.memory-list { display: flex; flex-direction: column; gap: 6px; }
+.memory-list .hint { margin: 0; }

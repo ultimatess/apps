@@ -12,6 +12,7 @@ import { CMD, chunksToBitmap, decodePacket, mapScrollSpeed, rgbToHex, splitPacke
 import { Frame, quantize } from "../../js/frame.js";
 import { FRAME_MS, brakeFrame, gridFrame, speedHud, turnFrame } from "../../js/graphics.js";
 import { layoutText, pixelOnlyRasterizer } from "../../js/text.js";
+import { PIC_IDS, PIC_STEP_MS, picFrame, picLoopMs } from "../../js/pictures.js";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const ART = `${ROOT}tests/e2e/artifacts/`;
@@ -323,7 +324,7 @@ try {
     await page.click('#modeLang [data-v="both"]');
     await tab("library");
     await page.click('#libChips [data-group="modes"]');
-    eq(await page.eval(`document.querySelectorAll("#libGrid .item").length`), 5, "five modes");
+    eq(await page.eval(`document.querySelectorAll("#libGrid .item").length`), 6, "six modes");
     const from = await mark();
     await page.click('#libGrid .item[data-id="mode.kural"] .hit');
     await page.waitFor("NF.engine.player.show?.id === 'mode.kural'", { label: "kural running" });
@@ -339,7 +340,7 @@ try {
 
   await step("modes: Friends and TVK play from the Shows tab; TVK goes out in red and yellow", async () => {
     await tab("shows");
-    eq(await page.eval(`document.querySelectorAll("#modeList .mode-row").length`), 5, "mode rows");
+    eq(await page.eval(`document.querySelectorAll("#modeList .mode-row").length`), 6, "mode rows");
     await page.click('#modeLang [data-v="en"]');
     await page.click('.mode-row[data-mode="friends"] .play');
     await page.waitFor("NF.engine.player.show?.id === 'mode.friends' && NF.scene.source === 'show'", { label: "friends running" });
@@ -357,6 +358,33 @@ try {
     await shot("04b-tvk");
     await page.click("#nowStop");
     await page.click('#modeLang [data-v="both"]');
+  });
+
+  await step("pictures: a cartoon from the library streams frame-exact on the panel; the Picture pack mode plays them", async () => {
+    await page.eval("NF.engine.stopShow(), NF.engine.sim = null, true");
+    await tab("library");
+    await page.click('#libChips [data-group="pics"]');
+    eq(await page.eval(`document.querySelectorAll("#libGrid .item").length`), PIC_IDS.length, "every picture listed");
+    const steps = [];
+    for (let t = 0; t < picLoopMs("horn"); t += PIC_STEP_MS) steps.push(quantize(picFrame("horn", t)));
+    const from = await mark();
+    await page.click('#libGrid .item[data-id="pic.horn"] .hit');
+    await sleep(2600);
+    const live = (await packetsSince(from)).packets.filter((p) => isFrame(p) && !p.saveSlot);
+    const matched = new Set();
+    for (const p of live) {
+      const i = steps.findIndex((f) => frameOf(p).equals(f));
+      assert(i >= 0, "every streamed frame is a step of the cartoon");
+      matched.add(steps[i].key());
+    }
+    assert(matched.size >= 3, `the cartoon moves on the panel (${matched.size} different frames)`);
+    await shot("04c-picture");
+    await tab("shows");
+    await page.click('#modeList .mode-row[data-mode="pics"] .play');
+    await page.waitFor("NF.engine.player.show?.id === 'mode.pics' && NF.scene.kind === 'pic'", { label: "picture pack playing" });
+    eq(await page.eval("NF.engine.player.show.units"), PIC_IDS.length, "one unit per picture");
+    await page.click('#modeList .mode-row[data-mode="pics"] .play');
+    await page.waitFor("!NF.engine.player.show", { label: "stopped" });
   });
 
   await step("studio text: live draft is preview-only, send is exact, save lands in Mine", async () => {
@@ -473,8 +501,68 @@ try {
     await setRange("brightness", 85);
   });
 
+  await step("panel memory: sent messages are kept in slots once each, oldest replaced; Off and Clear empty them; hand-over shows a slot", async () => {
+    const isSlot = (n) => (p) => p.cmd === CMD.TEXT && p.saveSlot === n && p.crcOk;
+    const isDel = (n) => (p) => p.cmd === CMD.DELETE_SLOT && p.payload[2] === n;
+    await page.eval("NF.engine.stopShow(), true");
+    let from = await mark();
+    await page.eval("NF.memory.clear()");
+    for (let n = 1; n <= 5; n++) await waitPacket(from, isDel(n), `delete slot ${n}`);
+    await tab("library");
+    await page.click('#libChips [data-group="road"]');
+    from = await mark();
+    await page.click('#libGrid .item[data-id="road.thanks"] .hit');
+    const want = layoutText({ text: "THANKS!", color: "#10b981", effect: "static", size: "big", paint: "solid" }, pixelOnlyRasterizer).frames[0];
+    const kept = await waitPacket(from, isSlot(1), "THANKS! kept in slot 1");
+    assert(frameOf(kept).equals(quantize(want)), "slot 1 holds exactly the message");
+    from = await mark();
+    await page.click('#libGrid .item[data-id="road.thanks"] .hit');
+    await sleep(500);
+    eq((await packetsSince(from)).packets.filter((p) => p.saveSlot).length, 0, "the same message is not written again");
+    for (const [id, n] of [["road.sorry", 2], ["road.hazard", 3]]) {
+      from = await mark();
+      await page.click(`#libGrid .item[data-id="${id}"] .hit`);
+      await waitPacket(from, isSlot(n), `${id} in slot ${n}`);
+    }
+    from = await mark();
+    await page.click('#libGrid .item[data-id="road.distance"] .hit');
+    const words = await waitPacket(from, isSlot(1), "fourth message replaces the oldest (slot 1)");
+    eq(words.anim, 1, "word-by-word is kept as a firmware scroll");
+    await tab("lab");
+    await page.waitFor(`document.querySelectorAll("#memoryList .show-item").length === 3`, { label: "Lab lists 3 kept messages" });
+    eq(await text("memoryInfo"), "3 of 3 saved", "memory info");
+    await page.eval("(() => { const c = document.getElementById('memoryCard'); const top = document.getElementById('stage').getBoundingClientRect().bottom; window.scrollTo(0, c.getBoundingClientRect().top + scrollY - top - 12); })()");
+    await sleep(150);
+    await shot("07b-memory");
+
+    await page.click("#settingsBtn");
+    from = await mark();
+    await page.click('#settings [data-setting="panelKeep"] [data-v="0"]');
+    for (const n of [1, 2, 3]) await waitPacket(from, isDel(n), `Off empties slot ${n}`);
+    await page.eval("document.getElementById('settings').close()");
+    await tab("library");
+    from = await mark();
+    await page.click('#libGrid .item[data-id="road.sorry"] .hit');
+    await sleep(600);
+    eq((await packetsSince(from)).packets.filter((p) => p.saveSlot).length, 0, "nothing kept while Off");
+    await page.eval("NF.store.set({ panelKeep: 3 }), true");
+    from = await mark();
+    await page.click('#libGrid .item[data-id="road.thanks"] .hit');
+    await waitPacket(from, isSlot(1), "kept again once back on");
+
+    await tab("lab");
+    from = await mark();
+    await page.click("#memoryPlayBtn");
+    await page.waitFor("!NF.transport.connected", { label: "hand-over disconnects" });
+    const tail = (await packetsSince(from)).packets.map((p) => [p.cmd, p.payload?.[0], p.payload?.[2]]);
+    eq(tail.slice(-2), [[CMD.DIY, 0, undefined], [CMD.SHOW_SLOT, 1, 1]], "DIY off, then show the newest slot");
+    await page.eval("NF.ctx.connect()");
+    await page.waitFor("NF.panel.ready", { label: "reconnected", timeout: 8000 });
+  });
+
   await step("link: a drop reconnects, re-handshakes and re-sends the scene; user disconnect stays off", async () => {
     await page.waitFor("NF.panel.queue.busy === false", { label: "idle", timeout: 20000 });
+    const connects = await page.eval("__mock.log.connects");
     const from = (await packetsSince(0)).count;
     await page.eval("__mock.drop()");
     await page.waitFor("NF.panel.ready", { label: "ready again", timeout: 8000 });
@@ -486,7 +574,7 @@ try {
     await page.waitFor("!NF.transport.connected", { label: "disconnected" });
     await page.waitFor(`document.getElementById("syncTag").textContent === "PREVIEW"`, { label: "PREVIEW tag" });
     await sleep(200);
-    eq(await page.eval("__mock.log.connects"), 2, "no auto-reconnect after a user disconnect");
+    eq(await page.eval("__mock.log.connects"), connects + 1, "no auto-reconnect after a user disconnect");
   });
 
   await step("drive mode: portrait and landscape fit the screen; buttons act", async () => {

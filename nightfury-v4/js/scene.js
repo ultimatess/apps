@@ -12,7 +12,8 @@ import { Frame, unpackFrame } from "./frame.js";
 import { LED, FRAME_MS, brakeFrame, clockFrame, hazardFrame, speedHud, stoppedFrame, turnFrame } from "./graphics.js";
 import { eyesBitmap, EYE_PACK } from "./eyes.js";
 import { FX, FX_STEP_MS, fxFrame } from "./fx.js";
-import { clampSpeed, layoutFrameAt, layoutText, scrollFrameAt } from "./text.js";
+import { clampSpeed, layoutFrameAt, layoutText, paceOf, scrollFrameAt } from "./text.js";
+import { PICS, PIC_STEP_MS, picFrame } from "./pictures.js";
 
 export const COLORS = {
   cyan: "#06b6d4",
@@ -40,8 +41,7 @@ export function createScenes({ rasterize, epoch = () => 0, options = () => ({}) 
   /** Message speed is one setting for every text scene; a scene's own `speed` is only a fallback. */
   const speed = (scene) => clampSpeed(options().speed ?? scene?.speed);
 
-  function textLayout(scene) {
-    const allowMotion = motion() !== "off";
+  function textLayout(scene, allowMotion = motion() !== "off") {
     const spec = { ...scene, speed: speed(scene) };
     const key = `${epoch()}|${allowMotion}|${options().pixelFont !== false}|${textKey(spec)}`;
     let l = layouts.get(key);
@@ -83,6 +83,8 @@ export function createScenes({ rasterize, epoch = () => 0, options = () => ({}) 
         return Frame.fromBitmap(eyesBitmap(scene.mode, t, react), scene.color);
       }
       case "fx": return fxFrame(scene.id, t);
+      // Pictures follow the message speed: slower stretches the cartoon's timeline.
+      case "pic": return picFrame(scene.id, t / paceOf(options().speed ?? 6), { poster });
       case "art": {
         const list = artFrames(scene);
         const fps = Math.max(1, Math.min(12, scene.fps ?? 4));
@@ -110,6 +112,7 @@ export function createScenes({ rasterize, epoch = () => 0, options = () => ({}) 
       }
       case "eyes": return m === "all" ? { mode: "frames", animated: true, stepMs: 250, minGapMs: 250 } : still;
       case "fx": return m === "all" ? { mode: "frames", animated: true, stepMs: FX_STEP_MS, minGapMs: 250 } : still;
+      case "pic": return m === "all" ? { mode: "frames", animated: true, stepMs: PIC_STEP_MS, minGapMs: 250 } : still;
       case "art": {
         const n = scene.frames?.length ?? 1;
         if (n < 2 || m !== "all") return still;
@@ -123,7 +126,26 @@ export function createScenes({ rasterize, epoch = () => 0, options = () => ({}) 
     }
   }
 
-  return { render, plan, textLayout, speed };
+  /**
+   * What to keep in the panel's own memory for a scene, or null for scenes that only
+   * make sense live (HUD, signals, clock, eyes). Text is kept as the firmware would
+   * show it unattended: a still when it fits, otherwise a firmware scroll. Pictures
+   * and art are kept as their still.
+   */
+  function stored(scene) {
+    switch (scene?.kind) {
+      case "text": {
+        if (!String(scene.text ?? "").trim()) return null;
+        const l = textLayout(scene, false);
+        if (l.kind === "scroll") return { mode: "scroll", raster: l.raster, speed: mapScrollSpeed(l.speed) };
+        return { mode: "frame", frame: l.frames[0] };
+      }
+      case "pic": case "art": return { mode: "frame", frame: render(scene, 0, { poster: true }) };
+      default: return null;
+    }
+  }
+
+  return { render, plan, textLayout, speed, stored };
 }
 
 function textKey(s) {
@@ -138,6 +160,7 @@ export function sceneKey(scene) {
     case "text": return `text|${textKey(scene)}|${n}`;
     case "eyes": return `eyes|${scene.mode}|${scene.color}|${scene.react ? 1 : 0}|${n}`;
     case "fx": return `fx|${scene.id}|${n}`;
+    case "pic": return `pic|${scene.id}|${n}`;
     case "art": return `art|${scene.id}|${scene.rev ?? 0}|${scene.fps ?? 4}|${n}`;
     case "turn": return `turn|${scene.dir}`;
     case "speed": return "speed";
@@ -152,6 +175,7 @@ export function describeScene(scene) {
     case "text": return scene.text;
     case "eyes": return `Eyes · ${EYE_PACK.find((e) => e.mode === scene.mode)?.label ?? scene.mode}`;
     case "fx": return FX[scene.id]?.label ?? "Effect";
+    case "pic": return PICS[scene.id]?.label ?? "Picture";
     case "art": return scene.name || "Pixel art";
     case "turn": return scene.dir === "left" ? "Signalling left" : "Signalling right";
     case "hazard": return "Hazard lights";
@@ -169,6 +193,7 @@ export function sceneTint(scene) {
     case "text": return scene.paint === "rainbow" ? "#a855f7" : scene.color ?? "#ffffff";
     case "eyes": return scene.color ?? "#ffffff";
     case "fx": return FX[scene.id]?.color ?? "#ffffff";
+    case "pic": return PICS[scene.id]?.color ?? "#ffffff";
     case "art": return scene.tint ?? "#ffffff";
     case "turn": case "hazard": return LED.amber;
     case "brake": case "stopped": return LED.red;

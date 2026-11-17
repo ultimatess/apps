@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Picture pack contact sheet</title>
+<style>
+  body { background: #0b0c10; color: #ccc; font: 12px/1.3 ui-monospace, monospace; margin: 12px; }
+  h2 { font-size: 13px; margin: 14px 0 4px; color: #fff; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; }
+  figure { margin: 0; } figcaption { color: #888; }
+  canvas { display: block; image-rendering: pixelated; }
+</style>
+<div id="out"></div>
+<script type="module">
+  // Dev aid: every shot of every picture, quantized as the panel shows it.
+  import { PICS, PIC_IDS, picFrame } from "../js/pictures.js";
+  import { quantize } from "../js/frame.js";
+  import { drawThumb } from "../js/ui/led.js";
+  const only = new URLSearchParams(location.search).get("id");
+  const out = document.getElementById("out");
+  for (const id of PIC_IDS.filter((i) => !only || i === only)) {
+    const p = PICS[id];
+    out.insertAdjacentHTML("beforeend", `<h2>${id} · ${p.label}</h2>`);
+    const row = document.createElement("div"); row.className = "row"; out.append(row);
+    let t0 = 0;
+    for (const [ms] of p.shots) {
+      for (let t = t0; t < t0 + ms; t += Math.max(250, Math.floor(ms / 3 / 250) * 250)) {
+        const fig = document.createElement("figure");
+        const c = document.createElement("canvas");
+        drawThumb(c, quantize(picFrame(id, t)), Number(new URLSearchParams(location.search).get("s") || 3));
+        fig.append(c, Object.assign(document.createElement("figcaption"), { textContent: `${t}` }));
+        row.append(fig);
+      }
+      t0 += ms;
+    }
+  }
+</script>

@@ -19,6 +19,7 @@ export function mountSettings(ctx) {
     if (key === "brakeSensitivity") drive.setSensitivity(S.brakeSensitivity);
     if (key === "invertTurns") drive.resetTurns();
     if (key === "nightDim" || key === "nightLevel") ctx.pushBrightness();
+    if (key === "panelKeep") ctx.memory.applyKeep().then(() => bus.emit("memory"));
     bus.emit("settings", key);
   }
 
@@ -43,6 +44,7 @@ export function mountSettings(ctx) {
     drive.setSensitivity(S.brakeSensitivity);
     sync();
     ctx.pushBrightness();
+    ctx.memory.applyKeep().then(() => bus.emit("memory"));
     bus.emit("settings", "all");
     toast("Settings reset");
   });

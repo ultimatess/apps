@@ -271,8 +271,18 @@
             <button class="btn btn-small" data-cmd="time">Sync time</button>
             <button class="btn btn-small" data-cmd="fwclock">Firmware clock</button>
             <button class="btn btn-small" data-cmd="diy">DIY mode</button>
-            <button class="btn btn-small" data-cmd="reset">Reset</button>
+            <button class="btn btn-small" data-cmd="reset">Wipe panel memory</button>
             <button class="btn btn-small" data-cmd="handshake">Re-handshake</button>
+          </div>
+        </div>
+
+        <div class="card" id="memoryCard">
+          <div class="card-head"><h2>Panel memory</h2><small id="memoryInfo">Off</small></div>
+          <p class="hint">Messages, pictures and pixel art you send are also saved in the panel itself, so it shows them after a restart without the phone. Set how many in Settings.</p>
+          <div class="memory-list" id="memoryList"></div>
+          <div class="wrap">
+            <button class="btn btn-small" id="memoryPlayBtn">Disconnect and play saved</button>
+            <button class="btn btn-small btn-ghost" id="memoryClearBtn">Clear panel memory</button>
           </div>
         </div>
 
@@ -404,6 +414,9 @@
           <output data-speed-val>6</output>
         </label>
         <p class="hint">How fast text scrolls, flashes word by word, and how quickly modes move on. Applies to every message.</p>
+        <div class="field-row"><span><b>Keep on the panel</b><small>Last messages play after a restart, no app needed</small></span>
+          <span class="seg" data-setting="panelKeep" data-type="number"><button type="button" data-v="0">Off</button><button type="button" data-v="3">3</button><button type="button" data-v="5">5</button></span>
+        </div>
         <div class="field-row">When stopped (Full HUD)
           <span class="seg" data-setting="stoppedMode"><button type="button" data-v="content">Content</button><button type="button" data-v="stopped">STOPPED</button><button type="button" data-v="clock">Clock</button></span>
         </div>

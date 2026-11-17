@@ -4,6 +4,7 @@ import { COLORS } from "./scene.js";
 import { EYE_PACK, isReactive } from "./eyes.js";
 import { FX } from "./fx.js";
 import { MODES } from "./modes.js";
+import { PICS } from "./pictures.js";
 
 export const GROUPS = [
   { id: "all", title: "All" },
@@ -11,6 +12,7 @@ export const GROUPS = [
   { id: "modes", title: "Modes" },
   { id: "road", title: "Road" },
   { id: "meme", title: "Meme" },
+  { id: "pics", title: "Pictures" },
   { id: "eyes", title: "Eyes" },
   { id: "art", title: "Art" },
 ];
@@ -54,6 +56,9 @@ export const BUILTIN_ITEMS = [
   })),
   ...road.map(textItem("road")),
   ...meme.map(textItem("meme")),
+  ...Object.entries(PICS).map(([id, p]) => ({
+    id: `pic.${id}`, group: "pics", kind: "pic", builtin: true, pic: id, label: p.label, hint: p.hint, color: p.color,
+  })),
   ...EYE_PACK.map((e) => ({
     id: `eyes.${e.mode}`, group: "eyes", kind: "eyes", builtin: true,
     mode: e.mode, color: e.color, label: e.label, hint: e.hint, react: isReactive(e.mode),
@@ -92,6 +97,7 @@ export function itemScene(item) {
       };
     case "eyes": return { kind: "eyes", mode: item.mode, color: item.color ?? "#ffffff", react: !!item.react };
     case "fx": return { kind: "fx", id: item.fx };
+    case "pic": return { kind: "pic", id: item.pic };
     case "art": return { kind: "art", id: item.id, rev: item.rev ?? 0, frames: item.frames ?? [], fps: item.fps ?? 4, name: item.label, tint: item.color };
     case "clock": return { kind: "clock", color: item.color ?? "#ff9000" };
     case "mode": return MODES[item.mode]?.cover ?? null; // cover card; tapping the item starts the mode

@@ -72,7 +72,7 @@ export function mountStudio(ctx) {
     const scene = textScene();
     if (!scene.text) return toast("Type a message first");
     sentKey = JSON.stringify(scene);
-    ctx.sendScene(scene, scene.text);
+    ctx.sendScene(scene, scene.text, { keep: true });
   }
 
   function saveText() {
@@ -384,7 +384,7 @@ export function mountStudio(ctx) {
     if (!px.frames.some((f) => f.litCount())) return toast("Draw something first");
     const scene = artScene();
     sentKey = `art|${px.rev}|${px.idx}|${px.fps}`;
-    ctx.sendScene({ ...scene, rev: `${scene.rev}.${Date.now()}` }, scene.name);
+    ctx.sendScene({ ...scene, rev: `${scene.rev}.${Date.now()}` }, scene.name || "Pixel art", { keep: true });
   }
 
   function pxPalette() {

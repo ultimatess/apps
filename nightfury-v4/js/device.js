@@ -2,8 +2,8 @@
 // settings commands. Every write goes through the TxQueue so GATT sees one
 // operation at a time.
 import {
-  ANIM, COLS, brightnessPacket, buildGifPacket, buildTextPacket, clockModePacket, diyModePacket,
-  pingPacket, powerPacket, resetPacket, timeSyncPacket, toHex,
+  ANIM, COLS, brightnessPacket, buildGifPacket, buildTextPacket, clockModePacket, deleteSlotPacket, diyModePacket,
+  pingPacket, powerPacket, resetPacket, showSlotPacket, timeSyncPacket, toHex,
 } from "./protocol.js";
 import { frameToChunks } from "./frame.js";
 import { TxQueue } from "./queue.js";
@@ -57,19 +57,19 @@ export class IPixelPanel {
   }
 
   /** Static 96x16 frame. `fallback` is the header colour when the frame is blank. */
-  pushFrame(frame, { key = "scene", label = "Frame 96×16", fallback = "#ffffff", quiet = false } = {}) {
+  pushFrame(frame, { key = "scene", label = "Frame 96×16", fallback = "#ffffff", quiet = false, saveSlot = 0 } = {}) {
     const { lsbFirst = true, multiColor = true } = this.options();
     const { chunks, colors, rgb } = frameToChunks(frame, { lsbFirst, columns: COLS, multi: multiColor, fallback });
-    const pkt = buildTextPacket(chunks, { anim: ANIM.STATIC, speed: 80, rgb, colors });
+    const pkt = buildTextPacket(chunks, { anim: ANIM.STATIC, speed: 80, rgb, colors, saveSlot });
     this.framesSent++;
     return this.send(pkt, { key, label, quiet });
   }
 
   /** Firmware scroll of a raster wider than the panel. `speed` is the firmware value (30..100). */
-  pushScroll(raster, speed, { key = "scene", label = "Scroll text", fallback = "#ffffff", anim = ANIM.SCROLL_LEFT, rainbow = 0 } = {}) {
+  pushScroll(raster, speed, { key = "scene", label = "Scroll text", fallback = "#ffffff", anim = ANIM.SCROLL_LEFT, rainbow = 0, saveSlot = 0 } = {}) {
     const { lsbFirst = true, multiColor = true } = this.options();
     const { chunks, colors, rgb } = frameToChunks(raster, { lsbFirst, multi: multiColor, fallback });
-    const pkt = buildTextPacket(chunks, { anim, speed, rgb, colors, rainbow });
+    const pkt = buildTextPacket(chunks, { anim, speed, rgb, colors, rainbow, saveSlot });
     return this.send(pkt, { key, label: `${label} (${chunks.length} chunks)` });
   }
 
@@ -77,6 +77,20 @@ export class IPixelPanel {
   uploadGif(bytes, slot = 1) {
     return this.send(buildGifPacket(bytes, slot), { key: "scene", label: `GIF upload (${bytes.length} B)` });
   }
+
+  /**
+   * Keep `stored` ({ mode: "frame", frame } | { mode: "scroll", raster, speed }) in panel slot `slot`
+   * (1..255). Each slot has its own queue key, so a later live frame never cancels it.
+   */
+  saveToSlot(stored, slot, { fallback = "#ffffff", label = "" } = {}) {
+    const key = `slot-${slot}`;
+    const text = `Save to slot ${slot}${label ? ` · ${label}` : ""}`;
+    if (stored.mode === "scroll") return this.pushScroll(stored.raster, stored.speed, { key, label: text, fallback, saveSlot: slot });
+    return this.pushFrame(stored.frame, { key, label: text, fallback, saveSlot: slot });
+  }
+
+  deleteSlot(slot) { return this.send(deleteSlotPacket(slot), { key: `slot-${slot}`, label: `Delete slot ${slot}` }); }
+  showSlot(slot) { return this.send(showSlotPacket(slot), { label: `Show slot ${slot}` }); }
 
   brightness(level) {
     return this.send(brightnessPacket(level), { key: "brightness", label: `Brightness ${level}%` });

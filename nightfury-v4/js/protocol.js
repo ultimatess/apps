@@ -39,12 +39,14 @@ export const CMD = {
   PNG: 0x0002,
   GIF: 0x0003,
   TEXT: 0x0100,
+  DELETE_SLOT: 0x0102,
   DIY: 0x0104,
   SET_PIXEL: 0x0105,
   CLOCK: 0x0106,
   POWER: 0x0107,
   TIME: 0x8001,
   RESET: 0x8003,
+  SHOW_SLOT: 0x8008,
   BRIGHTNESS: 0x8004,
   PING: 0x8005,
 };
@@ -211,8 +213,17 @@ export function clockModePacket(d = new Date(), { style = 1, format24 = true, sh
 
 export const diyModePacket = (enable = true) => buildPacket(CMD.DIY, [enable ? 1 : 0]);
 export const setPixelPacket = (x, y, [r, g, b]) => buildPacket(CMD.SET_PIXEL, [0, r & 0xff, g & 0xff, b & 0xff, x & 0xff, y & 0xff]);
+// pypixelcolor calls this "clear": it erases everything stored on the panel, settings included.
 export const resetPacket = () => buildPacket(CMD.RESET);
 export const pingPacket = () => buildPacket(CMD.PING);
+
+// ---------------------------------------------------------------- panel memory (save slots)
+// A data packet with SAVE_SLOT >= 1 is also kept in the panel's own memory, which it
+// plays by itself after a restart; slot 0 (what every live frame uses) is temporary.
+// Byte layouts follow the open-source pypixelcolor library (MIT): delete is
+// 07 00 02 01 01 00 NN, show is 07 00 08 80 01 00 NN. Not yet tried on this panel.
+export const deleteSlotPacket = (n) => buildPacket(CMD.DELETE_SLOT, [1, 0, clamp(n | 0, 0, 255)]);
+export const showSlotPacket = (n) => buildPacket(CMD.SHOW_SLOT, [1, 0, clamp(n | 0, 0, 255)]);
 
 // ---------------------------------------------------------------- bitmap chunking
 

@@ -4,6 +4,7 @@
 //   comedy   set-up, punchline, laugh
 //   friends  fun lines for the people you ride with
 //   tvk      supporter lines for Tamilaga Vettri Kazhagam / Vijay
+//   pics     the picture pack (pictures.js): cartoon stories and memes, one pass each
 //
 // A programme is a show whose items carry their scene inline:
 //   { id, name, mode, items: [{ scene, secs, label, unit }] }
@@ -12,6 +13,7 @@
 // The Tamil couplets were checked against the public tk120404/thirukkural dataset
 // (the text itself is ancient and in the public domain). The English gists, the
 // story retellings and the jokes are written for this app.
+import { PICS, PIC_IDS, picLoopMs } from "./pictures.js";
 
 const KURALS = [
   [1, "அகர முதல எழுத்தெல்லாம் ஆதி", "பகவன் முதற்றே உலகு", "EVERYTHING HAS A FIRST CAUSE"],
@@ -193,6 +195,11 @@ export const MODES = {
     hint: `${FRIENDS.length} fun lines for your gang`,
     cover: text("FRIENDS", C.purple, { effect: "static" }),
   },
+  pics: {
+    label: "படக்கதை", name: "Picture pack", color: C.lime,
+    hint: `${PIC_IDS.length} cartoon stories and memes`,
+    cover: { kind: "pic", id: "crow" },
+  },
   tvk: {
     label: "TVK", name: "TVK · Vijay", color: C.red,
     hint: `${TVK.length} supporter lines in party colours`,
@@ -277,6 +284,12 @@ export function buildProgramme(mode, { lang = "both", style = "scroll", seed = 0
       if ((l === "ta" && !ta) || (l === "en" && !en)) continue;
       beat(text(line, tints[n++ % tints.length], { effect: body }), line);
       beat(eyes(n % 2 ? "wink" : "happy", C.purple), line, 2000);
+      unit++;
+    }
+  } else if (mode === "pics") {
+    // Each cartoon plays one full pass; the message speed stretches it (pace).
+    for (const id of shuffled(PIC_IDS, seed)) {
+      items.push({ scene: { kind: "pic", id }, label: PICS[id].label, unit, secs: Math.round((picLoopMs(id) * pace) / 100) / 10 });
       unit++;
     }
   } else if (mode === "tvk") {
